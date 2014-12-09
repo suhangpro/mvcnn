@@ -12,7 +12,7 @@ fclose(fid);
 % Images and class
 imdb.images.name = filelist{1}';
 imdb.images.id = 1:length(imdb.images.name);
-class = cellfun(@(x) fileParts(x), imdb.images.name, 'UniformOutput', false);
+class = cellfun(@(x) fileparts(x), imdb.images.name, 'UniformOutput', false);
 
 % Class names
 classNames = unique(class);
