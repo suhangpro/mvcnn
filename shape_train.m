@@ -4,11 +4,11 @@ function shape_train(imdb, opts, varargin)
 opts.lite = false ;
 opts.numFetchThreads = 0 ;
 opts.train.batchSize = 256 ;
-opts.train.numEpochs = 65 ;
+opts.train.numEpochs = 30 ;
 opts.train.continue = true ;
-opts.train.useGpu = false ;
+opts.train.useGpu = true ;
 opts.train.prefetch = false ;
-opts.train.learningRate = [0.001*ones(1, 25) 0.0001*ones(1, 25) 0.00001*ones(1,15)] ;
+opts.train.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
 opts.train.expDir = opts.expDir ;
 opts = vl_argparse(opts, varargin) ;
 
@@ -83,13 +83,13 @@ if ~isempty(opts.model)
                            'biases', zeros(1, numClass, 'single'), ...
                            'stride', 1, ...
                            'pad', 0, ...
-                           'filtersLearningRate', 1, ...
-                           'biasesLearningRate', 2, ...
+                           'filtersLearningRate', 10, ...
+                           'biasesLearningRate', 20, ...
                            'filtersWeightDecay', 1, ...
                            'biasesWeightDecay', 0);
                        
     % Last layer is softmaxloss (switch to softmax for prediction)
-    net.layers{end+1} = struct('type', 'softmaxloss') ;
+    net.layers{end} = struct('type', 'softmaxloss') ;
 
     % Rename classes
     net.classes.name = imdb.classes.name;
