@@ -17,7 +17,7 @@ Fine-tune the models trained on ImageNet classification challenge on the sketch 
 
 **TODO:** Fine-tune models on the shapes datset
 
-##### R-CNN and D-CNN
+#### R-CNN and D-CNN
 
 We experiment with R-CNN and D-CNN, i.e., CNN filter banks with Fisher-vectors. 
 
@@ -30,12 +30,12 @@ We experiment with R-CNN and D-CNN, i.e., CNN filter banks with Fisher-vectors.
   	url       = {http://arxiv.org/abs/1411.6836}
 	}
 
-##### Source
+#### Source
 The code is available on Bitbucket at [https://smaji@bitbucket.org/smaji/deep-shape.git](https://smaji@bitbucket.org/smaji/deep-shape.git)
 
-##### Acknowlegements
+#### Acknowlegements
 
 The code uses open source implementations such as [matconvnet](http://www.vlfeat.org/matconvnet/) and [vlfeat](http://www.vlfeat.org).
 
-##### Questions or comments	
+#### Questions or comments	
 _For questions or comments email Subhransu Maji (smaji@cs.umass.edu)_
