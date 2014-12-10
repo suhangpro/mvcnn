@@ -2,12 +2,11 @@ function [opts, imdb] = shape_setup(varargin)
 setup ;
 opts.seed = 1 ;
 opts.batchSize = 128 ;
-opts.useGpu = true ;
+opts.useGpu = true;
 opts.regionBorder = 0.05 ;
 opts.printDatasetInfo = false ;
 opts.excludeDifficult = true ;
-opts.dataset = 'os' ;
-opts.vocDir = 'data/VOC2007' ;
+opts.dataset = 'sketch' ;
 opts.sketchDir = 'data/sketch';
 opts.suffix = 'baseline' ;
 opts.prefix = 'v1' ;
@@ -28,14 +27,13 @@ end
 % -------------------------------------------------------------------------
 %                                                       Download CNN models
 % -------------------------------------------------------------------------
-for i = 1:numel(models)
-  if ~exist(fullfile('data/models', models{i}))
-    fprintf('downloading model %s\n', models{i}) ;
-    vl_xmkdir('data/models') ;
-    urlwrite(fullfile('http://www.vlfeat.org/matconvnet/models', models{i}),...
-      fullfile('data/models', models{i})) ;
-  end
+if ~exist(fullfile('data/models', opts.model))
+  fprintf('downloading model %s\n', opts.model) ;
+  vl_xmkdir('data/models') ;
+  urlwrite(fullfile('http://www.vlfeat.org/matconvnet/models', opts.model),...
+      fullfile('data/models', opts.model)) ;
 end
+
 
 % -------------------------------------------------------------------------
 %                                                              Load dataset
