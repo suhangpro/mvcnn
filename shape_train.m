@@ -49,8 +49,30 @@ end
 %                                               Stochastic gradient descent
 % -------------------------------------------------------------------------
 fn = getBatchWrapper(net.normalization, opts.numFetchThreads) ;
-
 [net,info] = cnn_train(net, imdb, fn, opts.train, 'conserveMemory', true) ;
+
+% Save model
+net = vl_simplenn_move(net, 'cpu');
+saveNetwork(fullfile(opts.expDir, 'final-model.mat'), net);
+
+% -------------------------------------------------------------------------
+function saveNetwork(fileName, net)
+% -------------------------------------------------------------------------
+layers = net.layers;
+ignoreFields = {'filtersMomentum', ...
+                'biasesMomentum',...
+                'filtersLearningRate',...
+                'biasesLearningRate',...
+                'filtersWeightDecay',...
+                'biasesWeightDecay',...
+                'class'};
+for i = 1:length(layers),
+    layers{i} = rmfield(layers{i}, ignoreFields(isfield(layers{i}, ignoreFields)));
+end
+classes = net.classes;
+normalization = net.normalization;
+save(fileName, 'layers', 'classes', 'normalization');
+
 
 % -------------------------------------------------------------------------
 function fn = getBatchWrapper(opts, numThreads)
