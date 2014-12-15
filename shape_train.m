@@ -59,6 +59,12 @@ saveNetwork(fullfile(opts.expDir, 'final-model.mat'), net);
 function saveNetwork(fileName, net)
 % -------------------------------------------------------------------------
 layers = net.layers;
+
+% Replace the last layer with softmax
+layers{end}.type = 'softmax';
+layers{end}.name = 'prob';
+
+% Remove fields corresponding to training parameters
 ignoreFields = {'filtersMomentum', ...
                 'biasesMomentum',...
                 'filtersLearningRate',...
