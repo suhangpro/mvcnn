@@ -22,6 +22,11 @@ prefetch = fetch & opts.prefetch ;
 switch opts.augmentation
   case 'none'
     tfs = [.5 ; .5 ; 0 ];
+  case 'f2'
+    tfs = [...
+	0.5 0.5 ;
+	0.5 0.5 ;
+	  0   1];
   case 'f5'
     tfs = [...
       .5 0 0 1 1 .5 0 0 1 1 ;
