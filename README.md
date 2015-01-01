@@ -32,7 +32,7 @@ The current state of the art is **67.6%** accuracy on the _sketch_ dataset and *
 
 In addition to experimenting with ImageNet pretrained models, we optionally fine-tune the models on the datasets isself. We report results using R-CNN where features are extracted from the penultimate layer, and D-CNN where Fisher vectors are constructed from filter banks extracted from the last convolutional layer (see reference below).
 
-** Todo: ** There is an overlap of images in shape trainval and shape-clean test, corrupting the results of fine-tuned CNNs on shape-clean. 
+** Todo: ** There is an overlap of images in shape trainval and shape-clean test **corrupting** the results of fine-tuned CNNs on shape-clean. 
 
  dataset (measure) | finetune| rcnn | dcnn | dcnn-sp | rcnn-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -41,9 +41,9 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  sketch (mAP) | - | 61.1 | 68.1 | 67.9 | 55.1 | **70.5** | 69.4 
  sketch (mAP) | sketch | 71.8 | 69.1 | - | **76.3** | - | - 
  sketch-clean (acc) | - |70.8 | - | - | 63.0 | - | - 
- sketch-clean (acc) | sketch | 81.8 | - | - | **90.1** | - | -
+ sketch-clean (acc)* | sketch | 81.8 | - | - | **90.1** | - | -
  sketch-clean (mAP) | - | 74.3 | - | - | 67.6 | - | - 
- sketch-clean (mAP) | sketch | 86.1 | - | - | **94.0** | - | -
+ sketch-clean (mAP)* | sketch | 86.1 | - | - | **94.0** | - | -
  
 ## Reference
 
