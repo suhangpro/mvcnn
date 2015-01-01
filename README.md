@@ -1,25 +1,50 @@
-## Convolutional Neural Networks for Shape Recognition
+# CNNs for shape recognition
 
-The goal of the project is to learn a general purpose shape descriptor for applications such as hand-drawn image classification, 3D object retrieval, etc. To do this we train discriminative models for image recognition using Covolutional Neural Networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art, or renderings of 3D models where there is little texture information present. 
+The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for image recognition using covolutional neural networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art images where color is removed, or renderings of 3D models where there is little texture information present. 
+
+## Datasets
 
 
-#### Collecting a dataset of shapes
+### Collecting a new dataset of shapes
 
-We leverage clip-art datasets on the internet to build a large dataset of shape classes. Clip-art images enable us to extract high quality boundaries of objects using simple computer vision techniques such a GrabCut and Global probability of boundary (gPb). Annotating such boundaries would be prohibitively expensive and time consuming. 
+#### Motivation ####
+Current datasets for shape recognition are rather limited. The largest shape datasets out there ?? contain only a hundred categories. 
 
-We start by collecting 1000 clip-art images for various categories which are likely to be recognizable by shape. Each of these are manually inspected to see if (a) they contain the correct class (b) are clutter-free and non-photorealistic (so that GrabCut and gPb are likely to work) (c) contain a single, non-truncated object. We use an interface where a grid of images are shown and good ones are selected. It takes less than a second to process each image, making this pipeline fast. 
+#### Leveraging clip-art on the web ###
+We leverage large amounts of clip-art images available on the web to build large dataset of shape classes. Clip-art allow us to extract high quality boundaries of objects using simple computer vision techniques such a GrabCut and Global probability of boundary (gPb), which would otherwise not be possible from real images due to lack of contrast between object and background. Annotating such boundaries would be prohibitively expensive and time consuming. For example even the largest segmentation datasets such as Microsoft COCO have imprecise object boundaries. Morevoer, instances in such images to occlusion and truncation hence a large part of the object boundary many not reflect the object's shape. 
 
-In addition we also experiment with the sketch dataset (Eitz et al, 2012) which contains 20,000 hand-drawn images of 250 categories such as airplanes, apples, bridges, etc. Due to the difficulty of sketching well, the accuracy of huamns in recognizing these hand-drawings in only 73%.
+Clip-art images allows us to systematically study the role of external contours or sihouttles, and internal contours for shape recognition. Morevoer clip-art images tend to be higher quality unlike hand drawings and reflect the true shape of the object more. There is also a wide range of categories for which clip-art is available, unlike 3D object repositories which have good coverage for man-made objects but not organic categories such as animals and plants. One drawback of clip-art is that instances may be exxagerated in their cartoon like appearance, but we hope to prune such categories during the dataset collection stage. 
 
-#### Fine-tine CNNs on the sketch dataset
+We start by collecting 1000 _clipart_ images for various categories which are likely to be recognizable by shape. Each of these are manually inspected to see if (a) they contain the correct class (b) are clutter-free and non-photorealistic (so that GrabCut and gPb are likely to work) (c) contain a single, non-truncated object. We use an interface where a grid of images are shown and good ones are selected. It takes less than a second to process each image, making this pipeline fast.
 
-Fine-tune the models trained on ImageNet classification challenge on the sketch dataset of Eitz et al., SIGGRAPH 2012. We replace the last layer of the CNNs with a 250 way classifier and continue training the model with a smaller learning rate. 
 
-**TODO:** Fine-tune models on the shapes datset
+### Human sketch dataset
 
-#### R-CNN and D-CNN
+The human sketch dataset (Eitz et al, 2012) which contains 20,000 hand-drawn images of 250 categories such as airplanes, apples, bridges, etc. The accuracy of humans in recognizing these hand-drawings in only 73% for a number of resons including the quality of the sketches drawn. In a subsequent paper by Schneider and Tuytelaars (Siggraph Asia 2014) cleaned up the data by removing instances that humans find hard to recognize.
 
-We experiment with R-CNN and D-CNN, i.e., CNN filter banks with Fisher-vectors. 
+The current state of the art is **67.6%** accuracy on the _sketch_ dataset and **79.0%** accuracy on the _sketch-clean_ dataset evaluated on a subset containing 160 categories and 56 images per-category. We follow the same training and test protocol of Eitz et al. The best performance is achieved using SIFT Fisher vectors with spatial pyramid pooling and linear SVMs. 
+
+### Swedish leaf dataset
+
+### 3d shape datasets
+
+## Results
+
+In addition to experimenting with ImageNet pretrained models, we optionally fine-tune the models on the datasets isself. We report results using R-CNN where features are extracted from the penultimate layer, and D-CNN where Fisher vectors are constructed from filter banks extracted from the last convolutional layer (see reference below).
+
+ dataset (measure) | finetune| rcnn | dcnn | dcnn-sp | rcnn-vd | dcnn-vd | dcnn-vd-sp
+ :---- | :---: | :---: | :---: | :---: | :---: | :---: |
+ sketch (acc) | - | 57.2 | 65.3 | 65.3 | 52.4 | **67.8** | 67.5 
+ sketch (acc) | sketch | 68.6 | 66.6 | - |  **73.1** | - | -  
+ sketch (mAP) | - | 61.1 | 68.1 | 67.9 | 55.1 | **70.5** | 69.4 
+ sketch (mAP) | sketch | 71.8 | 69.1 | - | **76.3** | - | - 
+ sketch-clean (acc) | - |70.8 | - | - | 63.0 | - | - 
+ sketch-clean (acc) | sketch | 81.8 | - | - | **90.1** | - | -
+ sketch-clean (mAP) | - | 74.3 | - | - | 67.6 | - | - 
+ sketch-clean (mAP) | sketch | 86.1 | - | - | **94.0** | - | -
+## Reference
+
+For details on D-CNN read the following paper:
 
 	@article{DBLP:journals/corr/CimpoiMV14,
   	author    = {Mircea Cimpoi and Subhransu Maji and Andrea Vedaldi},
@@ -27,15 +52,4 @@ We experiment with R-CNN and D-CNN, i.e., CNN filter banks with Fisher-vectors.
   	journal   = {CoRR},
   	volume    = {abs/1411.6836},
  	year      = {2014},
-  	url       = {http://arxiv.org/abs/1411.6836}
-	}
-
-#### Source
-The code is available on Bitbucket at [https://smaji@bitbucket.org/smaji/deep-shape.git](https://smaji@bitbucket.org/smaji/deep-shape.git)
-
-#### Acknowlegements
-
-The code uses open source implementations such as [matconvnet](http://www.vlfeat.org/matconvnet/) and [vlfeat](http://www.vlfeat.org).
-
-#### Questions or comments	
-_For questions or comments email Subhransu Maji (smaji@cs.umass.edu)_
+  	url       = {http://arxiv.org/abs/1411.6836}}
