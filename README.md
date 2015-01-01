@@ -32,7 +32,7 @@ The current state of the art is **67.6%** accuracy on the _sketch_ dataset and *
 
 In addition to experimenting with ImageNet pretrained models, we optionally fine-tune the models on the datasets isself. We report results using R-CNN where features are extracted from the penultimate layer, and D-CNN where Fisher vectors are constructed from filter banks extracted from the last convolutional layer (see reference below).
 
-** Todo: ** check overlap of images in shape trainval and shape-clean test. 
+** Todo: ** There is an overlap of images in shape trainval and shape-clean test, corrupting the results of fine-tuned CNNs on shape-clean. 
 
  dataset (measure) | finetune| rcnn | dcnn | dcnn-sp | rcnn-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
