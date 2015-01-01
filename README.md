@@ -42,6 +42,7 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  sketch-clean (acc) | sketch | 81.8 | - | - | **90.1** | - | -
  sketch-clean (mAP) | - | 74.3 | - | - | 67.6 | - | - 
  sketch-clean (mAP) | sketch | 86.1 | - | - | **94.0** | - | -
+ 
 ## Reference
 
 For details on D-CNN read the following paper:
