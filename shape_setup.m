@@ -3,14 +3,15 @@ setup ;
 opts.seed = 1 ;
 opts.batchSize = 128 ;
 opts.useGpu = true;
-opts.regionBorder = 0.05 ;
 opts.printDatasetInfo = false ;
-opts.excludeDifficult = true ;
 opts.dataset = 'sketch' ;
 opts.sketchDir = 'data/sketch';
-opts.suffix = 'baseline' ;
-opts.prefix = 'v1' ;
+opts.clipartgpbDir = 'data/clipartgpb';
 opts.model = 'imagenet-vgg-m.mat';
+opts.prefix = 'v1' ;
+opts.suffix = 'baseline' ; % NOT USED?
+opts.regionBorder = 0.05 ; % NOT USED?
+opts.excludeDifficult = true ; % NOT USED?
 [opts, varargin] = vl_argparse(opts,varargin) ;
 
 opts.expDir = sprintf('data/%s/%s-seed-%02d', opts.prefix, opts.dataset, opts.seed) ;
@@ -41,19 +42,20 @@ end
 vl_xmkdir(opts.expDir) ;
 vl_xmkdir(opts.imdbDir) ;
 imdbPath = fullfile(opts.imdbDir, sprintf('imdb-seed-%d.mat', opts.seed)) ;
-if exist(imdbPath, 'file')
-  imdb = load(imdbPath) ;
-  return ;
-end
+if exist(imdbPath, 'file'), 
+    imdb = load(imdbPath) ;
+else
+    switch opts.dataset
+        case 'sketch'
+            imdb = sketch_get_database(opts.sketchDir, 'seed', opts.seed);
+        case 'clipartgpb'
+            imdb = clipart_get_database(opts.clipartgpbDir, 'seed', opts.seed);
+        otherwise
+            error('Unknown dataset %s', opts.dataset) ;
+    end
 
-switch opts.dataset
-  case 'sketch'
-    imdb = sketch_get_database(opts.sketchDir, 'seed', opts.seed);
-  otherwise
-    error('Unknown dataset %s', opts.dataset) ;
+    save(imdbPath, '-struct', 'imdb') ;
 end
-
-save(imdbPath, '-struct', 'imdb') ;
 
 if opts.printDatasetInfo
   print_dataset_info(imdb) ;

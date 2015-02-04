@@ -1,22 +1,22 @@
 function shape_train(imdb, opts, varargin)
 % SHAPE_TRAIN Train a CNN model on a dataset supplied by imdb
 
-opts.lite = false ;
+opts.lite = false ; % NOT USED?
 opts.numFetchThreads = 0 ;
-opts.train.batchSize = 256 ;
+opts.train.batchSize = opts.batchSize ;
+opts.train.useGpu = opts.useGpu ;
+opts.train.expDir = opts.expDir ;
 opts.train.numEpochs = 30 ;
 opts.train.continue = true ;
-opts.train.useGpu = true ;
 opts.train.prefetch = false ;
 opts.train.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
-opts.train.expDir = opts.expDir ;
 opts = vl_argparse(opts, varargin) ;
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
 % -------------------------------------------------------------------------
 
-net = initializeNetwork(imdb, opts) ;
+net = initializeNetwork(imdb, opts.model) ;
 
 % Initialize average image
 if isempty(net.normalization.averageImage), 
@@ -96,14 +96,14 @@ im = imdb_get_batch(images, opts, ...
 labels = imdb.images.label(batch) ;
 
 % -------------------------------------------------------------------------
-function net = initializeNetwork(imdb, opts)
+function net = initializeNetwork(imdb, model)
 % -------------------------------------------------------------------------
 scal = 1 ;
 init_bias = 0.1;
 numClass = length(imdb.classes.name);
-if ~isempty(opts.model)
-    net = load(fullfile('data/models', opts.model)); % Load model if specified
-    fprintf('Initializing from model: %s\n', opts.model);
+if exist(fullfile('data/models', model),'file'), 
+    net = load(fullfile('data/models', model)); % Load model if specified
+    fprintf('Initializing from model: %s\n', model);
 
     % Replace the last but one layer with random weights
     net.layers{end-1} = struct('type', 'conv', ...
