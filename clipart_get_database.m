@@ -1,6 +1,7 @@
 function imdb = clipart_get_database(clipartDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
+opts.limitPerClass = 100 ;
 opts = vl_argparse(opts, varargin) ;
 rng(opts.seed) ;
 
@@ -16,6 +17,8 @@ for c = imdb.classes.name,
     c = c{:};
     filelist = dir(fullfile(clipartDir,c,'*.png'));
     imagePaths = cellfun(@(x) fullfile(c,x),{filelist.name},'UniformOutput',false);
+    slctIdx = randperm(length(imagePaths));
+    imagePaths = imagePaths(slctIdx(1:min(opts.limitPerClass,length(slctIdx))));
     imdb.images.name = [imdb.images.name,imagePaths];
 end
 imdb.images.id = 1:length(imdb.images.name);
