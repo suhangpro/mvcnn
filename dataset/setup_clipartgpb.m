@@ -1,4 +1,4 @@
-function imdb = clipart_get_database(clipartDir, varargin)
+function imdb = setup_clipartgpb(clipartDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
 opts.limitPerClass = 100 ;
@@ -11,9 +11,9 @@ classlist = textscan(fid, '%s', 'Delimiter', '\n');
 fclose(fid);
 
 % Images and class
-imdb.classes.name = classlist{1}';
+imdb.meta.classes = classlist{1}';
 imdb.images.name = {};
-for c = imdb.classes.name, 
+for c = imdb.meta.classes, 
     c = c{:};
     filelist = dir(fullfile(clipartDir,c,'*.png'));
     imagePaths = cellfun(@(x) fullfile(c,x),{filelist.name},'UniformOutput',false);
@@ -25,14 +25,14 @@ imdb.images.id = 1:length(imdb.images.name);
 class = cellfun(@(x) fileparts(x), imdb.images.name, 'UniformOutput', false);
 
 % Class names
-[~, imdb.images.label] = ismember(class, imdb.classes.name);
+[~, imdb.images.class] = ismember(class, imdb.meta.classes);
 
 % No standard image splits are provided for this dataset, so split them
 % randomly into equal sized train/val/test sets
-imdb.sets = {'train', 'val', 'test'};
+imdb.meta.sets = {'train', 'val', 'test'};
 imdb.images.set = zeros(1,length(imdb.images.id));
-for c = 1:length(imdb.classes.name), 
-    isclass = find(imdb.images.label == c);
+for c = 1:length(imdb.meta.classes), 
+    isclass = find(imdb.images.class == c);
     
     % split equally into train, val, test
     order = randperm(length(isclass));
