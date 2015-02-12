@@ -7,7 +7,7 @@ function net = run_train(imdbName, varargin)
 %       random seed
 %   `batchSize`: 128
 %       set to a smaller number on limited memory
-%   `useGpu`:: false
+%   `gpuMode`:: false
 %       set to true to compute on GPU
 %   `modelName`:: 'imagenet-vgg-m'
 %       set to empty to train from scratch
@@ -20,7 +20,7 @@ function net = run_train(imdbName, varargin)
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
-opts.useGpu = false;
+opts.gpuMode = false;
 opts.modelName = 'imagenet-vgg-m';
 opts.prefix = 'v1' ;
 opts.numFetchThreads = 0 ;
@@ -39,7 +39,7 @@ opts = vl_argparse(opts,varargin) ;
 if ~exist(opts.expDir, 'dir'), vl_xmkdir(opts.expDir) ; end
 
 % Setup GPU if needed
-if opts.useGpu
+if opts.gpuMode
   gpuDevice(1) ;
 end
 
@@ -86,7 +86,7 @@ end
 %                                               Stochastic gradient descent
 % -------------------------------------------------------------------------
 trainOpts.batchSize = opts.batchSize ;
-trainOpts.useGpu = opts.useGpu ;
+trainOpts.useGpu = opts.gpuMode ;
 trainOpts.expDir = opts.expDir ;
 trainOpts.numEpochs = 30 ;
 trainOpts.continue = true ;
