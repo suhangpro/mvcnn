@@ -1,4 +1,4 @@
-function run_train(imdbName, varargin)
+function net = run_train(imdbName, varargin)
 %RUN_TRAIN Train a CNN model on a dataset supplied by imdb
 
 opts.seed = 1 ;
@@ -84,10 +84,10 @@ fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
 
 % Save model
 net = vl_simplenn_move(net, 'cpu');
-saveNetwork(fullfile(opts.expDir, 'final-model.mat'), net);
+net = saveNetwork(fullfile(opts.expDir, 'final-model.mat'), net);
 
 % -------------------------------------------------------------------------
-function saveNetwork(fileName, net)
+function net = saveNetwork(fileName, net)
 % -------------------------------------------------------------------------
 layers = net.layers;
 
@@ -106,9 +106,8 @@ ignoreFields = {'filtersMomentum', ...
 for i = 1:length(layers),
     layers{i} = rmfield(layers{i}, ignoreFields(isfield(layers{i}, ignoreFields)));
 end
-classes = net.classes;
-normalization = net.normalization;
-save(fileName, 'layers', 'classes', 'normalization');
+net.layers = layers;
+save(fileName, '-struct', 'net');
 
 
 % -------------------------------------------------------------------------
