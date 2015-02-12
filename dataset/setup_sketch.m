@@ -1,4 +1,4 @@
-function imdb = sketch_get_database(sketchDir, varargin)
+function imdb = setup_sketch(sketchDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
 opts = vl_argparse(opts, varargin) ;
@@ -16,15 +16,15 @@ class = cellfun(@(x) fileparts(x), imdb.images.name, 'UniformOutput', false);
 
 % Class names
 classNames = unique(class);
-imdb.classes.name = classNames;
-[~, imdb.images.label] = ismember(class, classNames);
+imdb.meta.classes = classNames;
+[~, imdb.images.class] = ismember(class, classNames);
 
 % No standard image splits are provided for this dataset, so split them
 % randomly into equal sized train/val/test sets
-imdb.sets = {'train', 'val', 'test'};
+imdb.meta.sets = {'train', 'val', 'test'};
 imdb.images.set = zeros(1,length(imdb.images.id));
-for c = 1:length(imdb.classes.name), 
-    isclass = find(imdb.images.label == c);
+for c = 1:length(imdb.meta.classes), 
+    isclass = find(imdb.images.class == c);
     
     % split equally into train, val, test
     order = randperm(length(isclass));

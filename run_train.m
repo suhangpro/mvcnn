@@ -1,22 +1,41 @@
-function shape_train(imdb, opts, varargin)
-% SHAPE_TRAIN Train a CNN model on a dataset supplied by imdb
+function run_train(imdbName, varargin)
+%RUN_TRAIN Train a CNN model on a dataset supplied by imdb
 
-opts.lite = false ; % NOT USED?
+opts.seed = 1 ;
+opts.batchSize = 128 ;
+opts.useGpu = false;
+opts.modelName = 'imagenet-vgg-m';
+opts.prefix = 'v1' ;
 opts.numFetchThreads = 0 ;
-opts.train.batchSize = opts.batchSize ;
-opts.train.useGpu = opts.useGpu ;
-opts.train.expDir = opts.expDir ;
-opts.train.numEpochs = 30 ;
-opts.train.continue = true ;
-opts.train.prefetch = false ;
-opts.train.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
+opts.augmentation = 'f2';
 opts = vl_argparse(opts, varargin) ;
+
+if ~isempty(opts.modelName), 
+    opts.expDir = sprintf('%s-finetuned-%s', opts.modelName, imdbName); 
+else
+    opts.expDir = imdbName; 
+end
+opts.expDir = fullfile('data', opts.prefix, ...
+    sprintf('%s-seed-%2d', opts.expDir, opts.seed));
+opts = vl_argparse(opts,varargin) ;
+
+if ~exist(opts.expDir, 'dir'), vl_xmkdir(opts.expDir) ; end
+
+% Setup GPU if needed
+if opts.useGpu
+  gpuDevice(1) ;
+end
+
+% -------------------------------------------------------------------------
+%                                                                 Get imdb
+% -------------------------------------------------------------------------
+imdb = get_imdb(imdbName);
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
 % -------------------------------------------------------------------------
 
-net = initializeNetwork(imdb, opts.model) ;
+net = initializeNetwork(opts.modelName, imdb.meta.classes) ;
 
 % Initialize average image
 if isempty(net.normalization.averageImage), 
@@ -27,11 +46,12 @@ if isempty(net.normalization.averageImage),
     else
       train = find(imdb.images.set == 1) ;
       bs = 256 ;
-      fn = getBatchWrapper(net.normalization, opts.numFetchThreads) ;
+      fn = getBatchWrapper(net.normalization, 'numThreads',...
+          opts.numFetchThreads,'augmentation', opts.augmentation);
       for t=1:bs:numel(train)
         batch_time = tic ;
         batch = train(t:min(t+bs-1, numel(train))) ;
-        fprintf('computing average image: processing batch starting with image %d ...', batch(1)) ;
+        fprintf('Computing average image: processing batch starting with image %d ...', batch(1)) ;
         temp = fn(imdb, batch) ;
         im{t} = mean(temp, 4) ;
         batch_time = toc(batch_time) ;
@@ -48,8 +68,19 @@ end
 % -------------------------------------------------------------------------
 %                                               Stochastic gradient descent
 % -------------------------------------------------------------------------
-fn = getBatchWrapper(net.normalization, opts.numFetchThreads) ;
-[net,info] = cnn_train(net, imdb, fn, opts.train, 'conserveMemory', true) ;
+trainOpts.batchSize = opts.batchSize ;
+trainOpts.useGpu = opts.useGpu ;
+trainOpts.expDir = opts.expDir ;
+trainOpts.numEpochs = 30 ;
+trainOpts.continue = true ;
+trainOpts.prefetch = false ;
+trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
+trainOpts.conserveMemory = true;
+
+fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
+    'augmentation', opts.augmentation);
+
+[net,info] = cnn_train(net, imdb, fn, trainOpts) ;
 
 % Save model
 net = vl_simplenn_move(net, 'cpu');
@@ -81,33 +112,42 @@ save(fileName, 'layers', 'classes', 'normalization');
 
 
 % -------------------------------------------------------------------------
-function fn = getBatchWrapper(opts, numThreads)
+function fn = getBatchWrapper(opts, varargin)
 % -------------------------------------------------------------------------
-fn = @(imdb,batch) getBatch(imdb,batch,opts,numThreads) ;
+fn = @(imdb,batch) getBatch(imdb,batch,opts,varargin{:}) ;
 
 % -------------------------------------------------------------------------
-function [im,labels] = getBatch(imdb, batch, opts, numThreads)
+function [im,labels] = getBatch(imdb, batch, opts, varargin)
 % -------------------------------------------------------------------------
 images = strcat([imdb.imageDir '/'], imdb.images.name(batch)) ;
-im = imdb_get_batch(images, opts, ...
-                            'numThreads', numThreads, ...
-                            'prefetch', nargout == 0, ...
-                            'augmentation', 'f25') ;
-labels = imdb.images.label(batch) ;
+im = get_image_batch(images, opts, 'prefetch', nargout == 0, varargin{:}); 
+labels = imdb.images.class(batch) ;
 
 % -------------------------------------------------------------------------
-function net = initializeNetwork(imdb, model)
+function net = initializeNetwork(modelName, classNames)
 % -------------------------------------------------------------------------
 scal = 1 ;
 init_bias = 0.1;
-numClass = length(imdb.classes.name);
-if exist(fullfile('data/models', model),'file'), 
-    net = load(fullfile('data/models', model)); % Load model if specified
-    fprintf('Initializing from model: %s\n', model);
+numClass = length(classNames);
 
+if ~isempty(modelName), 
+    netFilePath = fullfile('data','models', [modelName '.mat']);
+    % download model if not found
+    if ~exist(netFilePath,'file'),
+        fprintf('Downloading model (%s) ...', modelName) ;
+        vl_xmkdir(fullfile('data','models')) ;
+        urlwrite(fullfile('http://www.vlfeat.org/matconvnet/models', ...
+            [modelName '.mat']), netFilePath) ;
+        fprintf(' done!\n');
+    end
+    net = load(netFilePath); % Load model if specified
+    
+    fprintf('Initializing from model: %s\n', modelName);
     % Replace the last but one layer with random weights
-    net.layers{end-1} = struct('type', 'conv', ...
-                           'filters', 0.01/scal * randn(1,1,4096,numClass,'single'), ...
+    widthPenultimate = size(net.layers{end-1}.filters,3); 
+    net.layers{end-1} = struct('name','fc8', ...
+                           'type', 'conv', ...
+                           'filters', 0.01/scal * randn(1,1,widthPenultimate,numClass,'single'), ...
                            'biases', zeros(1, numClass, 'single'), ...
                            'stride', 1, ...
                            'pad', 0, ...
@@ -120,8 +160,8 @@ if exist(fullfile('data/models', model),'file'),
     net.layers{end} = struct('type', 'softmaxloss') ;
 
     % Rename classes
-    net.classes.name = imdb.classes.name;
-    net.classes.description = imdb.classes.name;
+    net.classes.name = classNames;
+    net.classes.description = classNames;
     return;
 end
 
@@ -129,7 +169,8 @@ end
 net.layers = {} ;
 
 % Block 1
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'conv1', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(11, 11, 3, 96, 'single'), ...
                            'biases', zeros(1, 96, 'single'), ...
                            'stride', 4, ...
@@ -148,7 +189,8 @@ net.layers{end+1} = struct('type', 'normalize', ...
                            'param', [5 1 0.0001/5 0.75]) ;
 
 % Block 2
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'conv2', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(5, 5, 48, 256, 'single'), ...
                            'biases', init_bias*ones(1, 256, 'single'), ...
                            'stride', 1, ...
@@ -167,7 +209,8 @@ net.layers{end+1} = struct('type', 'normalize', ...
                            'param', [5 1 0.0001/5 0.75]) ;
 
 % Block 3
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'conv3', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(3,3,256,384,'single'), ...
                            'biases', init_bias*ones(1,384,'single'), ...
                            'stride', 1, ...
@@ -179,7 +222,8 @@ net.layers{end+1} = struct('type', 'conv', ...
 net.layers{end+1} = struct('type', 'relu') ;
 
 % Block 4
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'conv4', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(3,3,192,384,'single'), ...
                            'biases', init_bias*ones(1,384,'single'), ...
                            'stride', 1, ...
@@ -191,7 +235,8 @@ net.layers{end+1} = struct('type', 'conv', ...
 net.layers{end+1} = struct('type', 'relu') ;
 
 % Block 5
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'conv5', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(3,3,192,256,'single'), ...
                            'biases', init_bias*ones(1,256,'single'), ...
                            'stride', 1, ...
@@ -208,7 +253,8 @@ net.layers{end+1} = struct('type', 'pool', ...
                            'pad', 0) ;
 
 % Block 6
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'fc6', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(6,6,256,4096,'single'),...
                            'biases', init_bias*ones(1,4096,'single'), ...
                            'stride', 1, ...
@@ -222,7 +268,8 @@ net.layers{end+1} = struct('type', 'dropout', ...
                            'rate', 0.5) ;
 
 % Block 7
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'fc7', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(1,1,4096,4096,'single'),...
                            'biases', init_bias*ones(1,4096,'single'), ...
                            'stride', 1, ...
@@ -236,7 +283,8 @@ net.layers{end+1} = struct('type', 'dropout', ...
                            'rate', 0.5) ;
 
 % Block 8
-net.layers{end+1} = struct('type', 'conv', ...
+net.layers{end+1} = struct('name', 'fc8', ...
+                           'type', 'conv', ...
                            'filters', 0.01/scal * randn(1,1,4096,numClass,'single'), ...
                            'biases', zeros(1, numClass, 'single'), ...
                            'stride', 1, ...
