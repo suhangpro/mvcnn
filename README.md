@@ -2,6 +2,38 @@
 
 The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for image recognition using covolutional neural networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art images where color is removed, or renderings of 3D models where there is little texture information present. 
 
+## Installing and compiling
+
+* install dependencies
+``` 
+#!bash
+git submodule init
+git submodule update
+```
+* compile
+``` 
+#!bash
+MEX=MATLAB_DIR/bin/mex matlab -nodisplay -r "setup(true);exit;"
+```
+to compile with GPU support: 
+``` 
+#!bash
+MEX=MATLAB_DIR/bin/mex matlab -nodisplay -r "setup(true,true);exit;"
+```
+* download datasets 
+```
+#!bash
+#clipartgpb (316M)
+cd data
+wget http://pegasus.cs.umass.edu/deep-shape-data/clipartgpb.tar
+tar xf clipartgpb.tar
+
+#sketch (525M)
+cd data
+wget http://cybertron.cg.tu-berlin.de/eitz/projects/classifysketch/sketches_png.zip
+mkdir sketch
+unzip sketches_png.zip -d sketch/
+```
 ## Datasets
 
 
@@ -34,13 +66,13 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
 
 ** Todo: ** There is an overlap of images in shape trainval and shape-clean test **corrupting** the results of fine-tuned CNNs on shape-clean. 
 
- dataset (measure) | finetune| rcnn | dcnn | dcnn-sp | rcnn-vd | dcnn-vd | dcnn-vd-sp
+ dataset (measure) | finetune| fc7 | dcnn | dcnn-sp | fc7-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
  sketch (acc) | - | 57.2 | 65.3 | 65.3 | 52.4 | 67.8 | 67.5 
  sketch (acc) | sketch | 68.6 | 66.6 | - | 73.1 | - | -  
  sketch (acc) | clipart | **64.6** | - | - | - | - | -  
  clipart (acc) | - | **62.9** | - | - | - | - | -  
- clipart (acc) | clipart | **69.5** | - | - | - | - | -  
+ clipart (acc) | clipart | **69.5** | - | - | **77.2** | - | -  
  sketch (mAP) | - | 61.1 | 68.1 | 67.9 | 55.1 | 70.5 | 69.4 
  sketch (mAP) | sketch | 71.8 | 69.1 | - | 76.3 | - | - 
  sketch-clean (acc) | - |70.8 | - | - | 63.0 | - | - 
