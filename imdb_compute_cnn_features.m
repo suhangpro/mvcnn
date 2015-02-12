@@ -106,7 +106,11 @@ end
 % find requested layers
 layerNames = cell(1,length(net.layers));
 for i=1:length(layerNames),
-    layerNames{i} = net.layers{i}.name;
+    if isfield(net.layers{i},'name'), 
+        layerNames{i} = net.layers{i}.name;
+    else
+        layerNames{i} = 'na';
+    end
 end
 [~,layers.index] = ismember(opts.layers,layerNames);
 layers.index = layers.index + 1;
