@@ -35,7 +35,7 @@ mkdir sketch
 unzip sketches_png.zip -d sketch/
 ```
 ## Datasets
-
+![size comparison](https://dl.dropboxusercontent.com/u/50473730/tmp/dataset.png)
 
 ### Collecting a new dataset of shapes
 
@@ -70,15 +70,10 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
  sketch (acc) | - | 57.2 | 65.3 | 65.3 | 52.4 | 67.8 | 67.5 
  sketch (acc) | sketch | 68.6 | 66.6 | - | 73.1 | - | -  
- sketch (acc) | clipart | **64.6** | - | - | - | - | -  
- clipart (acc) | - | **62.9** | - | - | - | - | -  
+ sketch (acc) | clipart | **64.6** | - | - | **61.1** | - | -  
+ clipart (acc) | - | **62.9** | - | - | **52.9** | - | -  
  clipart (acc) | clipart | **69.5** | - | - | **77.2** | - | -  
- sketch (mAP) | - | 61.1 | 68.1 | 67.9 | 55.1 | 70.5 | 69.4 
- sketch (mAP) | sketch | 71.8 | 69.1 | - | 76.3 | - | - 
  sketch-clean (acc) | - |70.8 | - | - | 63.0 | - | - 
- sketch-clean (acc)* | sketch | 81.8 | - | - | 90.1 | - | -
- sketch-clean (mAP) | - | 74.3 | - | - | 67.6 | - | - 
- sketch-clean (mAP)* | sketch | 86.1 | - | - | 94.0 | - | -
  
 ## Reference
 
