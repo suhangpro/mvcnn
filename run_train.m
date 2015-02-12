@@ -34,7 +34,7 @@ else
     opts.expDir = imdbName; 
 end
 opts.expDir = fullfile('data', opts.prefix, ...
-    sprintf('%s-seed-%2d', opts.expDir, opts.seed));
+    sprintf('%s-seed-%02d', opts.expDir, opts.seed));
 opts = vl_argparse(opts,varargin) ;
 
 if ~exist(opts.expDir, 'dir'), vl_xmkdir(opts.expDir) ; end
