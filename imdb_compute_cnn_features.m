@@ -1,4 +1,4 @@
-function imdb_compute_cnn_features( imdbName, model, varargin )
+function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
 %IMDB_COMPUTE_CNN_FEATURES Compute and save CNN activations features
 %
 %   imdb:: 'Pf4q'

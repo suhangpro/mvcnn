@@ -1,6 +1,23 @@
 function net = run_train(imdbName, varargin)
-%RUN_TRAIN Train a CNN model on a dataset supplied by imdb
-
+%RUN_TRAIN Train a CNN model on a provided dataset 
+%
+%   imdbName:: 
+%       must be name of a folder under data/
+%   `seed`:: 1
+%       random seed
+%   `batchSize`: 128
+%       set to a smaller number on limited memory
+%   `useGpu`:: false
+%       set to true to compute on GPU
+%   `modelName`:: 'imagenet-vgg-m'
+%       set to empty to train from scratch
+%   `prefix`:: 'v1'
+%       additional experiment identifier
+%   `numFetchThreads`::
+%       #threads for vl_imreadjpeg
+%   `augmentation`:: 'f2'
+%       data augmentation
+% 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
 opts.useGpu = false;

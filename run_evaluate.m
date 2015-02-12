@@ -3,15 +3,18 @@ function run_evaluate(feat, varargin)
 %
 %   feat::
 %       a structure containing cnn feature
-%   `imdb`:: 
+%   `imdb`:: []
 %       optional, usually a field in feat
-%   `cv`::
+%   `cv`:: 5
 %       #folds in cross validation
+%   `log2c`:: [-4:2:4]
+%       tunable liblinear svm parameter (-c) 
 %   `logDir`:: 'log'
 %       place to save log file (eval.txt) 
 %   
 opts.imdb = [];
 opts.cv = 5;
+opts.log2c = [-4:2:4];
 opts.logDir = 'log';
 opts = vl_argparse(opts, varargin) ;
 
@@ -40,7 +43,7 @@ trainFeat   = sparse(feat.x(trainIdxs,:));
 testFeat    = sparse(feat.x(testIdxs,:));
 
 bestcv = 0;
-for log2c = -4:2:4,
+for log2c = opts.log2c,
 	cmd = ['-v ', num2str(opts.cv) ,' -q -c ', num2str(2^log2c)];
     cv = liblinear_train(trainLabel,trainFeat,cmd);
     if (cv >= bestcv),
