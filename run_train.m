@@ -16,7 +16,8 @@ function net = run_train(imdbName, varargin)
 %   `numFetchThreads`::
 %       #threads for vl_imreadjpeg
 %   `augmentation`:: 'f2'
-%       data augmentation
+%       specifies the operations (fliping, perturbation, etc.) used 
+%       to get sub-regions
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -47,6 +48,11 @@ end
 %                                                                 Get imdb
 % -------------------------------------------------------------------------
 imdb = get_imdb(imdbName);
+if isfield(imdb.meta,'invert'), 
+    opts.invert = imdb.meta.invert;
+else
+    opts.invert = false;
+end
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
@@ -95,7 +101,7 @@ trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10
 trainOpts.conserveMemory = true;
 
 fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
-    'augmentation', opts.augmentation);
+    'augmentation', opts.augmentation, 'invert', opts.invert);
 
 [net,info] = cnn_train(net, imdb, fn, trainOpts) ;
 

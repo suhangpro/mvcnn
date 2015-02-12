@@ -1,6 +1,28 @@
 function ims = get_image_batch(images, varargin)
 %GET_IMAGE_BATCH  Load, preprocess, and pack images for CNN evaluation
-% TODO: augmentation doesn't seem right, use 'none' or 'f2' only 
+%   images::
+%       cell array of image paths 
+%   `imageSize`:: [224, 224]
+%       output size
+%   `border`:: [0, 0]
+%       border (within image)
+%   `averageImage`:: []
+%       average image that will be substracted (if not empty)
+%   `interpolation`:: 'biliner'
+%       resizing method
+%   `keepAspect`:: true
+%       whether keep the aspect ratio of input image
+%   `augmentation`:: 'none'
+%       specifies the operations (fliping, perturbation, etc.) used 
+%       to get sub-regions
+%       TODO: augmentation doesn't seem right, use 'none' or 'f2' only 
+%   `invert`::false
+%       change to true to map intensity value v-->255-v
+%   `numThreads`:: 0
+%       #threads for vl_imreadjpeg
+%   `prefetch`:: false
+%       prefetch option for vl_imreadjpeg
+% 
 
 % options in net.normalization
 opts.imageSize = [224, 224] ;
@@ -10,6 +32,7 @@ opts.interpolation = 'bilinear' ;
 opts.keepAspect = true;
 % other options
 opts.augmentation = 'none' ;
+opts.invert = false;
 opts.numThreads = 0 ;
 opts.prefetch = false ;
 opts = vl_argparse(opts, varargin);
@@ -74,6 +97,9 @@ for i=1:nImages
     imt = single(imt) ; % faster than im2single (and multiplies by 255)
   else
     imt = im{i} ;
+  end
+  if opts.invert, 
+    imt = 255 - imt;
   end
   if size(imt,3) == 1
     imt = cat(3, imt, imt, imt) ;

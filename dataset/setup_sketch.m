@@ -9,6 +9,9 @@ fid = fopen(fullfile(sketchDir, 'png', 'filelist.txt'));
 filelist = textscan(fid, '%s', 'Delimiter', '\n');
 fclose(fid);
 
+% sketch images need to be inverted (v --> 255-v)
+imdb.meta.invert = true;
+
 % Images and class
 imdb.images.name = filelist{1}';
 imdb.images.id = 1:length(imdb.images.name);
