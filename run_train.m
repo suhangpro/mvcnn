@@ -142,8 +142,10 @@ fn = @(imdb,batch) getBatch(imdb,batch,opts,varargin{:}) ;
 function [im,labels] = getBatch(imdb, batch, opts, varargin)
 % -------------------------------------------------------------------------
 images = strcat([imdb.imageDir '/'], imdb.images.name(batch)) ;
-im = get_image_batch(images, opts, 'prefetch', nargout == 0, varargin{:}); 
-labels = imdb.images.class(batch) ;
+[im, idxs] = get_image_batch(images, opts, ...
+    'prefetch', nargout == 0, ...
+    varargin{:}); 
+labels = imdb.images.class(batch(idxs)) ;
 
 % -------------------------------------------------------------------------
 function net = initializeNetwork(modelName, classNames)

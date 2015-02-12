@@ -1,4 +1,4 @@
-function ims = get_image_batch(images, varargin)
+function [ims, idxs] = get_image_batch(images, varargin)
 %GET_IMAGE_BATCH  Load, preprocess, and pack images for CNN evaluation
 %   images::
 %       cell array of image paths 
@@ -139,3 +139,7 @@ end
 if ~isempty(opts.averageImage)
   ims = bsxfun(@minus, ims, opts.averageImage) ;
 end
+
+% indexs of image sub-regions
+idxs = reshape(repmat(1:nImages,[nAugments,1]),[1 nAugments*nImages]);
+
