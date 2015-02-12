@@ -4,8 +4,8 @@ opts.seed = 0 ;
 opts = vl_argparse(opts, varargin) ;
 rng(opts.seed) ;
 
-imdb.imageDir = fullfile(sketchDir);
-fid = fopen(fullfile(sketchDir, 'filelist.txt'));
+imdb.imageDir = fullfile(sketchDir,'png');
+fid = fopen(fullfile(sketchDir, 'png', 'filelist.txt'));
 filelist = textscan(fid, '%s', 'Delimiter', '\n');
 fclose(fid);
 
