@@ -45,6 +45,8 @@ testLabel   = imdb.images.class(testIdxs)';
 trainFeat   = sparse(feat.x(trainIdxs,:));
 testFeat    = sparse(feat.x(testIdxs,:));
 
+fprintf('Evaluating ... \n');
+
 bestcv = 0;
 for log2c = opts.log2c,
 	cmd = ['-v ', num2str(opts.cv) ,' -c ', num2str(2^log2c)];
@@ -62,9 +64,10 @@ model = liblinear_train(trainLabel,trainFeat,cmd);
 
 cmd = [''];
 if opts.quiet, cmd = [cmd ' -q']; end;
-[~,accuracy,~] = liblinear_predict(testLabel,testFeat,model,cmd);
+[~,accuTrain,~] = liblinear_predict(trainLabel,trainFeat,model,cmd);
+[~,accuTest,~] = liblinear_predict(testLabel,testFeat,model,cmd);
 
-fprintf('(%s) Evaluation finished.\n', datestr(now));
+fprintf('Evaluation finished! \n');
 fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf('\tdataset: %s\n', imdb.imageDir);
 fprintf('\tmodel: %s\n',feat.modelName);
@@ -73,10 +76,10 @@ fprintf('\taccuracy (val): %g\n',bestcv);
 fprintf('\taccuracy (test): %g\n\n',accuracy(1));
 
 fid = fopen(fullfile(opts.logDir,'eval.txt'),'a+');
-fprintf(fid, '(%s) Evaluation finished.\n', datestr(now));
+fprintf(fid, '(%s) \n', datestr(now));
 fprintf(fid, '\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);
 fprintf(fid, '\tlayer: %s\n',feat.layerName);
-fprintf(fid, '\taccuracy (val): %g\n',bestcv);
-fprintf(fid, '\taccuracy (test): %g\n\n',accuracy(1));
+fprintf(fid, '\taccuracy (train): %g\n',accuTrain(1));
+fprintf(fid, '\taccuracy (test): %g\n\n',accuTest(1));
