@@ -72,8 +72,8 @@ fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf('\tdataset: %s\n', imdb.imageDir);
 fprintf('\tmodel: %s\n',feat.modelName);
 fprintf('\tlayer: %s\n',feat.layerName);
-fprintf('\taccuracy (val): %g\n',bestcv);
-fprintf('\taccuracy (test): %g\n\n',accuracy(1));
+fprintf('\taccuracy (train): %g\n',accuTrain(1));
+fprintf('\taccuracy (test): %g\n\n',accuTest(1));
 
 fid = fopen(fullfile(opts.logDir,'eval.txt'),'a+');
 fprintf(fid, '(%s) \n', datestr(now));
