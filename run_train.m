@@ -39,9 +39,18 @@ opts = vl_argparse(opts,varargin) ;
 
 if ~exist(opts.expDir, 'dir'), vl_xmkdir(opts.expDir) ; end
 
-% Setup GPU if needed
-if opts.gpuMode
-  gpuDevice(1) ;
+% use gpu if requested and possible
+if opts.gpuMode,
+    if gpuDeviceCount()==0,
+        fprintf('No supported gpu detected! ');
+        reply = input('Continue w/ cpu mode? Y/N [Y]:','s');
+        if ~isempty(reply) && reply~='Y',
+            return;
+        end
+        opts.gpuMode = false;
+    else
+        gpuDevice(1);
+    end
 end
 
 % -------------------------------------------------------------------------

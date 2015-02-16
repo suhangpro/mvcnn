@@ -32,6 +32,11 @@ addpath('dependencies/matlab-helpers');
 % -------------------------------------------------------------------------
 %                                                                liblinear
 % -------------------------------------------------------------------------
+if doCompile, 
+    !make -C dependencies/liblinear-1.96/ clean
+    !make -C dependencies/liblinear-1.96/
+    run dependencies/liblinear-1.96/matlab/make.m
+end
 addpath('dependencies/liblinear-1.96/matlab');
 
 % -------------------------------------------------------------------------
