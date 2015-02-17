@@ -1,7 +1,8 @@
 function [ feat ] = get_cnn_activations( im, net, subWins, layers, varargin)
 %GET_CNN_FEATURE Get CNN activation responses for im
 %   im:: 
-%       image matrix
+%       image matrix, #channels (size(im,3)) must be compatible with net
+%       0~255
 %   net::
 %       cnn model structure 
 %   subWins:: [0; 1; 0; 1; 0]
@@ -19,6 +20,12 @@ if nargin<3 || isempty(subWins),
 end
 nSubWins = size(subWins,2);
 
+if size(im,3) ~= size(net.layers{1}.filters,3), 
+    error('image (%d channels) is not compatible with net (%d channels)', ...
+        size(im,3), size(net.layers{1}.filters,3));
+end
+nChannels = size(im,3); 
+
 opts.gpuMode = false;
 opts = vl_argparse(opts,varargin);
 
@@ -35,10 +42,10 @@ if iscell(layers),
     [~,layers.index] = ismember(layers.name,allLayersName);
     layers.index = layers.index + 1;
     % sizes
-    im0 = single(imread('peppers.png'));
-    im0_ = imresize(im0,net.normalization.imageSize(1:2));
-    if opts.gpuMode, im0_ = gpuArray(im0_); end
-    res = vl_simplenn(net,im0_);
+    im0 = zeros(net.normalization.imageSize(1), ...
+        net.normalization.imageSize(2), nChannels, 'single') * 255;
+    if opts.gpuMode, im0 = gpuArray(im0); end
+    res = vl_simplenn(net,im0);
     layers.sizes = zeros(3,numel(layers.name));
     for i = 1:numel(layers.name),
         layers.sizes(:,i) = reshape(size(res(layers.index(i)).x),[3,1]);
@@ -52,7 +59,6 @@ for fi = 1:numel(layers.name),
 end
 
 im = single(im);
-if size(im,3)==1, im = repmat(im,[1,1,3]); end;
 
 for ri = 1:nSubWins,
     r = subWins(1:4,ri).*[size(im,2);size(im,2);size(im,1);size(im,1)];

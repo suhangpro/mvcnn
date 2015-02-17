@@ -17,6 +17,8 @@ function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
 %       set to true to compute on GPU
 %   `restart`:: false
 %       set to true to re-compute all features
+%   `readOp`:: @imread_255
+%       the operator that reads data from file
 %   `normalization`:: true
 %       set to false to turn off all normalization (incl. pca, whitening,
 %       powerTrans)
@@ -48,6 +50,7 @@ opts.layers = {'fc6', 'fc7', 'fc8'};
 opts.augmentation = 'nr3';
 opts.gpuMode = false;
 opts.restart = false;
+opts.readOp = @imread_255;
 opts.normalization = true;
 opts.pca = 500;
 opts.pcaNumSamples = Inf;
@@ -121,10 +124,11 @@ layers.name = opts.layers;
 % -------------------------------------------------------------------------
 % response dimensions
 fprintf('Testing model (%s) ...', modelName) ;
-im = single(imread('peppers.png'));
-im_ = imresize(im,net.normalization.imageSize(1:2));
-if opts.gpuMode, im_ = gpuArray(im_); end
-res = vl_simplenn(net,im_);
+nChannels = size(net.layers{1}.filters,3); 
+im0 = zeros(net.normalization.imageSize(1), ...
+    net.normalization.imageSize(2), nChannels, 'single') * 255; 
+if opts.gpuMode, im0 = gpuArray(im0); end
+res = vl_simplenn(net,im0);
 layers.sizes = zeros(3,numel(layers.name));
 for i = 1:numel(layers.name),
     layers.sizes(:,i) = reshape(size(res(layers.index(i)).x),[3,1]);
@@ -143,7 +147,11 @@ parfor (i=1:nImgs, poolSize)
     if exist(fullfile(cacheDir, [imCat '_' imName '.mat']),'file'),
         continue;
     end
-    im = imread(fullfile(imdb.imageDir,imdb.images.name{i}));
+    im = opts.readOp(fullfile(imdb.imageDir,imdb.images.name{i}),nChannels);
+    
+    if isfield(imdb.meta,'invert') && imdb.meta.invert, 
+        im = 255 - im;
+    end
     
     feat = get_cnn_activations( im, net, subWins, layers, ...
         'gpuMode', opts.gpuMode);
