@@ -7,6 +7,8 @@ function net = run_train(imdbName, varargin)
 %       random seed
 %   `batchSize`: 128
 %       set to a smaller number on limited memory
+%   `numEpochs`: 30 
+%       set to a higher value when training from scratch
 %   `gpuMode`:: false
 %       set to true to compute on GPU
 %   `modelName`:: 'imagenet-vgg-m'
@@ -21,6 +23,7 @@ function net = run_train(imdbName, varargin)
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
+opts.numEpochs = 30;
 opts.gpuMode = false;
 opts.modelName = 'imagenet-vgg-m';
 opts.prefix = 'v1' ;
@@ -103,7 +106,7 @@ end
 trainOpts.batchSize = opts.batchSize ;
 trainOpts.useGpu = opts.gpuMode ;
 trainOpts.expDir = opts.expDir ;
-trainOpts.numEpochs = 30 ;
+trainOpts.numEpochs = opts.numEpochs ;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
 trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
@@ -195,6 +198,11 @@ if ~isempty(modelName),
     % Rename classes
     net.classes.name = classNames;
     net.classes.description = classNames;
+
+    % fix border size
+    if max(net.normalization.imageSize(1:2)) < 256, 
+        net.normalization.border = 256 - net.normalization.imageSize(1:2) ;
+    end
     return;
 end
 
