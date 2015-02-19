@@ -20,6 +20,8 @@ function net = run_train(imdbName, varargin)
 %   `augmentation`:: 'f2'
 %       specifies the operations (fliping, perturbation, etc.) used 
 %       to get sub-regions
+%   `border`:: []
+%       used in data augmentation
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -29,6 +31,7 @@ opts.modelName = 'imagenet-vgg-m';
 opts.prefix = 'v1' ;
 opts.numFetchThreads = 0 ;
 opts.augmentation = 'f2';
+opts.border = [];
 opts = vl_argparse(opts, varargin) ;
 
 if ~isempty(opts.modelName), 
@@ -39,6 +42,8 @@ end
 opts.expDir = fullfile('data', opts.prefix, ...
     sprintf('%s-seed-%02d', opts.expDir, opts.seed));
 opts = vl_argparse(opts,varargin) ;
+
+if length(opts.border) == 1, opts.border = [opts.border opts.border]; end
 
 if ~exist(opts.expDir, 'dir'), vl_xmkdir(opts.expDir) ; end
 
@@ -71,6 +76,9 @@ end
 % -------------------------------------------------------------------------
 
 net = initializeNetwork(opts.modelName, imdb.meta.classes) ;
+if ~isempty(opts.border), 
+    net.normalization.border = opts.border; 
+end
 
 % Initialize average image
 if isempty(net.normalization.averageImage), 
@@ -200,9 +208,9 @@ if ~isempty(modelName),
     net.classes.description = classNames;
 
     % fix border size
-    if max(net.normalization.imageSize(1:2)) < 256, 
-        net.normalization.border = 256 - net.normalization.imageSize(1:2) ;
-    end
+    % if max(net.normalization.imageSize(1:2)) < 256, 
+    %     net.normalization.border = 256 - net.normalization.imageSize(1:2) ;
+    % end
     return;
 end
 
