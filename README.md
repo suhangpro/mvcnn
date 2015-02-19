@@ -68,12 +68,16 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
 
  dataset (measure) | finetune| fc7 | dcnn | dcnn-sp | fc7-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
- sketch (acc) | - | 57.2 | 65.3 | 65.3 | 52.4 | 67.8 | 67.5 
- sketch (acc) | sketch | 68.6 | 66.6 | - | 73.1 | - | -  
- sketch (acc) | clipart | **64.6** | - | - | **61.1** | - | -  
- clipart (acc) | - | **62.9** | - | - | **52.9** | - | -  
- clipart (acc) | clipart | **69.5** | - | - | **77.2** | - | -  
- sketch-clean (acc) | - |70.8 | - | - | 63.0 | - | - 
+ sketch (acc) | - | 63.4 | 65.3 | 65.3 | 52.4 | 67.8 | 67.5 
+ sketch (acc) | sketch | 68.6 | 66.6 | - | **73.1** | - | -  
+ sketch (acc) | clipart | 64.8 | - | - | 61.1 | - | -  
+ sketch (acc) | 3ddrawing | 64.8 | - | - | - | - | -  
+ clipart (acc) | - | 62.7 | - | - | 52.9 | - | -  
+ clipart (acc) | clipart | 67.4 | - | - | **77.2** | - | -  
+ clipart (acc) | 3ddrawing | 62.9 | - | - | - | - | -  
+ 3ddrawing (acc) | - | - | - | - | - | - | -  
+ 3ddrawing (acc) | 3ddrawing | **>90** | - | - | - | - | -  
+ sketch-clean (acc) | - | **70.8** | - | - | 63.0 | - | - 
  
 ## Reference
 
