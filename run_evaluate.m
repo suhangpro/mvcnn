@@ -90,7 +90,7 @@ fprintf('\tdataset: %s\n', imdb.imageDir);
 fprintf('\tmodel: %s\n',feat.modelName);
 fprintf('\tlayer: %s\n',feat.layerName);
 fprintf('\taccuracy (train): %g\n',accuTrain(1));
-fprintf('\taccuracy (test): %g\n\n',accuTest(1));
+fprintf('\taccuracy (test): %g\n',accuTest(1));
 fprintf('\tmAP (test): %g\n\n',mAP);
 
 fid = fopen(opts.logPath,'a+');
@@ -100,5 +100,6 @@ fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);
 fprintf(fid, '\tlayer: %s\n',feat.layerName);
 fprintf(fid, '\taccuracy (train): %g\n',accuTrain(1));
+fprintf(fid, '\taccuracy (test): %g\n',accuTest(1));
 fprintf(fid, '\tmAP (test): %g\n\n',mAP);
 fclose(fid);
