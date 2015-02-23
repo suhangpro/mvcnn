@@ -6,7 +6,7 @@ function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
 %       model will be searched/saved under 'data/models'
-%   `layers`:: {'fc6', 'fc7', 'fc8'}
+%   `layers`:: {'fc6', 'fc7', 'prob'}
 %       the set of raw activations features that will be extracted
 %   `augmentation`:: 'nr3'
 %       1st field(f|n) indicates whether include flipped copy or not
@@ -46,7 +46,7 @@ else
 end
 
 % default options
-opts.layers = {'fc6', 'fc7', 'fc8'};
+opts.layers = {'fc6', 'fc7', 'prob'};
 opts.augmentation = 'nr3';
 opts.gpuMode = false;
 opts.restart = false;
@@ -168,7 +168,8 @@ end
 % -------------------------------------------------------------------------
 featCell = cell(1,numel(layers.name));
 for fi=1:numel(layers.name),
-    if strcmp(layers.name{fi}(1:2),'fc'), % fully connected layers
+    if strcmp(layers.name{fi}(1:2), 'fc') ... % fully connected layers
+        || strcmp(layers.name{fi}, 'prob'), % output layer
         featCell{fi}.x = zeros(nImgs*nSubWins,layers.sizes(3,fi));
         featCell{fi}.id = reshape(repmat([1:nImgs],[nSubWins,1]),...
             [nImgs*nSubWins,1]);
@@ -242,7 +243,7 @@ fprintf('Saving feature descriptors & encoders: ');
 for fi = 1:numel(layers.name),
     fprintf('%s ... ',layers.name{fi});
     feat = featCell{fi};
-    save(fullfile(saveDir,[layers.name{fi} '.mat']),'-struct','feat');
+    save(fullfile(saveDir,[layers.name{fi} '.mat']),'-struct','feat','-v7.3');
 end
 fprintf('done! \n');
 

@@ -40,3 +40,10 @@ for c = 1:length(imdb.meta.classes),
     imdb.images.set(val) = 2;
     imdb.images.set(test) = 3;
 end
+
+% shuffle
+order = randperm(length(imdb.images.name));
+imdb.images.name = imdb.images.name(order);
+imdb.images.id = imdb.images.id(order);
+imdb.images.class = imdb.images.class(order);
+imdb.images.set = imdb.images.set(order);
