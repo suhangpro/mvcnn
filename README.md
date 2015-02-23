@@ -76,7 +76,14 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  clipart (acc) | clipart | 67.4 | - | - | **77.2** | - | -  
  clipart (acc) | 3ddrawing | 62.9 | - | - | - | - | -  
  3ddrawing (acc) | - | - | - | - | - | - | -  
- 3ddrawing (acc) | 3ddrawing | **>90** | - | - | - | - | -  
+ 3ddrawing (acc) | 3ddrawing | **91.0** | - | - | - | - | -  
+ modelnet10toon (acc) | - | 87.4 | - | - | - | - | -  
+ modelnet10toon (acc) | modelnet10toon | 88.1 | - | - | - | - | -  
+ modelnet10toon (mAP) | modelnet10toon | 0.929 | - | - | - | - | -  
+ modelnet10toonedge (acc) | - | 85.6 | - | - | - | - | -  
+ modelnet10toonedge (mAP) | - | 0.908 | - | - | - | - | -  
+ modelnet10toonedge (acc) | modelnet10toonedge | **88.5** | - | - | - | - | -  
+ modelnet10toonedge (mAP) | modelnet10toonedge | **0.930** | - | - | - | - | -  
  sketch-clean (acc) | - | **70.8** | - | - | 63.0 | - | - 
  
 ## Reference
