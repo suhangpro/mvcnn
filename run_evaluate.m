@@ -53,8 +53,13 @@ testIdxs    = find(imdb.images.set==3);
 trainLabel  = imdb.images.class(trainIdxs)';
 testLabel   = imdb.images.class(testIdxs)';
 
+% only keep training samples from same classes with testing instances 
+trainIdxs   = trainIdxs(ismember(trainLabel,unique(testLabel)));
+trainLabel  = imdb.images.class(trainIdxs)';
+
 trainFeat   = sparse(feat.x(trainIdxs,:));
 testFeat    = sparse(feat.x(testIdxs,:));
+
 
 fprintf('Evaluating ... \n');
 
@@ -90,8 +95,8 @@ end
 mAP = mean(AP);
 
 % confusion matrix
-plot_confusionmat(imdb.images.class(testIdxs)', predTest, ... 
-    opts.confusionPath, [imdb.imageDir ' : ' feat.modelName]);
+plot_confusionmat(testLabel, predTest, opts.confusionPath, ...
+    [imdb.imageDir ' : ' feat.modelName]);
 
 fprintf('Evaluation finished! \n');
 fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);
