@@ -93,8 +93,8 @@ else
         model,cmd);
     [~,I] = sort(model.Label);
     decTest = decTest(:,I);
-    accuTest = accuTest(1);
-    accuTrain = accuTrain(1);
+    accuTest = accuTest(1)/100;
+    accuTrain = accuTrain(1)/100;
     
     save(opts.predPath,'bestc','accuTrain','predTest','accuTest','decTest',...
         'model');
@@ -155,8 +155,8 @@ fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf('\tdataset: %s\n', imdb.imageDir);
 fprintf('\tmodel: %s\n',feat.modelName);
 fprintf('\tlayer: %s\n',feat.layerName);
-fprintf('\taccuracy (train): %g\n',accuTrain);
-fprintf('\taccuracy (test): %g\n',accuTest);
+fprintf('\taccuracy (train): %g%%\n',accuTrain*100);
+fprintf('\taccuracy (test): %g%%\n',accuTest*100);
 fprintf('\tmAP (test): %g\n\n',mAP);
 
 fid = fopen(opts.logPath,'a+');
@@ -165,8 +165,8 @@ fprintf(fid, '\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);
 fprintf(fid, '\tlayer: %s\n',feat.layerName);
-fprintf(fid, '\taccuracy (train): %g\n',accuTrain);
-fprintf(fid, '\taccuracy (test): %g\n',accuTest);
+fprintf(fid, '\taccuracy (train): %g%%\n',accuTrain*100);
+fprintf(fid, '\taccuracy (test): %g%%\n',accuTest*100);
 fprintf(fid, '\tmAP (test): %g\n\n',mAP);
 fclose(fid);
 
