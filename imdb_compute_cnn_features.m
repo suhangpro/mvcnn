@@ -72,6 +72,30 @@ subWins = get_augmentation_matrix(opts.augmentation);
 nSubWins = size(subWins,2);
 
 % -------------------------------------------------------------------------
+%                                                   Load data if available
+% -------------------------------------------------------------------------
+layers.name = opts.layers; 
+featCell = cell(1,numel(layers.name));
+flag_found = true;
+fprintf('Loading pre-computed features ... ');
+for fi = 1:numel(layers.name),
+    featPath = fullfile(saveDir,[layers.name{fi} '.mat']);
+    if ~exist(featPath, 'file'), 
+        flag_found = false;
+        break;
+    end
+    fprintf('%s ... ', layers.name{fi});
+    featCell{fi} = load(featPath);
+end
+if flag_found, 
+    fprintf('all found! \n');
+    return;
+else
+    fprintf('all/some feature missing! \n');
+    clear featCell;
+end
+
+% -------------------------------------------------------------------------
 %                                                                 Get imdb
 % -------------------------------------------------------------------------
 imdb = get_imdb(imdbName);
@@ -117,7 +141,6 @@ for i=1:length(layerNames),
 end
 [~,layers.index] = ismember(opts.layers,layerNames);
 layers.index = layers.index + 1;
-layers.name = opts.layers;
 
 % -------------------------------------------------------------------------
 %                                                    Get raw CNN responses
