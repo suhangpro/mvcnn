@@ -72,19 +72,19 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  sketch (acc) | sketch | 68.6 | 66.6 | - | **73.1** | - | -  
  sketch (acc) | clipart | 64.8 | - | - | 61.1 | - | -  
  sketch (acc) | 3ddrawing | 64.8 | - | - | - | - | -  
+ sketch-clean (acc) | - | **70.8** | - | - | 63.0 | - | - 
  clipart (acc) | - | 62.7 | - | - | 52.9 | - | -  
  clipart (acc) | clipart | 67.4 | - | - | **77.2** | - | -  
  clipart (acc) | 3ddrawing | 62.9 | - | - | - | - | -  
  3ddrawing (acc) | - | - | - | - | - | - | -  
  3ddrawing (acc) | 3ddrawing | **91.0** | - | - | - | - | -  
- modelnet10toon (acc) | - | 87.4 | - | - | - | - | -  
- modelnet10toon (acc) | modelnet10toon | 88.1 | - | - | - | - | -  
- modelnet10toon (mAP) | modelnet10toon | 0.929 | - | - | - | - | -  
- modelnet10toonedge (acc) | - | 85.6 | - | - | - | - | -  
- modelnet10toonedge (mAP) | - | 0.908 | - | - | - | - | -  
- modelnet10toonedge (acc) | modelnet10toonedge | **88.5** | - | - | - | - | -  
- modelnet10toonedge (mAP) | modelnet10toonedge | **0.930** | - | - | - | - | -  
- sketch-clean (acc) | - | **70.8** | - | - | 63.0 | - | - 
+ modelnet10toon (acc) | - | - | - | - | - | - | -  
+ modelnet10toon (acc) | modelnet10toon | **90.97** | - | - | - | - | -  
+ modelnet10toon (mAP) | modelnet10toon | **0.9570** | - | - | - | - | -  
+ modelnet10toonedge (acc) | - | 89.98 | - | - | - | - | -  
+ modelnet10toonedge (mAP) | - | 0.9558 | - | - | - | - | -  
+ modelnet10toonedge (acc) | modelnet10toonedge | 90.75 | - | - | - | - | -  
+ modelnet10toonedge (mAP) | modelnet10toonedge | 0.9566 | - | - | - | - | -  
  
 ## Reference
 
