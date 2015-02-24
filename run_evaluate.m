@@ -15,6 +15,8 @@ function run_evaluate(feat, varargin)
 %       place to save log information
 %   `predPath`:: 'data/pred.mat'
 %       place to save prediction results
+%   `confusionPath`:: 'data/confusion.pdf' 
+%       place to save confusion matrix plot 
 %   
 opts.imdb = [];
 opts.cv = 5;
@@ -22,6 +24,9 @@ opts.log2c = [-4:2:4];
 opts.quiet = true;
 opts.logPath = fullfile('log','eval.txt');
 opts.predPath = fullfile('data','pred.mat');
+[opts, varargin] = vl_argparse(opts, varargin) ;
+
+opts.confusionPath = fullfile(fileparts(opts.predPath), 'confusion.pdf');
 opts = vl_argparse(opts, varargin) ;
 
 if ~exist(fileparts(opts.logPath),'dir'), 
@@ -83,6 +88,10 @@ for c=1:length(AP),
     AP(c) = info.ap;
 end
 mAP = mean(AP);
+
+% confusion matrix
+plot_confusionmat(imdb.images.class(testIdxs)', predTest, ... 
+    opts.confusionPath, [imdb.imageDir ' : ' feat.modelName]);
 
 fprintf('Evaluation finished! \n');
 fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);

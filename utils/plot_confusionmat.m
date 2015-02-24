@@ -29,6 +29,8 @@ imagesc(C); colormap(gray);
 title(fTitle);
 axis square; colorbar;
 
+labels = cellfun(@(s) strrep(s,'_',' '), labels, 'UniformOutput', false); 
+
 % set(gca, 'XTick', 1:length(labels), 'XTickLabel', labels);
 set(gca, 'XTick', 1:length(labels), 'XTickLabel', []);
 set(gca, 'YTick', 1:length(labels), 'YTickLabel', labels);
