@@ -1,3 +1,3 @@
-function imdb = setup_modelnet10toon(datasetDir, varargin)
+function imdb = setup_modelnet40toon(datasetDir, varargin)
 
 imdb = setup_modelnet(datasetDir, 'invert', false, varargin{:}); 
