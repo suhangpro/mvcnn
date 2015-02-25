@@ -166,8 +166,8 @@ else
 end
 parfor (i=1:nImgs, poolSize)
 %  for  i=1:nImgs, % if no parallel computing toolbox
-    [imCat, imName, ~] = fileparts(imdb.images.name{i});
-    if exist(fullfile(cacheDir, [imCat '_' imName '.mat']),'file'),
+    [imPathStr, imName, ~] = fileparts(imdb.images.name{i});
+    if exist(fullfile(cacheDir, imPathStr, [imName '.mat']),'file'),
         continue;
     end
     im = opts.readOp(fullfile(imdb.imageDir,imdb.images.name{i}),nChannels);
@@ -178,11 +178,12 @@ parfor (i=1:nImgs, poolSize)
     
     feat = get_cnn_activations( im, net, subWins, layers, ...
         'gpuMode', opts.gpuMode);
-    parsave(fullfile(cacheDir,[imCat '_' imName '.mat']),feat);
+    parsave(fullfile(cacheDir,imPathStr,[imName '.mat']),feat);
     
-    cacheFiles = dir(fullfile(cacheDir,'*.mat'));
-    fprintf('[%4d/%4d] %s\n',length(cacheFiles),nImgs,...
-        fullfile(imdb.imageDir,imdb.images.name{i}));
+    % cacheFiles = dir(fullfile(cacheDir,'*.mat'));
+    % fprintf('[%4d/%4d] %s\n',length(cacheFiles),nImgs,...
+    %     fullfile(imdb.imageDir,imdb.images.name{i}));
+    fprintf(' %s\n', fullfile(imdb.imageDir,imdb.images.name{i}));
     
 end
 
@@ -207,8 +208,8 @@ fprintf('Loading raw features: \n');
 for i=1:nImgs,
     if mod(i,10)==0, fprintf('.'); end
     if mod(i,500)==0, fprintf(' %4d/%4d\n', i,nImgs); end
-    [imCat, imName, ~] = fileparts(imdb.images.name{i});
-    feat = load(fullfile(cacheDir,[imCat '_' imName '.mat']));
+    [imPathStr, imName, ~] = fileparts(imdb.images.name{i});
+    feat = load(fullfile(cacheDir,imPathStr,[imName '.mat']));
     for fi = 1:numel(layers.name),
         featCell{fi}.x((i-1)*nSubWins+(1:nSubWins),:) = ...
             squeeze(feat.(layers.name{fi}))';
