@@ -4,6 +4,3 @@
 [submodule "dependencies/matconvnet"]
 	path = dependencies/matconvnet
 	url = git@github.com:vlfeat/matconvnet.git
-[submodule "dependencies/matlab-helpers"]
-	path = dependencies/matlab-helpers
-	url = git@bitbucket.org:vedaldi/matlab-helpers.git
