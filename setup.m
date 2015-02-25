@@ -53,7 +53,9 @@ run dependencies/vlfeat/toolbox/vl_setup.m
 % -------------------------------------------------------------------------
 if doCompile, 
     run dependencies/matconvnet/matlab/vl_setupnn.m
+    cd dependencies/matconvnet
     vl_compilenn('enableGpu', gpuMode, 'enableImreadJpeg', gpuMode);
+    cd ../..
 end
 run dependencies/matconvnet/matlab/vl_setupnn.m
 addpath dependencies/matconvnet/examples/
