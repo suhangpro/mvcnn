@@ -68,23 +68,31 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
 
  dataset (measure) | finetune| fc7 | dcnn | dcnn-sp | fc7-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
- sketch (acc) | - | 63.4 | 65.3 | 65.3 | 52.4 | 67.8 | 67.5 
- sketch (acc) | sketch | 68.6 | 66.6 | - | **73.1** | - | -  
- sketch (acc) | clipart | 64.8 | - | - | 61.1 | - | -  
- sketch (acc) | 3ddrawing | 64.8 | - | - | - | - | -  
- sketch-clean (acc) | - | **70.8** | - | - | 63.0 | - | - 
- clipart (acc) | - | 62.7 | - | - | 52.9 | - | -  
- clipart (acc) | clipart | 67.4 | - | - | **77.2** | - | -  
- clipart (acc) | 3ddrawing | 62.9 | - | - | - | - | -  
+ sketch (acc) | - | 63.4 % | 65.3 % | 65.3 % | 52.4 % | 67.8 % | 67.5 % 
+ sketch (acc) | sketch | 68.6 % | 66.6 % | - | **73.1 %** | - | -  
+ sketch (acc) | clipart | 64.8 % | - | - | 61.1 % | - | -  
+ sketch (acc) | 3ddrawing | 64.8 % | - | - | - | - | -  
+ sketch-clean (acc) | - | **70.8 %** | - | - | 63.0 % | - | - 
+ clipart (acc) | - | 62.7 % | - | - | 52.9 % | - | -  
+ clipart (acc) | clipart | 67.4 % | - | - | **77.2 %** | - | -  
+ clipart (acc) | 3ddrawing | 62.9 % | - | - | - | - | -  
  3ddrawing (acc) | - | - | - | - | - | - | -  
- 3ddrawing (acc) | 3ddrawing | **91.0** | - | - | - | - | -  
+ 3ddrawing (acc) | 3ddrawing | **91.0 %** | - | - | - | - | -  
  modelnet10toon (acc) | - | - | - | - | - | - | -  
- modelnet10toon (acc) | modelnet10toon | **90.97** | - | - | - | - | -  
+ modelnet10toon (acc) | modelnet10toon | **90.97 %** | - | - | - | - | -  
  modelnet10toon (mAP) | modelnet10toon | **0.9570** | - | - | - | - | -  
- modelnet10toonedge (acc) | - | 89.98 | - | - | - | - | -  
+ modelnet10toonedge (acc) | - | 89.98 % | - | - | - | - | -  
  modelnet10toonedge (mAP) | - | 0.9558 | - | - | - | - | -  
- modelnet10toonedge (acc) | modelnet10toonedge | 90.75 | - | - | - | - | -  
+ modelnet10toonedge (acc) | modelnet10toonedge | 90.75 % | - | - | - | - | -  
  modelnet10toonedge (mAP) | modelnet10toonedge | 0.9566 | - | - | - | - | -  
+ modelnet40toon (acc) | - | 90.40 % | - | - | 89.95% | - | -  
+ modelnet40toon (mAP) | - | 0.9146 | - | - | 0.9112 | - | -  
+ modelnet40toon (acc) | modelnet40toon | **90.84 %** | - | - | - | - | -  
+ modelnet40toon (mAP) | modelnet40toon | 0.9167 | - | - | - | - | -  
+ modelnet40toonedge (acc) | - | 89.26 % | - | - | 89.75 % | - | -  
+ modelnet40toonedge (mAP) | - | 0.9109 | - | - | 0.9108 | - | -  
+ modelnet40toonedge (acc) | modelnet40toonedge | 90.28 % | - | - | - | - | -  
+ modelnet40toonedge (mAP) | modelnet40toonedge | **0.9170** | - | - | - | - | -  
  
 ## Reference
 
