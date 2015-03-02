@@ -87,12 +87,12 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  modelnet10toonedge (mAP) | modelnet10toonedge | 0.9566 | - | - | - | - | -  
  modelnet40toon (acc) | - | 90.40 % | - | - | 89.95% | - | -  
  modelnet40toon (mAP) | - | 0.9146 | - | - | 0.9112 | - | -  
- modelnet40toon (acc) | modelnet40toon | **90.84 %** | - | - | - | - | -  
- modelnet40toon (mAP) | modelnet40toon | 0.9167 | - | - | - | - | -  
+ modelnet40toon (acc) | modelnet40toon | 90.84 % | - | - | **91.05 %** | - | -  
+ modelnet40toon (mAP) | modelnet40toon | 0.9167 | - | - | 0.9224 | - | -  
  modelnet40toonedge (acc) | - | 89.26 % | - | - | 89.75 % | - | -  
  modelnet40toonedge (mAP) | - | 0.9109 | - | - | 0.9108 | - | -  
- modelnet40toonedge (acc) | modelnet40toonedge | 90.28 % | - | - | - | - | -  
- modelnet40toonedge (mAP) | modelnet40toonedge | **0.9170** | - | - | - | - | -  
+ modelnet40toonedge (acc) | modelnet40toonedge | 90.28 % | - | - | 90.64 % | - | -  
+ modelnet40toonedge (mAP) | modelnet40toonedge | 0.9170 | - | - | **0.9229** | - | -  
  
 ## Reference
 
