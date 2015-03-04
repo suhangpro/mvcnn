@@ -1,4 +1,4 @@
-function imdb = setup_modelnet(datasetDir, varargin)
+function imdb = setup_modelnet_(datasetDir, varargin)
 
 % Set the random seed generator
 opts.seed = 0 ;

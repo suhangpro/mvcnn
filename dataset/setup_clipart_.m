@@ -1,4 +1,4 @@
-function imdb = setup_clipartgpb(clipartDir, varargin)
+function imdb = setup_clipart_(clipartDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
 opts.limitPerClass = 100 ;
