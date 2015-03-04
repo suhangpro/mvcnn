@@ -1,6 +1,8 @@
 function imdb = setup_clipart_(clipartDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
+opts.ratio = [0.5 0.2 0.3];
+opts.invert = false;
 opts.limitPerClass = 100 ;
 opts = vl_argparse(opts, varargin) ;
 rng(opts.seed) ;
@@ -9,6 +11,8 @@ imdb.imageDir = fullfile(clipartDir);
 fid = fopen(fullfile(clipartDir, 'classlist.txt'));
 classlist = textscan(fid, '%s', 'Delimiter', '\n');
 fclose(fid);
+
+imdb.meta.invert = opts.invert;
 
 % Images and class
 imdb.meta.classes = classlist{1}';
@@ -28,7 +32,7 @@ class = cellfun(@(x) fileparts(x), imdb.images.name, 'UniformOutput', false);
 [~, imdb.images.class] = ismember(class, imdb.meta.classes);
 
 % No standard image splits are provided for this dataset, so split them
-% randomly into equal sized train/val/test sets
+% randomly into train/val/test sets according to opts.ratio
 imdb.meta.sets = {'train', 'val', 'test'};
 imdb.images.set = zeros(1,length(imdb.images.id));
 for c = 1:length(imdb.meta.classes), 
@@ -36,10 +40,11 @@ for c = 1:length(imdb.meta.classes),
     
     % split equally into train, val, test
     order = randperm(length(isclass));
-    subsetSize = ceil(length(order)/3);
-    train = isclass(order(1:subsetSize));
-    val = isclass(order(subsetSize+1:2*subsetSize));
-    test  = isclass(order(2*subsetSize+1:end));
+    subsetSizeTrain = ceil(length(order)*opts.ratio(1));
+    subsetSizeVal = ceil(length(order)*opts.ratio(2));
+    train = isclass(order(1:subsetSizeTrain));
+    val = isclass(order(subsetSizeTrain+1:subsetSizeTrain+subsetSizeVal));
+    test  = isclass(order(subsetSizeTrain+subsetSizeVal+1:end));
     
     imdb.images.set(train) = 1;
     imdb.images.set(val) = 2;
