@@ -1,4 +1,4 @@
-function imdb = setup_sketch(sketchDir, varargin)
+function imdb = setup_sketch_(sketchDir, varargin)
 % Set the random seed generator
 opts.seed = 0 ;
 opts = vl_argparse(opts, varargin) ;
