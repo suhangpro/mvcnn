@@ -73,6 +73,7 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  sketch (acc) | clipart-gpb | 64.8 % | - | - | 61.1 % | - | -  
  sketch-clean (acc/ mAP) | - | 77.34%/ 0.7798 | - | - | 69.33%/ 0.6768 | - | -  
  sketch-clean (acc/ mAP) | sketch-clean | **83.95%**/ **0.8627** | - | - | - | - | -  
+ sketch-clean (acc/ mAP) | clipart | 78.84%/ 0.7997 | - | - | - | - | -  
  sketch-clean (acc/ mAP) | modelnet40toonedge | 79.35%/ 0.8126 | - | - | 77.94%/ 0.7853 | - | -  
  clipart (acc/ mAP) | - | 72.35%/ 0.7283 | - | - | 69.57%/ 0.6981 | - | -  
  clipart (acc/ mAP) | clipart | **79.91%**/ **0.8180** | - | - | - | - | -  
