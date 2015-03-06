@@ -20,6 +20,8 @@ function net = run_train(imdbName, varargin)
 %   `augmentation`:: 'f2'
 %       specifies the operations (fliping, perturbation, etc.) used 
 %       to get sub-regions
+%   `addDropout`:: true
+%       whether add dropout layers (to the last two fc layers)
 %   `border`:: []
 %       used in data augmentation
 % 
@@ -31,6 +33,7 @@ opts.modelName = 'imagenet-vgg-m';
 opts.prefix = 'v1' ;
 opts.numFetchThreads = 0 ;
 opts.augmentation = 'f2';
+opts.addDropout = true;
 opts.border = [];
 opts = vl_argparse(opts, varargin) ;
 
@@ -108,6 +111,16 @@ if isempty(net.normalization.averageImage),
     clear averageImage im temp ;
 end
 
+% Add dropout layers
+if opts.addDropout, 
+    dropoutLayer = struct('type', 'dropout', 'rate', 0.5) ;
+    net.layers = horzcat(net.layers(1:end-4), ...
+                            dropoutLayer, ...
+                            net.layers(end-3:end-2), ...
+                            dropoutLayer, ...
+                            net.layers(end-1:end)); 
+end
+
 % -------------------------------------------------------------------------
 %                                               Stochastic gradient descent
 % -------------------------------------------------------------------------
@@ -149,7 +162,13 @@ ignoreFields = {'filtersMomentum', ...
 for i = 1:length(layers),
     layers{i} = rmfield(layers{i}, ignoreFields(isfield(layers{i}, ignoreFields)));
 end
+
+% Remove dropout layers
+removeIndices = cellfun(@(x)(strcmp(x.type, 'dropout')), layers);
+layers = layers(~removeIndices);
+
 net.layers = layers;
+
 save(fileName, '-struct', 'net');
 
 
