@@ -74,7 +74,7 @@ ex(end).trainAug    = 'f2';
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
-ex(end).evalDataset = {'clipart100gpb'
+ex(end).evalDataset = {'clipart100gpb', ...
                         'sketch160', ...
                         'modelnet40toonedge'};
 
@@ -113,9 +113,9 @@ for i=1:length(ex),
     % train / fine-tune 
     if ~isfield(ex(i),'model') || isempty(ex(i).model), 
         prefix = sprintf('BS%d_AUG%s', ex(i).batchSize, ex(i).trainAug);
-        model = sprintf('%s-finetuned-%s-%s', ex(i).baseModel, ...
+        ex(i).model = sprintf('%s-finetuned-%s-%s', ex(i).baseModel, ...
             ex(i).trainDataset, prefix);
-        if ~exist(fullfile('data','models',[model '.mat']),'file'),
+        if ~exist(fullfile('data','models',[ex(i).model '.mat']),'file'),
             if evalOnly, continue; end; 
             net = run_train(ex(i).trainDataset, ...
                 'modelName', ex(i).baseModel,...
@@ -124,9 +124,8 @@ for i=1:length(ex),
                 'batchSize', ex(i).batchSize, ...
                 'augmentation', ex(i).trainAug, ...
                 'gpuMode', trainGpuMode);
-            models{end+1} = model;
+            models{end+1} = ex(i).model;
             save(fullfile('data','models',[model '.mat']),'-struct','net');
-            ex(i).model = model;
         end
     end
     % compute and evaluate features 
