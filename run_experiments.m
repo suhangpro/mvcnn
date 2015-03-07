@@ -90,9 +90,9 @@ ex(end).evalDataset = {'clipart100gpb', ...
                         'modelnet40toonedge'};
 
 ex(end+1).baseModel = 'imagenet-vgg-m';
-ex(end).trainDataset = 'modelnet40toon';
+ex(end).trainDataset= 'modelnet40toon';
 ex(end).batchSize   = 64;
-ex(end).trainAug = 'f2';
+ex(end).trainAug    = 'f2';
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
