@@ -61,7 +61,7 @@ opts = vl_argparse(opts,varargin);
 % saving directory
 saveDir = fullfile('data','features',sprintf('%s-%s-%s', ...
     imdbName, modelName, opts.augmentation));
-if opts.normalization, 
+if ~opts.normalization, 
     expSuffix = 'NORM0';
 else
     expSuffix = sprintf('NORM%d-PCA%d', opts.normalization, opts.pca);

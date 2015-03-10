@@ -1,7 +1,8 @@
 % function run_experiments_classification()
 
 setup;
-multiviewOn = {'modelnet40toon', 'modelnet40toonedge'};
+multiviewOn = {'modelnet10toon', 'modelnet10toonedge', ...
+                'modelnet40toon', 'modelnet40toonedge'};
 trainGpuMode = true;
 evalAug = 'none';
 logPath = fullfile('log','eval1.txt'); 

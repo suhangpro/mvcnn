@@ -1,7 +1,8 @@
 % function run_experiments_retrieval()
 
 setup;
-multiviewOn = {'modelnet40toon', 'modelnet40toonedge'};
+multiviewOn = {'modelnet10toon', 'modelnet10toonedge', ...
+                'modelnet40toon', 'modelnet40toonedge'};
 trainGpuMode = true;
 evalAug = 'none';
 evalOnly = true; % if true, skip all training
@@ -19,7 +20,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet10toon';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
-ex(end).addDropout  = false; % TODO: try different options 
+ex(end).addDropout  = true; % TODO: try different options 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc6';
 ex(end).evalGpuMode = false;
@@ -36,7 +37,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet10toon';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
-ex(end).addDropout  = false; 
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7';
 ex(end).evalGpuMode = false;
