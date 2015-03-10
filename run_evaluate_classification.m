@@ -1,5 +1,5 @@
-function run_evaluate(feat, varargin)
-%RUN_EVALUATE Evaluate CNN activations features
+function run_evaluate_classification(feat, varargin)
+%RUN_EVALUATE_CLASSIFICATION Evaluate CNN features for classification 
 %
 %   feat::
 %       a structure containing cnn feature

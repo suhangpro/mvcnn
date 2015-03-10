@@ -1,8 +1,9 @@
-% function run_experiments()
+% function run_experiments_classification()
 
 setup;
 multiviewOn = {'modelnet40toon', 'modelnet40toonedge'};
 trainGpuMode = true;
+evalAug = 'none';
 logPath = fullfile('log','eval1.txt'); 
 evalOnly = true; % if true, skip all training
 
@@ -31,6 +32,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'clipart100gpb';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -41,6 +43,7 @@ ex(end+1).baseModel = 'imagenet-vgg-verydeep-16';
 ex(end).trainDataset= 'clipart100gpb';
 ex(end).batchSize   = 32;
 ex(end).trainAug    = 'none';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -51,6 +54,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'sketch160';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -61,6 +65,7 @@ ex(end+1).baseModel = 'imagenet-vgg-verydeep-16';
 ex(end).trainDataset= 'sketch160';
 ex(end).batchSize   = 32;
 ex(end).trainAug    = 'none';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -71,6 +76,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet40toonedge';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -82,6 +88,7 @@ ex(end+1).baseModel = 'imagenet-vgg-verydeep-16';
 ex(end).trainDataset= 'modelnet40toonedge';
 ex(end).batchSize   = 32;
 ex(end).trainAug    = 'none';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -93,6 +100,7 @@ ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet40toon';
 ex(end).batchSize   = 64;
 ex(end).trainAug    = 'f2';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -103,6 +111,7 @@ ex(end+1).baseModel = 'imagenet-vgg-verydeep-16';
 ex(end).trainDataset= 'modelnet40toon';
 ex(end).batchSize   = 32;
 ex(end).trainAug    = 'none';
+ex(end).addDropout  = true; 
 ex(end).numEpochs   = 20;
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
@@ -123,6 +132,7 @@ for i=1:length(ex),
                 'prefix', prefix, ...
                 'batchSize', ex(i).batchSize, ...
                 'augmentation', ex(i).trainAug, ...
+                'addDropout', ex(i).addDropout, ...
                 'gpuMode', trainGpuMode);
             models{end+1} = ex(i).model;
             save(fullfile('data','models',[model '.mat']),'-struct','net');
@@ -131,18 +141,18 @@ for i=1:length(ex),
     % compute and evaluate features 
     if isfield(ex(i),'evalDataset') && ~isempty(ex(i).evalDataset), 
         for dataset = ex(i).evalDataset, 
-            featDir = fullfile('data', 'features', [dataset{1} '-' ex(i).model '-none']);
+            featDir = fullfile('data', 'features', ...
+                [dataset{1} '-' ex(i).model '-' evalAug], 'NORM0');
             % skip the evaluation if feature ready exists
             if exist(fullfile(featDir, [ex(i).featLayer '.mat']),'file'), 
                 continue; 
             end
             if ~ex(i).evalGpuMode, poolObj = gcp(); end;
-            featCell = imdb_compute_cnn_features(dataset{1}, ex(i).model, ...
-                'augmentation', 'none', ...
+            feats = imdb_compute_cnn_features(dataset{1}, ex(i).model, ...
+                'augmentation', evalAug, ...
                 'gpuMode', ex(i).evalGpuMode, ...
-                'normalization', false, ...
-                'layers', {ex(i).featLayer});
-            run_evaluate(featCell{1}, ...
+                'normalization', false);
+            run_evaluate_classification(feats.(ex(i).featLayer), ...
                 'cv', 2, ...
                 'logPath', logPath, ...
                 'predPath', fullfile(featDir,'pred.mat'), ...

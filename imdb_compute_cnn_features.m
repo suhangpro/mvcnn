@@ -1,4 +1,4 @@
-function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
+function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %IMDB_COMPUTE_CNN_FEATURES Compute and save CNN activations features
 %
 %   imdb:: 'Pf4q'
@@ -6,7 +6,7 @@ function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
 %       model will be searched/saved under 'data/models'
-%   `layers`:: {'fc6', 'fc7', 'prob'}
+%   `layers`:: {'fc6', 'fc7', 'fc8', 'prob'}
 %       the set of raw activations features that will be extracted
 %   `augmentation`:: 'nr3'
 %       1st field(f|n) indicates whether include flipped copy or not
@@ -24,8 +24,8 @@ function featCell = imdb_compute_cnn_features( imdbName, model, varargin )
 %       powerTrans)
 %   `pca`:: 500
 %       set to Inf to disable pca
-%   `pcaNumSamples`:: Inf
-%       set to a smaller value (e.g. 10^5) if pca takes too long
+%   `pcaNumSamples`:: 10^5
+%       set to Inf to include all samples 
 %   `whiten`:: true
 %       set to false to diable whitening
 %   `powerTrans`:: 2
@@ -46,26 +46,32 @@ else
 end
 
 % default options
-opts.layers = {'fc6', 'fc7', 'prob'};
+opts.layers = {'fc6', 'fc7', 'fc8', 'prob'};
 opts.augmentation = 'nr3';
 opts.gpuMode = false;
 opts.restart = false;
 opts.readOp = @imread_255;
 opts.normalization = true;
 opts.pca = 500;
-opts.pcaNumSamples = Inf;
+opts.pcaNumSamples = 10^5;
 opts.whiten = true;
 opts.powerTrans = 2;
 opts = vl_argparse(opts,varargin);
 
 % saving directory
-saveDir = fullfile('data','features',[imdbName '-' modelName '-' ...
-    opts.augmentation]);
+saveDir = fullfile('data','features',sprintf('%s-%s-%s', ...
+    imdbName, modelName, opts.augmentation));
+if opts.normalization, 
+    expSuffix = 'NORM0';
+else
+    expSuffix = sprintf('NORM%d-PCA%d', opts.normalization, opts.pca);
+end
 if opts.restart,
     rmdir(saveDir,'s');
 end
 cacheDir = fullfile(saveDir,'cache');
 vl_xmkdir(cacheDir);
+vl_xmkdir(fullfile(saveDir,expSuffix));
 
 % data augmentation
 subWins = get_augmentation_matrix(opts.augmentation);
@@ -263,11 +269,14 @@ if opts.normalization,
 end
 
 % write to disk
+feats = struct();
 fprintf('Saving feature descriptors & encoders: ');
 for fi = 1:numel(layers.name),
     fprintf('%s ... ',layers.name{fi});
     feat = featCell{fi};
-    save(fullfile(saveDir,[layers.name{fi} '.mat']),'-struct','feat','-v7.3');
+    feats.(layers.name{fi}) = feat;
+    save(fullfile(saveDir, expSuffix, [layers.name{fi} '.mat']), ...
+        '-struct', 'feat', '-v7.3');
 end
 fprintf('done! \n');
 
