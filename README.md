@@ -71,22 +71,22 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  sketch (acc) | - | 63.4 % | 65.3 % | 65.3 % | 52.4 % | 67.8 % | 67.5 % 
  sketch (acc) | sketch | 68.6 % | 66.6 % | - | **73.1 %** | - | -  
  sketch (acc) | clipart-gpb | 64.8 % | - | - | 61.1 % | - | -  
- sketch-clean (acc/ mAP) | - | 77.34%/ 0.7798 | - | - | 69.29%/ 0.6765 | - | -  
- sketch-clean (acc/ mAP) | *sketch-clean* | 84.04%/ 0.8667 | - | - | **86.31%**/ **0.8893** | - | -  
- sketch-clean (acc/ mAP) | clipart | 78.84%/ 0.7997 | - | - | - | - | -  
- sketch-clean (acc/ mAP) | modelnet40toonedge | 79.35%/ 0.8126 | - | - | 77.94%/ 0.7853 | - | -  
- clipart (acc/ mAP) | - | 72.35%/ 0.7283 | - | - | 69.57%/ 0.6981 | - | -  
- clipart (acc/ mAP) | clipart | **79.91%**/ **0.8180** | - | - | - | - | -  
- clipart (acc/ mAP) | modelnet40toon | 71.66%/ 0.7267 | - | - | 66.82%/ 0.6764 | - | -  
- clipart-gpb (acc/ mAP) | - | 62.71%/ 0.6247 | - | - | 52.9 % | - | -  
- clipart-gpb (acc/ mAP) | *clipart-gpb* | 71.90%/ 0.7493 | - | - | **76.11%/ 0.7884** | - | -  
- modelnet10toon (acc/ mAP) | modelnet10toon | **90.97%**/ **0.9570** | - | - | - | - | -  
- modelnet10toonedge (acc/ mAP) | - | 89.98%/ 0.9558 | - | - | - | - | -  
- modelnet10toonedge (acc/ mAP) | modelnet10toonedge | 90.75%/ 0.9566 | - | - | - | - | -  
- modelnet40toon (acc/ mAP) | - | 90.40%/ 0.9146 | - | - | 89.95%/ 0.9112 | - | -  
- modelnet40toon (acc/ mAP) | modelnet40toon | 90.84%/ 0.9167 | - | - | **91.05%**/ 0.9224 | - | -  
- modelnet40toonedge (acc/ mAP) | - | 89.26%/ 0.9109 | - | - | 89.75%/ 0.9108 | - | -  
- modelnet40toonedge (acc/ mAP) | modelnet40toonedge | 90.28%/ 0.9170 | - | - | 90.64%/ **0.9229** | - | -  
+ sketch-clean (acc) | - | 77.34% | - | - | 69.29% | - | -  
+ sketch-clean (acc) | *sketch-clean* | 84.04% | - | - | **86.31%** | - | -  
+ sketch-clean (acc) | clipart | 78.84% | - | - | - | - | -  
+ sketch-clean (acc) | modelnet40toonedge | 79.35% | - | - | 77.94% | - | -  
+ clipart (acc) | - | 72.35% | - | - | 69.57% | - | -  
+ clipart (acc) | clipart | **79.91%** | - | - | - | - | -  
+ clipart (acc) | modelnet40toon | 71.66% | - | - | 66.82% | - | -  
+ clipart-gpb (acc) | - | 62.71% | - | - | 52.9 % | - | -  
+ clipart-gpb (acc) | *clipart-gpb* | 71.90% | - | - | **76.11%** | - | -  
+ modelnet10toon (acc) | modelnet10toon | **90.97%** | - | - | - | - | -  
+ modelnet10toonedge (acc) | - | 89.98% | - | - | - | - | -  
+ modelnet10toonedge (acc) | modelnet10toonedge | 90.75% | - | - | - | - | -  
+ modelnet40toon (acc) | - | 90.40% | - | - | 89.95% | - | -  
+ modelnet40toon (acc) | modelnet40toon | 90.84% | - | - | 91.05% | - | -  
+ modelnet40toonedge (acc) | - | 89.26% | - | - | 89.75% | - | -  
+ modelnet40toonedge (acc) | *modelnet40toonedge* | 90.28% | - | - | **91.13%** | - | -  
  
 ## Reference
 
