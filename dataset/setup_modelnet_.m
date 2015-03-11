@@ -40,9 +40,11 @@ if ~hasTest, imdb.meta.sets{3} = []; end;
 fprintf('%d classes found! \n', length(imdb.meta.classes));
 
 % images
-imdb.images.name = {};
-imdb.images.class = [];
-imdb.images.set = [];
+imdb.images.name    = {};
+imdb.images.class   = [];
+imdb.images.set     = [];
+imdb.images.sid     = [];
+cntShapes = 0;
 fprintf('Scanning for images: \n');
 for ci = 1:length(imdb.meta.classes),
     fprintf('  [%2d/%2d] %s ... ', ci, length(imdb.meta.classes), ...
@@ -67,24 +69,36 @@ for ci = 1:length(imdb.meta.classes),
     imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('training', ...
         imdb.meta.classes{ci}, s), fileNames, 'UniformOutput', false)];
     imdb.images.class = [imdb.images.class ci*ones(1,nTrainval)];
+    imdb.images.sid = [imdb.images.sid shapeIdxs+cntShapes];
+    cntShapes = cntShapes + nShapes; 
     % test
     nTest = 0;
     if hasTest,
         files = dir(fullfile(testDir, imdb.meta.classes{ci}, ['*' opts.ext]));
+        fileNames = {files.name};
+        shapeNames = cellfun(@(s) get_shape_name(s), fileNames, ...
+            'UniformOutput', false);
+        shapeNamesUnique = unique(shapeNames);
+        [~,shapeIdxs] = ismember(shapeNames, shapeNamesUnique);
+        nShapes = length(shapeNamesUnique);
         nTest = length(files);
         imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('testing', ...
             imdb.meta.classes{ci}, s), {files.name}, 'UniformOutput', false)];
         imdb.images.class = [imdb.images.class ci*ones(1,nTest)];
         imdb.images.set = [imdb.images.set 3*ones(1,nTest)];
+        imdb.images.sid = [imdb.images.sid shapeIdxs+cntShapes];
+        cntShapes = cntShapes + nShapes; 
     end
     fprintf('\ttrain/val/test: %d/%d/%d\n', nTrain, nVal, nTest);
 end
 imdb.images.id = 1:length(imdb.images.name);
+imdb.meta.nShapes = cntShapes;
 
 % shuffle
 fprintf('Shuffling ... ');
 order = randperm(length(imdb.images.name));
 imdb.images.name = imdb.images.name(order);
+imdb.images.sid = imdb.images.sid(order);
 imdb.images.id = imdb.images.id(order);
 imdb.images.class = imdb.images.class(order);
 imdb.images.set = imdb.images.set(order);
