@@ -137,12 +137,12 @@ else % no query given, evaluation within dataset
     switch opts.method,
         case 'mindist',
             dists = vl_alldist2(queryX',refX',opts.metric);
-            dists = -1*vl_nnpool(-1*single(dists),[nViews nRefViews],, ...
+            dists = -1*vl_nnpool(-1*single(dists),[nViews nRefViews], ...
                 'stride', [nViews nRefViews], ...
                 'method', 'max');
         case 'avgdist',
             dists = vl_alldist2(queryX',refX',opts.metric);
-            dists = vl_nnpool(single(dists),[nViews nRefViews],, ...
+            dists = vl_nnpool(single(dists),[nViews nRefViews], ...
                 'stride', [nViews nRefViews], ...
                 'method', 'avg');
         case 'avgdesc',
@@ -156,14 +156,16 @@ else % no query given, evaluation within dataset
     end
     
     % pr curves 
-    recall = zeros(nQueryShapes, nDims+1);
-    precision = zeros(nQueryShapes, nDims+1);
+    recall = zeros(nQueryShapes, nRefShapes+1);
+    precision = zeros(nQueryShapes, nRefShapes+1);
     ap = zeros(nQueryShapes, 1);
     
     for q = 1:nQueryShapes, 
-        [recall(q,:), precision(q,:), info] = vl_pr(...
+        [r, p, info] = vl_pr(...
             (shapeGtClasses(refShapeIds)==shapeGtClasses(queryShapeIds(q)))-0.5, ... % LABELS
             -1*dists(q,:)); % SCORES
+        recall(q,:) = r;
+        precision(q,:) = p;
         ap(q) = info.ap;
     end
     clear results;
