@@ -4,3 +4,4 @@
 [submodule "dependencies/matconvnet"]
 	path = dependencies/matconvnet
 	url = git@github.com:suhangpro/matconvnet.git
+	branch = maxout

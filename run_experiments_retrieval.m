@@ -13,8 +13,38 @@ ex = struct([]);
 ex(end+1).model     = 'imagenet-vgg-m';
 ex(end).featLayer   = 'fc6'; 
 ex(end).evalGpuMode = false;
+ex(end).pca         = Inf; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ...
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-m';
+ex(end).featLayer   = 'fc6'; 
+ex(end).evalGpuMode = false;
 ex(end).pca         = 500; 
-ex(end).evalDataset = { 'modelnet10toon'}; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ...
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-verydeep-16';
+ex(end).featLayer   = 'fc6'; 
+ex(end).evalGpuMode = false;
+ex(end).pca         = Inf; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-verydeep-16';
+ex(end).featLayer   = 'fc6'; 
+ex(end).evalGpuMode = false;
+ex(end).pca         = 500; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
 
 ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet10toon';
@@ -30,8 +60,38 @@ ex(end).evalDataset = { 'modelnet10toon'};
 ex(end+1).model     = 'imagenet-vgg-m';
 ex(end).featLayer   = 'fc7'; 
 ex(end).evalGpuMode = false;
+ex(end).pca         = Inf; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-m';
+ex(end).featLayer   = 'fc7'; 
+ex(end).evalGpuMode = false;
 ex(end).pca         = 500; 
-ex(end).evalDataset = { 'modelnet10toon'}; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-verydeep-16';
+ex(end).featLayer   = 'fc7'; 
+ex(end).evalGpuMode = false;
+ex(end).pca         = Inf; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
+
+ex(end+1).model     = 'imagenet-vgg-verydeep-16';
+ex(end).featLayer   = 'fc7'; 
+ex(end).evalGpuMode = false;
+ex(end).pca         = 500; 
+ex(end).evalDataset = { 'modelnet10toon', ...
+                        'modelnet10toonedge', ... 
+                        'modelnet40toon', ...
+                        'modelnet40toonedge'}; 
 
 ex(end+1).baseModel = 'imagenet-vgg-m';
 ex(end).trainDataset= 'modelnet10toon';
