@@ -177,7 +177,7 @@ for i=1:length(ex),
                 'addDropout', ex(i).addDropout, ...
                 'gpuMode', trainGpuMode);
             models{end+1} = ex(i).model;
-            save(fullfile('data','models',[model '.mat']),'-struct','net');
+            save(fullfile('data','models',[ex(i).model '.mat']),'-struct','net');
         end
     end
     % compute and evaluate features 
