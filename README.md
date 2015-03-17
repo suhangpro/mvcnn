@@ -35,7 +35,6 @@ mkdir sketch
 unzip sketches_png.zip -d sketch/
 ```
 ## Datasets
-![size comparison](https://dl.dropboxusercontent.com/u/50473730/tmp/dataset.png)
 
 ### Collecting a new dataset of shapes
 
@@ -64,8 +63,20 @@ The current state of the art is **67.6%** accuracy on the _sketch_ dataset and *
 
 In addition to experimenting with ImageNet pretrained models, we optionally fine-tune the models on the datasets isself. We report results using R-CNN where features are extracted from the penultimate layer, and D-CNN where Fisher vectors are constructed from filter banks extracted from the last convolutional layer (see reference below).
 
-*italic*: fine-tuned with 50% dropout on fc6 and fc7
+### Modelnet
 
+ dataset (measure) | finetune| fc7 | fc7-vd 
+ :---- | :---: | :---: | :---: | 
+ modelnet10toon (acc) | - | 90.97% | 90.42% 
+ modelnet10toon (acc) | modelnet10toon | **91.30%** | - 
+ modelnet10toonedge (acc) | - | 90.64% | 90.53% 
+ modelnet10toonedge (acc) | modelnet10toonedge | 90.31% | - 
+ modelnet40toon (acc) | - | 90.40% | 89.95% 
+ modelnet40toon (acc) | modelnet40toon | 90.24% | 89.95% 
+ modelnet40toonedge (acc) | - | 89.26% | 89.75% 
+ modelnet40toonedge (acc) | modelnet40toonedge | 90.28% | **91.13%** 
+ 
+### Others
  dataset (measure) | finetune| fc7 | dcnn | dcnn-sp | fc7-vd | dcnn-vd | dcnn-vd-sp
  :---- | :---: | :---: | :---: | :---: | :---: | :---: |
  sketch (acc) | - | 63.4 % | 65.3 % | 65.3 % | 52.4 % | 67.8 % | 67.5 % 
@@ -80,14 +91,9 @@ In addition to experimenting with ImageNet pretrained models, we optionally fine
  clipart (acc) | modelnet40toon | 71.66% | - | - | 66.82% | - | -  
  clipart-gpb (acc) | - | 62.71% | - | - | 52.9 % | - | -  
  clipart-gpb (acc) | *clipart-gpb* | 71.90% | - | - | **76.11%** | - | -  
- modelnet10toon (acc) | modelnet10toon | **90.97%** | - | - | - | - | -  
- modelnet10toonedge (acc) | - | 89.98% | - | - | - | - | -  
- modelnet10toonedge (acc) | modelnet10toonedge | 90.75% | - | - | - | - | -  
- modelnet40toon (acc) | - | 90.40% | - | - | 89.95% | - | -  
- modelnet40toon (acc) | modelnet40toon | 90.84% | - | - | 91.05% | - | -  
- modelnet40toonedge (acc) | - | 89.26% | - | - | 89.75% | - | -  
- modelnet40toonedge (acc) | *modelnet40toonedge* | 90.28% | - | - | **91.13%** | - | -  
- 
+
+*italic*: fine-tuned with 50% dropout on fc6 and fc7
+
 ## Reference
 
 For details on D-CNN read the following paper:
