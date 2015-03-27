@@ -130,7 +130,7 @@ for i=1:nImages
     sx = (1:opts.imageSize(2)) + dx ;
     sy = (1:opts.imageSize(1)) + dy ;
     if tf(3), sx = fliplr(sx) ; end
-    ims(:,:,:,(ai-1)*nImages+ai) = imt(sy,sx,:) ;
+    ims(:,:,:,(ai-1)*nImages+i) = imt(sy,sx,:) ;
   end
 end
 
