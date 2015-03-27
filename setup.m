@@ -53,4 +53,3 @@ if doCompile,
     cd ../..
 end
 run dependencies/matconvnet/matlab/vl_setupnn.m
-addpath dependencies/matconvnet/examples/

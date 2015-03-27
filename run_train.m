@@ -24,6 +24,9 @@ function net = run_train(imdbName, varargin)
 %       whether add dropout layers (to the last two fc layers)
 %   `border`:: []
 %       used in data augmentation
+%   `multiview`:: false 
+%       if true, use shapes (w/ multiple views) instead of images as
+%       instances 
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -35,6 +38,7 @@ opts.numFetchThreads = 0 ;
 opts.augmentation = 'f2';
 opts.addDropout = true;
 opts.border = [];
+opts.multiview = false;
 opts = vl_argparse(opts, varargin) ;
 
 if ~isempty(opts.modelName), 
@@ -73,12 +77,15 @@ if isfield(imdb.meta,'invert'),
 else
     opts.invert = false;
 end
+if opts.multiview, 
+    opts.nViews = length(imdb.images.id)/imdb.meta.nShapes;
+end
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
 % -------------------------------------------------------------------------
 
-net = initializeNetwork(opts.modelName, imdb.meta.classes) ;
+net = initializeNetwork(opts.modelName, imdb.meta.classes, opts) ;
 if ~isempty(opts.border), 
     net.normalization.border = opts.border; 
 end
@@ -128,6 +135,7 @@ trainOpts.batchSize = opts.batchSize ;
 trainOpts.useGpu = opts.gpuMode ;
 trainOpts.expDir = opts.expDir ;
 trainOpts.numEpochs = opts.numEpochs ;
+trainOpts.multiview = opts.multiview;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
 trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
@@ -167,6 +175,10 @@ end
 removeIndices = cellfun(@(x)(strcmp(x.type, 'dropout')), layers);
 layers = layers(~removeIndices);
 
+% Remove viewpool layers
+removeIndices = cellfun(@(x)(strcmp(x.name, 'viewpool')), layers);
+layers = layers(~removeIndices);
+
 net.layers = layers;
 
 save(fileName, '-struct', 'net');
@@ -187,7 +199,7 @@ images = strcat([imdb.imageDir '/'], imdb.images.name(batch)) ;
 labels = imdb.images.class(batch(idxs)) ;
 
 % -------------------------------------------------------------------------
-function net = initializeNetwork(modelName, classNames)
+function net = initializeNetwork(modelName, classNames, opts)
 % -------------------------------------------------------------------------
 scal = 1 ;
 init_bias = 0.1;
@@ -218,9 +230,18 @@ if ~isempty(modelName),
                            'biasesLearningRate', 20, ...
                            'filtersWeightDecay', 1, ...
                            'biasesWeightDecay', 0);
-                       
+    
+    net.layers = net.layers(1:end-1);
+    % Add viewpool layer if multiview is enabled
+    if opts.multiview, 
+        net.layers{end+1} = struct('name', 'viewpool', ...
+                            'type', 'custom', ...
+                            'stride', opts.nViews, ...
+                            'forward', @viewpool_fw, ...
+                            'backward', @viewpool_bw);
+    end
     % Last layer is softmaxloss (switch to softmax for prediction)
-    net.layers{end} = struct('type', 'softmaxloss') ;
+    net.layers{end+1} = struct('type', 'softmaxloss') ;
 
     % Rename classes
     net.classes.name = classNames;
@@ -363,12 +384,38 @@ net.layers{end+1} = struct('name', 'fc8', ...
                            'biasesWeightDecay', 0) ;
 
 % Block 9
+if opts.multiview, 
+	net.layers{end+1} = struct('name', 'viewpool', ...
+                                'type', 'custom', ...
+                                'stride', opts.nViews, ...
+                                'forward', @viewpool_fw, ...
+                                'backward', @viewpool_bw);
+end
 net.layers{end+1} = struct('type', 'softmaxloss') ;
 
 % Other details
-net.normalization.imageSize = [227, 227, 3] ;
+net.normalization.imageSize = [224, 224, 3] ;
 net.normalization.interpolation = 'bicubic' ;
 net.normalization.border = 256 - net.normalization.imageSize(1:2) ;
 net.normalization.averageImage = [] ;
 net.normalization.keepAspect = true ;
 
+% -------------------------------------------------------------------------
+function res_ip1 = viewpool_fw(layer, res_i, res_ip1)
+% -------------------------------------------------------------------------
+[sz1, sz2, sz3, sz4] = size(res_i.x);
+if mod(sz4,layer.stride)~=0, 
+    error('all shapes should have same number of views');
+end
+res_ip1.x = permute(...
+    mean(reshape(res_i.x,[sz1 sz2 sz3 layer.stride sz4/layer.stride]), 4), ...
+    [1,2,3,5,4]);
+
+% -------------------------------------------------------------------------
+function res_i = viewpool_bw(layer, res_i, res_ip1)
+% -------------------------------------------------------------------------
+[sz1, sz2, sz3, sz4] = size(res_ip1.dzdx);
+res_i.dzdx = ...
+    reshape(repmat(reshape(res_ip1.dzdx,[sz1 sz2 sz3 1 sz4]), ...
+            [1 1 1 layer.stride 1]),...
+    [sz1 sz2 sz3 sz4*layer.stride]);

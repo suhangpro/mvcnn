@@ -28,7 +28,7 @@ function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %       set to Inf to include all samples 
 %   `whiten`:: true
 %       set to false to diable whitening
-%   `powerTrans`:: 2
+%   `powerTrans`:: 0.5
 %       set to 1 to disable power transform
 
 if nargin<2 || isempty(model),
@@ -55,7 +55,7 @@ opts.normalization = true;
 opts.pca = 500;
 opts.pcaNumSamples = 10^5;
 opts.whiten = true;
-opts.powerTrans = 2;
+opts.powerTrans = 0.5;
 opts = vl_argparse(opts,varargin);
 
 % saving directory

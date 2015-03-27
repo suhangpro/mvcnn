@@ -88,7 +88,6 @@ ims = zeros(opts.imageSize(1), opts.imageSize(2), 3, ...
 
 [~,augIdxs] = sort(rand(nAugments, nImages), 1) ;
 
-si = 1 ;
 for i=1:nImages
 
   % acquire image
@@ -131,8 +130,7 @@ for i=1:nImages
     sx = (1:opts.imageSize(2)) + dx ;
     sy = (1:opts.imageSize(1)) + dy ;
     if tf(3), sx = fliplr(sx) ; end
-    ims(:,:,:,si) = imt(sy,sx,:) ;
-    si = si + 1 ;
+    ims(:,:,:,(ai-1)*nImages+ai) = imt(sy,sx,:) ;
   end
 end
 
@@ -141,5 +139,5 @@ if ~isempty(opts.averageImage)
 end
 
 % indexs of image sub-regions
-idxs = reshape(repmat(1:nImages,[nAugments,1]),[1 nAugments*nImages]);
+idxs = reshape(repmat((1:nImages)',[1, nAugments]),[1 nAugments*nImages]);
 
