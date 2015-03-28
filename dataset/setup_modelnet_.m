@@ -99,7 +99,7 @@ fprintf('Shuffling ... ');
 order = randperm(length(imdb.images.name));
 imdb.images.name = imdb.images.name(order);
 imdb.images.sid = imdb.images.sid(order);
-imdb.images.id = imdb.images.id(order);
+% imdb.images.id = imdb.images.id(order);
 imdb.images.class = imdb.images.class(order);
 imdb.images.set = imdb.images.set(order);
 fprintf('done! \n');
