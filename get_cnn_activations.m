@@ -26,6 +26,17 @@ if size(im,3) ~= size(net.layers{1}.filters,3),
 end
 nChannels = size(im,3); 
 
+% find if net contains viewpool layer
+viewpoolIdx = find(cellfun(@(x)strcmp(x.name, 'viewpool'),net.layers));
+if ~isempty(viewpoolIdx), 
+    if numel(viewpoolIdx)>1, 
+        error('More than one viewpool layers found!'); 
+    end
+    nViews = net.layers{viewpoolIdx}.stride;
+else
+    nViews = 1;
+end
+
 opts.gpuMode = false;
 opts = vl_argparse(opts,varargin);
 
@@ -43,7 +54,7 @@ if iscell(layers),
     layers.index = layers.index + 1;
     % sizes
     im0 = zeros(net.normalization.imageSize(1), ...
-        net.normalization.imageSize(2), nChannels, 'single') * 255;
+        net.normalization.imageSize(2), nChannels, nViews, 'single') * 255;
     if opts.gpuMode, im0 = gpuArray(im0); end
     res = vl_simplenn(net,im0);
     layers.sizes = zeros(3,numel(layers.name));
@@ -64,10 +75,10 @@ for ri = 1:nSubWins,
     r = subWins(1:4,ri).*[size(im,2);size(im,2);size(im,1);size(im,1)];
     r = round(r);
     im_ = im(max(1,r(3)):min(size(im,1),r(3)+r(4)),...
-        max(1,r(1)):min(size(im,2),r(1)+r(2)),:);
+        max(1,r(1)):min(size(im,2),r(1)+r(2)),:,:);
     if subWins(5,ri), im_ = flipdim(im_,2); end
-    im_ = imresize(im_, net.normalization.imageSize(1:2))...
-        - net.normalization.averageImage;
+    im_ = bsxfun(@minus, imresize(im_, net.normalization.imageSize(1:2)), ...
+        net.normalization.averageImage);
     if opts.gpuMode,
         im_ = gpuArray(im_);
     end

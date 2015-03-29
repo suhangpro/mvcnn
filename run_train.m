@@ -85,7 +85,7 @@ end
 %                                                    Network initialization
 % -------------------------------------------------------------------------
 
-net = initializeNetwork(opts.modelName, imdb.meta.classes, opts) ;
+net = initializeNetwork(opts.modelName, imdb.meta.classes) ;
 if ~isempty(opts.border), 
     net.normalization.border = opts.border; 
 end
@@ -126,6 +126,18 @@ if opts.addDropout,
                             net.layers(end-3:end-2), ...
                             dropoutLayer, ...
                             net.layers(end-1:end)); 
+end
+
+% Add viewpool layer if multiview is enabled
+if opts.multiview,
+    viewpoolLayer = struct('name', 'viewpool', ...
+        'type', 'custom', ...
+        'stride', opts.nViews, ...
+        'forward', @viewpool_fw, ...
+        'backward', @viewpool_bw);
+    net.layers = horzcat(net.layers(1:end-1), ...
+                            viewpoolLayer, ...
+                            net.layers(end));
 end
 
 % -------------------------------------------------------------------------
@@ -176,8 +188,8 @@ removeIndices = cellfun(@(x)(strcmp(x.type, 'dropout')), layers);
 layers = layers(~removeIndices);
 
 % Remove viewpool layers
-removeIndices = cellfun(@(x)(strcmp(x.name, 'viewpool')), layers);
-layers = layers(~removeIndices);
+% removeIndices = cellfun(@(x)(strcmp(x.name, 'viewpool')), layers);
+% layers = layers(~removeIndices);
 
 net.layers = layers;
 
@@ -199,7 +211,7 @@ images = strcat([imdb.imageDir '/'], imdb.images.name(batch)) ;
 labels = imdb.images.class(batch(idxs)) ;
 
 % -------------------------------------------------------------------------
-function net = initializeNetwork(modelName, classNames, opts)
+function net = initializeNetwork(modelName, classNames)
 % -------------------------------------------------------------------------
 scal = 1 ;
 init_bias = 0.1;
@@ -231,17 +243,8 @@ if ~isempty(modelName),
                            'filtersWeightDecay', 1, ...
                            'biasesWeightDecay', 0);
     
-    net.layers = net.layers(1:end-1);
-    % Add viewpool layer if multiview is enabled
-    if opts.multiview, 
-        net.layers{end+1} = struct('name', 'viewpool', ...
-                            'type', 'custom', ...
-                            'stride', opts.nViews, ...
-                            'forward', @viewpool_fw, ...
-                            'backward', @viewpool_bw);
-    end
     % Last layer is softmaxloss (switch to softmax for prediction)
-    net.layers{end+1} = struct('type', 'softmaxloss') ;
+    net.layers{end} = struct('type', 'softmaxloss') ;
 
     % Rename classes
     net.classes.name = classNames;
@@ -384,13 +387,6 @@ net.layers{end+1} = struct('name', 'fc8', ...
                            'biasesWeightDecay', 0) ;
 
 % Block 9
-if opts.multiview, 
-	net.layers{end+1} = struct('name', 'viewpool', ...
-                                'type', 'custom', ...
-                                'stride', opts.nViews, ...
-                                'forward', @viewpool_fw, ...
-                                'backward', @viewpool_bw);
-end
 net.layers{end+1} = struct('type', 'softmaxloss') ;
 
 % Other details

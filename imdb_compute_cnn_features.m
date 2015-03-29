@@ -58,54 +58,24 @@ opts.whiten = true;
 opts.powerTrans = 0.5;
 opts = vl_argparse(opts,varargin);
 
-% saving directory
-saveDir = fullfile('data','features',sprintf('%s-%s-%s', ...
-    imdbName, modelName, opts.augmentation));
-if ~opts.normalization, 
-    expSuffix = 'NORM0';
-else
-    expSuffix = sprintf('NORM%d-PCA%d', opts.normalization, opts.pca);
-end
-if opts.restart,
-    rmdir(saveDir,'s');
-end
-cacheDir = fullfile(saveDir,'cache');
-vl_xmkdir(cacheDir);
-vl_xmkdir(fullfile(saveDir,expSuffix));
-
-% data augmentation
-subWins = get_augmentation_matrix(opts.augmentation);
-nSubWins = size(subWins,2);
-
-% -------------------------------------------------------------------------
-%                                                   Load data if available
-% -------------------------------------------------------------------------
-layers.name = opts.layers; 
-featCell = cell(1,numel(layers.name));
-flag_found = true;
-fprintf('Loading pre-computed features ... ');
-for fi = 1:numel(layers.name),
-    featPath = fullfile(saveDir,[layers.name{fi} '.mat']);
-    if ~exist(featPath, 'file'), 
-        flag_found = false;
-        break;
-    end
-    fprintf('%s ... ', layers.name{fi});
-    featCell{fi} = load(featPath);
-end
-if flag_found, 
-    fprintf('all found! \n');
-    return;
-else
-    fprintf('all/some feature missing! \n');
-    clear featCell;
-end
-
 % -------------------------------------------------------------------------
 %                                                                 Get imdb
 % -------------------------------------------------------------------------
 imdb = get_imdb(imdbName);
 nImgs = numel(imdb.images.name);
+if isfield(imdb.images,'sid'), 
+    [imdb.images.sid,I] = sort(imdb.images.sid);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.id = imdb.images.id(I);
+else
+    [imdb.images.id,I] = sort(imdb.images.id);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.sid = imdb.images.sid(I);
+end
 
 % -------------------------------------------------------------------------
 %                                                                CNN Model
@@ -136,6 +106,18 @@ if opts.gpuMode,
         net = vl_simplenn_move(net,'gpu');
     end
 end
+% see if it's a multivew net
+viewpoolIdx = find(cellfun(@(x)strcmp(x.name, 'viewpool'),net.layers));
+if ~isempty(viewpoolIdx), 
+    if numel(viewpoolIdx)>1, 
+        error('More than one viewpool layers found!'); 
+    end
+    nViews = net.layers{viewpoolIdx}.stride;
+else
+    nViews = 1;
+end
+nImgs = nImgs / nViews;
+
 % find requested layers
 layerNames = cell(1,length(net.layers));
 for i=1:length(layerNames),
@@ -149,13 +131,60 @@ end
 layers.index = layers.index + 1;
 
 % -------------------------------------------------------------------------
+%                                                   Load data if available
+% -------------------------------------------------------------------------
+% saving directory
+saveDir = fullfile('data','features',sprintf('%s-%s-%s', ...
+    imdbName, modelName, opts.augmentation));
+if ~opts.normalization, 
+    expSuffix = 'NORM0';
+else
+    expSuffix = sprintf('NORM%d-PCA%d', opts.normalization, opts.pca);
+end
+if opts.restart,
+    rmdir(saveDir,'s');
+end
+if nViews>1, 
+    cacheDir = fullfile(saveDir,'cache','sid');
+else
+    cacheDir = fullfile(saveDir,'cache','id');
+end
+vl_xmkdir(cacheDir);
+vl_xmkdir(fullfile(saveDir,expSuffix));
+
+layers.name = opts.layers; 
+featCell = cell(1,numel(layers.name));
+flag_found = true;
+fprintf('Loading pre-computed features ... ');
+for fi = 1:numel(layers.name),
+    featPath = fullfile(saveDir,[layers.name{fi} '.mat']);
+    if ~exist(featPath, 'file'), 
+        flag_found = false;
+        break;
+    end
+    fprintf('%s ... ', layers.name{fi});
+    featCell{fi} = load(featPath);
+end
+if flag_found, 
+    fprintf('all found! \n');
+    return;
+else
+    fprintf('all/some feature missing! \n');
+    clear featCell;
+end
+
+% -------------------------------------------------------------------------
 %                                                    Get raw CNN responses
 % -------------------------------------------------------------------------
+% data augmentation
+subWins = get_augmentation_matrix(opts.augmentation);
+nSubWins = size(subWins,2);
+
 % response dimensions
 fprintf('Testing model (%s) ...', modelName) ;
 nChannels = size(net.layers{1}.filters,3); 
 im0 = zeros(net.normalization.imageSize(1), ...
-    net.normalization.imageSize(2), nChannels, 'single') * 255; 
+    net.normalization.imageSize(2), nChannels, nViews, 'single') * 255; 
 if opts.gpuMode, im0 = gpuArray(im0); end
 res = vl_simplenn(net,im0);
 layers.sizes = zeros(3,numel(layers.name));
@@ -172,11 +201,16 @@ else
 end
 parfor (i=1:nImgs, poolSize)
 %  for  i=1:nImgs, % if no parallel computing toolbox
-    [imPathStr, imName, ~] = fileparts(imdb.images.name{i});
-    if exist(fullfile(cacheDir, imPathStr, [imName '.mat']),'file'),
+    if exist(fullfile(cacheDir, [num2str(i) '.mat']),'file'),
         continue;
     end
-    im = opts.readOp(fullfile(imdb.imageDir,imdb.images.name{i}),nChannels);
+    im = zeros(net.normalization.imageSize(1), ...
+        net.normalization.imageSize(2), nChannels, nViews, 'single') * 255;
+    for v = 1:nViews, 
+        im(:,:,:,v) = imresize(opts.readOp(...
+            fullfile(imdb.imageDir, imdb.images.name{(i-1)*nViews+v}), ...
+            nChannels), net.normalization.imageSize(1:2));
+    end
     
     if isfield(imdb.meta,'invert') && imdb.meta.invert, 
         im = 255 - im;
@@ -184,12 +218,9 @@ parfor (i=1:nImgs, poolSize)
     
     feat = get_cnn_activations( im, net, subWins, layers, ...
         'gpuMode', opts.gpuMode);
-    parsave(fullfile(cacheDir,imPathStr,[imName '.mat']),feat);
+    parsave(fullfile(cacheDir, [num2str(i) '.mat']),feat);
     
-    % cacheFiles = dir(fullfile(cacheDir,'*.mat'));
-    % fprintf('[%4d/%4d] %s\n',length(cacheFiles),nImgs,...
-    %     fullfile(imdb.imageDir,imdb.images.name{i}));
-    fprintf(' %s\n', fullfile(imdb.imageDir,imdb.images.name{i}));
+    fprintf(' %s\n', fullfile(imdb.imageDir,imdb.images.name{(i-1)*nViews+1}));
     
 end
 
@@ -199,13 +230,19 @@ end
 featCell = cell(1,numel(layers.name));
 for fi=1:numel(layers.name),
     if strcmp(layers.name{fi}(1:2), 'fc') ... % fully connected layers
-        || strcmp(layers.name{fi}, 'prob'), % output layer
+        || strcmp(layers.name{fi}, 'prob') ... % output layer
+        || strcmp(layers.name{fi}, 'viewpool'), % viewpool layer
         featCell{fi}.x = zeros(nImgs*nSubWins,layers.sizes(3,fi));
-        featCell{fi}.id = reshape(repmat([1:nImgs],[nSubWins,1]),...
-            [nImgs*nSubWins,1]);
         featCell{fi}.imdb = imdb;
         featCell{fi}.modelName = modelName;
         featCell{fi}.layerName = layers.name{fi};
+        if nViews>1, 
+            featCell{fi}.sid = reshape(repmat([1:nImgs],[nSubWins,1]),...
+                [nImgs*nSubWins,1]);
+        else
+            featCell{fi}.id = reshape(repmat([1:nImgs],[nSubWins,1]),...
+                [nImgs*nSubWins,1]);
+        end
     else
         error('feature type (%s) not yet supported.', layers.name{fi});
     end
@@ -214,8 +251,7 @@ fprintf('Loading raw features: \n');
 for i=1:nImgs,
     if mod(i,10)==0, fprintf('.'); end
     if mod(i,500)==0, fprintf(' %4d/%4d\n', i,nImgs); end
-    [imPathStr, imName, ~] = fileparts(imdb.images.name{i});
-    feat = load(fullfile(cacheDir,imPathStr,[imName '.mat']));
+    feat = load(fullfile(cacheDir, [num2str(i) '.mat']));
     for fi = 1:numel(layers.name),
         featCell{fi}.x((i-1)*nSubWins+(1:nSubWins),:) = ...
             squeeze(feat.(layers.name{fi}))';
