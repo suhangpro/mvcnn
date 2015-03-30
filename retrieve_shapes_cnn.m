@@ -159,19 +159,41 @@ else % no query given, evaluation within dataset
     recall = zeros(nQueryShapes, nRefShapes+1);
     precision = zeros(nQueryShapes, nRefShapes+1);
     ap = zeros(nQueryShapes, 1);
+    auc = zeros(nQueryShapes, 1);
+    % interpolated pr curves
+    recall_i = zeros(nQueryShapes, nRefShapes+1);
+    precision_i = zeros(nQueryShapes, nRefShapes+1);
+    ap_i = zeros(nQueryShapes, 1);
+    auc_i = zeros(nQueryShapes, 1);
     
     for q = 1:nQueryShapes, 
         [r, p, info] = vl_pr(...
             (shapeGtClasses(refShapeIds)==shapeGtClasses(queryShapeIds(q)))-0.5, ... % LABELS
-            -1*dists(q,:)); % SCORES
+            -1*dists(q,:), ... % SCORES
+            'Interpolate', false); 
         recall(q,:) = r;
         precision(q,:) = p;
         ap(q) = info.ap;
+        auc(q) = info.auc;
+        % interpolated
+        [r, p, info] = vl_pr(...
+            (shapeGtClasses(refShapeIds)==shapeGtClasses(queryShapeIds(q)))-0.5, ... % LABELS
+            -1*dists(q,:), ... % SCORES
+            'Interpolate', true); 
+        recall_i(q,:) = r;
+        precision_i(q,:) = p;
+        ap_i(q) = info.ap;
+        auc_i(q) = info.auc;
     end
     clear results;
-    results.recall = mean(recall,1);
-    results.precision = mean(precision,1);
-    results.mAP = mean(ap);
+    results.recall = recall;
+    results.precision = precision;
+    results.ap = ap;
+    results.auc = auc;
+    results.recall_i = recall_i;
+    results.precision_i = precision_i;
+    results.ap_i = ap_i;
+    results.auc_i = auc_i;
 end
 
 end
