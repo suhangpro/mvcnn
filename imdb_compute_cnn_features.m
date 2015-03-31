@@ -131,8 +131,8 @@ for i = 1:length(net.layers),
     ires = i+1;
     [sz1, sz2, sz3, sz4] = size(res(ires).x);
     if sz1==1 && sz2==1 && sz4==1 && isfield(net.layers{i},'name'),
-        layers.name{end+1} = net.layers{i};
-        layers.index = ires;
+        layers.name{end+1} = net.layers{i}.name;
+        layers.index(end+1) = ires;
         layers.sizes(:,end+1) = [sz1;sz2;sz3];
     end
 end
