@@ -6,8 +6,6 @@ function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
 %       model will be searched/saved under 'data/models'
-%   `layers`:: {'fc6', 'fc7', 'fc8', 'prob'}
-%       the set of raw activations features that will be extracted
 %   `augmentation`:: 'nr3'
 %       1st field(f|n) indicates whether include flipped copy or not
 %       2nd field(s|r) indicates type of region - Square or Rectangle
@@ -46,7 +44,6 @@ else
 end
 
 % default options
-opts.layers = {'fc6', 'fc7', 'fc8', 'prob'};
 opts.augmentation = 'nr3';
 opts.gpuMode = false;
 opts.restart = false;
@@ -92,6 +89,7 @@ if isempty(net),
     end
     net = load(netFilePath);
 end
+
 % use gpu if requested and possible
 if opts.gpuMode,
     if gpuDeviceCount()==0,
@@ -106,6 +104,7 @@ if opts.gpuMode,
         net = vl_simplenn_move(net,'gpu');
     end
 end
+
 % see if it's a multivew net
 viewpoolIdx = find(cellfun(@(x)strcmp(x.name, 'viewpool'),net.layers));
 if ~isempty(viewpoolIdx), 
@@ -118,17 +117,26 @@ else
 end
 nImgs = nImgs / nViews;
 
-% find requested layers
-layerNames = cell(1,length(net.layers));
-for i=1:length(layerNames),
-    if isfield(net.layers{i},'name'), 
-        layerNames{i} = net.layers{i}.name;
-    else
-        layerNames{i} = 'na';
+% response dimensions
+fprintf('Testing model (%s) ...', modelName) ;
+nChannels = size(net.layers{1}.filters,3); 
+im0 = zeros(net.normalization.imageSize(1), ...
+    net.normalization.imageSize(2), nChannels, nViews, 'single') * 255; 
+if opts.gpuMode, im0 = gpuArray(im0); end
+res = vl_simplenn(net,im0);
+layers.name = {};
+layers.sizes = [];
+layers.index = [];
+for i = 1:length(net.layers), 
+    ires = i+1;
+    [sz1, sz2, sz3, sz4] = size(res(ires).x);
+    if sz1==1 && sz2==1 && sz4==1 && isfield(net.layers{i},'name'),
+        layers.name{end+1} = net.layers{i};
+        layers.index = ires;
+        layers.sizes(:,end+1) = [sz1;sz2;sz3];
     end
 end
-[~,layers.index] = ismember(opts.layers,layerNames);
-layers.index = layers.index + 1;
+fprintf(' done!\n');
 
 % -------------------------------------------------------------------------
 %                                                   Load data if available
@@ -152,7 +160,6 @@ end
 vl_xmkdir(cacheDir);
 vl_xmkdir(fullfile(saveDir,expSuffix));
 
-layers.name = opts.layers; 
 featCell = cell(1,numel(layers.name));
 flag_found = true;
 fprintf('Loading pre-computed features ... ');
@@ -179,19 +186,6 @@ end
 % data augmentation
 subWins = get_augmentation_matrix(opts.augmentation);
 nSubWins = size(subWins,2);
-
-% response dimensions
-fprintf('Testing model (%s) ...', modelName) ;
-nChannels = size(net.layers{1}.filters,3); 
-im0 = zeros(net.normalization.imageSize(1), ...
-    net.normalization.imageSize(2), nChannels, nViews, 'single') * 255; 
-if opts.gpuMode, im0 = gpuArray(im0); end
-res = vl_simplenn(net,im0);
-layers.sizes = zeros(3,numel(layers.name));
-for i = 1:numel(layers.name),
-    layers.sizes(:,i) = reshape(size(res(layers.index(i)).x),[3,1]);
-end
-fprintf(' done!\n');
 
 poolobj = gcp('nocreate');
 if isempty(poolobj) || opts.gpuMode,
