@@ -223,22 +223,16 @@ end
 % -------------------------------------------------------------------------
 featCell = cell(1,numel(layers.name));
 for fi=1:numel(layers.name),
-    if strcmp(layers.name{fi}(1:2), 'fc') ... % fully connected layers
-        || strcmp(layers.name{fi}, 'prob') ... % output layer
-        || strcmp(layers.name{fi}, 'viewpool'), % viewpool layer
-        featCell{fi}.x = zeros(nImgs*nSubWins,layers.sizes(3,fi));
-        featCell{fi}.imdb = imdb;
-        featCell{fi}.modelName = modelName;
-        featCell{fi}.layerName = layers.name{fi};
-        if nViews>1, 
-            featCell{fi}.sid = reshape(repmat([1:nImgs],[nSubWins,1]),...
-                [nImgs*nSubWins,1]);
-        else
-            featCell{fi}.id = reshape(repmat([1:nImgs],[nSubWins,1]),...
-                [nImgs*nSubWins,1]);
-        end
+    featCell{fi}.x = zeros(nImgs*nSubWins,layers.sizes(3,fi));
+    featCell{fi}.imdb = imdb;
+    featCell{fi}.modelName = modelName;
+    featCell{fi}.layerName = layers.name{fi};
+    if nViews>1, 
+        featCell{fi}.sid = reshape(repmat([1:nImgs],[nSubWins,1]),...
+            [nImgs*nSubWins,1]);
     else
-        error('feature type (%s) not yet supported.', layers.name{fi});
+        featCell{fi}.id = reshape(repmat([1:nImgs],[nSubWins,1]),...
+            [nImgs*nSubWins,1]);
     end
 end
 fprintf('Loading raw features: \n');
