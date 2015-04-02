@@ -43,15 +43,25 @@ opts.refSets = {'test'};
 opts.metric = 'L2';
 opts = vl_argparse(opts,varargin);
 
-% sort and group images according to shape id
+if isfield(feat, 'sid'), 
+    pooledFeat = true; 
+    [feat.sid,I] = sort(feat.sid);
+    feat.x = feat.x(I,:);
+else
+    pooledFeat = false; 
+    [feat.id,I] = sort(feat.id);
+    feat.x = feat.x(I,:);
+end
 imdb = feat.imdb;
+nRefViews = length(imdb.images.name)/imdb.meta.nShapes;
+nRefDescPerShape = size(feat.x,1)/imdb.meta.nShapes;
+
+% sort and group images according to shape id
 [imdb.images.sid, order] = sort(imdb.images.sid);
 imdb.images.name = imdb.images.name(order);
 imdb.images.class = imdb.images.class(order);
 imdb.images.set = imdb.images.set(order);
 imdb.images.id = imdb.images.id(order);
-feat.x = feat.x(order,:);
-nRefViews = length(imdb.images.name)/imdb.meta.nShapes; % NOTE: assume same # of views
 shapeGtClasses = imdb.images.class(1:nRefViews:end);
 shapeSets = imdb.images.set(1:nRefViews:end);
 
@@ -59,7 +69,13 @@ shapeSets = imdb.images.set(1:nRefViews:end);
 refImgInds = ismember(imdb.images.set,I);
 refShapeIds=find(ismember(shapeSets,I));
 nRefShapes = numel(refShapeIds);
-refX = feat.x(refImgInds, :);
+if pooledFeat, 
+    tmp = zeros(nRefDescPerShape, imdb.meta.nShapes);
+    tmp(:,refShapeIds) = 1;
+    refX = feat.x(find(tmp)', :); 
+else
+    refX = feat.x(refImgInds, :);
+end
 nDims = size(refX,2);
 
 if ~isempty(shape), % retrieval given a query shape
@@ -76,85 +92,92 @@ if ~isempty(shape), % retrieval given a query shape
             fprintf(' done!\n');
         end
         net = load(netFilePath);
-    end
-    
+    end  
+	% get raw responses
     nViews = numel(shape);
-    desc = zeros(nViews,size(feat.x,2));
-    for i=1:nViews,
+    for i=1:numel(shape), 
         if ischar(shape{i}), shape{i} = imread(shape{i}); end
-        
-        % get raw responses
-        desc0 = get_cnn_activations(shape{i}, net, [], {feat.layerName}, ...
+    end
+    if pooledFeat, 
+        desc = get_cnn_activations(shape, net, [], {feat.layerName}, ...
             'gpuMode', opts.gpuMode);
-        if strcmp(feat.layerName(1:2),'fc') || ... % fully connected layers
-                strcmp(feat.layerName,'prob'),
+        desc = squeeze(desc.(feat.layerName))';
+        nDescPerShape = size(desc,1);
+    else
+        nDescPerShape = nViews;
+        desc = zeros(nDescPerShape,size(feat.x,2));
+        for i=1:nDescPerShape,
+            desc0 = get_cnn_activations(shape{i}, net, [], {feat.layerName}, ...
+                'gpuMode', opts.gpuMode);
             desc0 = squeeze(desc0.(feat.layerName))';
-        else
-            error('feature type (%s) not yet supported.', feat.layerName);
         end
-        
-        % normalization & projection
-        desc0 = bsxfun(@rdivide,desc0,sqrt(sum(desc0.^2,2)));
-        desc0 = bsxfun(@minus,desc0,feat.pcaMean) * feat.pcaCoeff;
-        desc0 = bsxfun(@rdivide,desc0,sqrt(sum(desc0.^2,2)));
+        desc(i,:) = desc0;
+    end    
+    % normalization & projection
+    if isfield(feat,'pcaMean'),
+        desc = bsxfun(@rdivide,desc,sqrt(sum(desc.^2,2)));
+        desc = bsxfun(@minus,desc,feat.pcaMean) * feat.pcaCoeff;
+        desc = bsxfun(@rdivide,desc,sqrt(sum(desc.^2,2)));
         if feat.powerTrans~=1,
-            desc0 = (abs(desc0).^feat.powerTrans).*sign(desc0);
+            desc = (abs(desc).^feat.powerTrans).*sign(desc);
         end
     end
-    desc(i,:) = desc0;
-    
     % retrieve by sorting distances
     switch opts.method,
         case 'mindist',
             dists = vl_alldist2(desc',refX',opts.metric);
             dists = reshape(min(reshape(dists',...
-                [nRefViews nRefShapes*nViews]),[],1),[nRefShapes nViews]);
+                [nRefDescPerShape nRefShapes*nDescPerShape]),[],1),[nRefShapes nDescPerShape]);
             dists = min(dists,[],2);
         case 'avgdist',
             dists = vl_alldist2(desc',refX',opts.metric);
             dists = reshape(mean(reshape(dists',...
-                [nRefViews nRefShapes*nViews]),1),[nRefShapes nViews]);
+                [nRefDescPerShape nRefShapes*nDescPerShape]),1),[nRefShapes nDescPerShape]);
             dists = mean(dists,2);
         case 'avgdesc',
             desc = mean(desc,1);
             descs = reshape(mean(reshape(refX,...
-                [nRefViews nRefShapes*nDims]),1),[nRefShapes nDims]);
-            dists = vl_alldist2(desc',descs',opts.metric);
+                [nRefDescPerShape nRefShapes*nDims]),1),[nRefShapes nDims]);
+            dists = vl_alldist2(descs',desc',opts.metric);
         otherwise,
             error('Unknown retrieval method: %s', opts.method);
     end
-    [~,I] = sort(dists,2,'ascend');
+    [~,I] = sort(dists,'ascend');
     results = refShapeIds(I(1:min(opts.nTop,nRefShapes)));
 else % no query given, evaluation within dataset
+    nDescPerShape = nRefDescPerShape;
     [~,I] = ismember(opts.querySets,imdb.meta.sets);
     queryImgInds = ismember(imdb.images.set,I);
     queryShapeIds=find(ismember(shapeSets,I));
     nQueryShapes = numel(queryShapeIds);
-    queryX = feat.x(queryImgInds, :);
-    nViews = nRefViews;
-    
+    if pooledFeat,
+        tmp = zeros(nDescPerShape, imdb.meta.nShapes);
+        tmp(:,queryShapeIds) = 1;
+        queryX = feat.x(find(tmp)', :);
+    else
+        queryX = feat.x(queryImgInds, :);
+    end
     % retrieve by sorting distances
     switch opts.method,
         case 'mindist',
             dists = vl_alldist2(queryX',refX',opts.metric);
-            dists = -1*vl_nnpool(-1*single(dists),[nViews nRefViews], ...
-                'stride', [nViews nRefViews], ...
+            dists = -1*vl_nnpool(-1*single(dists),[nDescPerShape nRefDescPerShape], ...
+                'stride', [nDescPerShape nRefDescPerShape], ...
                 'method', 'max');
         case 'avgdist',
             dists = vl_alldist2(queryX',refX',opts.metric);
-            dists = vl_nnpool(single(dists),[nViews nRefViews], ...
-                'stride', [nViews nRefViews], ...
+            dists = vl_nnpool(single(dists),[nDescPerShape nRefDescPerShape], ...
+                'stride', [nDescPerShape nRefDescPerShape], ...
                 'method', 'avg');
         case 'avgdesc',
             desc = reshape(mean(reshape(queryX, ...
-                [nViews nQueryShapes*nDims]),1),[nQueryShapes nDims]);
+                [nDescPerShape nQueryShapes*nDims]),1),[nQueryShapes nDims]);
             descs = reshape(mean(reshape(refX, ...
-                [nRefViews nRefShapes*nDims]),1),[nRefShapes nDims]);
+                [nRefDescPerShape nRefShapes*nDims]),1),[nRefShapes nDims]);
             dists = vl_alldist2(desc',descs',opts.metric);
         otherwise,
             error('Unknown retrieval method: %s', opts.method);
     end
-    
     % pr curves 
     recall = zeros(nQueryShapes, nRefShapes+1);
     precision = zeros(nQueryShapes, nRefShapes+1);

@@ -11,6 +11,7 @@ function [ feat ] = get_cnn_activations( im, net, subWins, layers, varargin)
 %       can be either a structure (.name, .sizes, .index) or string array 
 %   `gpuMode`:: false 
 %       set to true to compute on GPU 
+% TODO return multiple descriptors at once
 
 if nargin<4 || isempty(layers), 
     layers = {'fc6'};
@@ -19,12 +20,21 @@ if nargin<3 || isempty(subWins),
     subWins = get_augmentation_matrix('none');
 end
 nSubWins = size(subWins,2);
+nChannels = size(net.layers{1}.filters,3);
 
-if size(im,3) ~= size(net.layers{1}.filters,3), 
+if iscell(im), 
+    imCell = im;
+    im = zeros(net.normalization.imageSize(1), ...
+        net.normalization.imageSize(2), ...
+        nChannels, ...
+        numel(imCell));
+    for i=1:numel(imCell), 
+        im(:,:,:,i) = imresize(imCell{i}, net.normalization.imageSize(1:2));
+    end
+elseif size(im,3) ~= nChannels, 
     error('image (%d channels) is not compatible with net (%d channels)', ...
-        size(im,3), size(net.layers{1}.filters,3));
+        size(im,3), nChannels);
 end
-nChannels = size(im,3); 
 
 % find if net contains viewpool layer
 viewpoolIdx = find(cellfun(@(x)strcmp(x.name, 'viewpool'),net.layers));
