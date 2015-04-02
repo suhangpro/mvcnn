@@ -164,7 +164,7 @@ featCell = cell(1,numel(layers.name));
 flag_found = true;
 fprintf('Loading pre-computed features ... ');
 for fi = 1:numel(layers.name),
-    featPath = fullfile(saveDir,[layers.name{fi} '.mat']);
+    featPath = fullfile(saveDir,expSuffix,[layers.name{fi} '.mat']);
     if ~exist(featPath, 'file'), 
         flag_found = false;
         break;
@@ -174,6 +174,10 @@ for fi = 1:numel(layers.name),
 end
 if flag_found, 
     fprintf('all found! \n');
+    feats = struct();
+    for fi = 1:numel(layers.name),
+        feats.(layers.name{fi}) = featCell{fi};
+    end
     return;
 else
     fprintf('all/some feature missing! \n');
