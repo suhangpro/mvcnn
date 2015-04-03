@@ -71,7 +71,6 @@ else
     imdb.images.name = imdb.images.name(I);
     imdb.images.class = imdb.images.class(I);
     imdb.images.set = imdb.images.set(I);
-    imdb.images.sid = imdb.images.sid(I);
 end
 
 % -------------------------------------------------------------------------
