@@ -14,11 +14,6 @@ opts.ratio = opts.ratio(1:2)/sum(opts.ratio(1:2)); % train:val ratio
 imdb.imageDir = datasetDir;
 trainDir = fullfile(datasetDir, 'training');
 testDir = fullfile(datasetDir, 'testing');
-if exist(testDir, 'dir'),
-    hasTest = true;
-else
-    hasTest = false;
-end
 
 % meta
 folders = {};
@@ -27,16 +22,13 @@ contents = dir(trainDir);
 for i=1:numel(contents),
     if contents(i).isdir, folders = [folders contents(i).name]; end
 end
-if hasTest
-    contents = dir(testDir);
-    for i=1:numel(contents),
-        if contents(i).isdir, folders = [folders contents(i).name]; end
-    end
+contents = dir(testDir);
+for i=1:numel(contents),
+    if contents(i).isdir, folders = [folders contents(i).name]; end
 end
 imdb.meta.classes = setdiff(unique(folders),{'.','..'});
 imdb.meta.invert = opts.invert; % edges need to be inverted (v --> 255-v)
 imdb.meta.sets = {'train', 'val', 'test'};
-if ~hasTest, imdb.meta.sets{3} = []; end;
 fprintf('%d classes found! \n', length(imdb.meta.classes));
 
 % images
@@ -53,62 +45,70 @@ for ci = 1:length(imdb.meta.classes),
     files = dir(fullfile(trainDir, imdb.meta.classes{ci}, ['*' opts.ext]));
     nTrainval = length(files);
     fileNames = {files.name}; 
-    shapeNames = cellfun(@(s) get_shape_name(s), fileNames, ...
+    fileNames = fileNames(randperm(nTrainval)); % shuffle images 
+    imVids = cellfun(@(s) get_shape_vid(s), fileNames);
+    [~, I] = sort(imVids);
+    fileNames = fileNames(I); % order images wrt view id
+    imSnames = cellfun(@(s) get_shape_name(s), fileNames, ...
         'UniformOutput', false); 
-    shapeNamesUnique = unique(shapeNames); 
-    [~,shapeIdxs] = ismember(shapeNames, shapeNamesUnique); 
-    nShapes = length(shapeNamesUnique); 
-    order = randperm(nShapes);
-    nTrainShapes = ceil(nShapes*opts.ratio(1));
-    val = order(nTrainShapes+1:end); 
-    imagesSet = ones(1, nTrainval);
-    imagesSet(ismember(shapeIdxs,val)) = 2;
-    nTrain = sum(imagesSet==1); 
+    snamesUnique = unique(imSnames);  
+    nShapes = length(snamesUnique); 
+    snamesUnique = snamesUnique(randperm(nShapes)); % shuffle shape id
+    [~,imSids] = ismember(imSnames, snamesUnique);
+    nValShapes = ceil(nShapes*opts.ratio(2));
+    imSet = ones(1, nTrainval);
+    imSet(ismember(imSids,1:nValShapes)) = 2;
+    nTrain = sum(imSet==1); 
     nVal = nTrainval - nTrain; 
-    imdb.images.set = [imdb.images.set imagesSet];
+    imdb.images.set = [imdb.images.set imSet];
     imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('training', ...
         imdb.meta.classes{ci}, s), fileNames, 'UniformOutput', false)];
     imdb.images.class = [imdb.images.class ci*ones(1,nTrainval)];
-    imdb.images.sid = [imdb.images.sid shapeIdxs+cntShapes];
+    imdb.images.sid = [imdb.images.sid imSids+cntShapes];
     cntShapes = cntShapes + nShapes; 
     % test
-    nTest = 0;
-    if hasTest,
-        files = dir(fullfile(testDir, imdb.meta.classes{ci}, ['*' opts.ext]));
-        fileNames = {files.name};
-        shapeNames = cellfun(@(s) get_shape_name(s), fileNames, ...
-            'UniformOutput', false);
-        shapeNamesUnique = unique(shapeNames);
-        [~,shapeIdxs] = ismember(shapeNames, shapeNamesUnique);
-        nShapes = length(shapeNamesUnique);
-        nTest = length(files);
-        imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('testing', ...
-            imdb.meta.classes{ci}, s), {files.name}, 'UniformOutput', false)];
-        imdb.images.class = [imdb.images.class ci*ones(1,nTest)];
-        imdb.images.set = [imdb.images.set 3*ones(1,nTest)];
-        imdb.images.sid = [imdb.images.sid shapeIdxs+cntShapes];
-        cntShapes = cntShapes + nShapes; 
-    end
+    files = dir(fullfile(testDir, imdb.meta.classes{ci}, ['*' opts.ext]));
+    nTest = length(files);
+    fileNames = {files.name};
+    fileNames = fileNames(randperm(nTest)); % shuffle images 
+    imVids = cellfun(@(s) get_shape_vid(s), fileNames);
+    [~, I] = sort(imVids);
+    fileNames = fileNames(I); % order images wrt view id
+    imSnames = cellfun(@(s) get_shape_name(s), fileNames, ...
+        'UniformOutput', false);
+    snamesUnique = unique(imSnames);
+    nShapes = length(snamesUnique); 
+    snamesUnique = snamesUnique(randperm(nShapes)); % shuffle shape id
+    [~,imSids] = ismember(imSnames, snamesUnique);
+    imdb.images.set = [imdb.images.set 3*ones(1,nTest)];
+    imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('testing', ...
+        imdb.meta.classes{ci}, s), {files.name}, 'UniformOutput', false)];
+    imdb.images.class = [imdb.images.class ci*ones(1,nTest)];
+    imdb.images.sid = [imdb.images.sid imSids+cntShapes];
+    cntShapes = cntShapes + nShapes;
+    
     fprintf('\ttrain/val/test: %d/%d/%d\n', nTrain, nVal, nTest);
 end
+[imdb.images.sid, I] = sort(imdb.images.sid);
+imdb.images.name = imdb.images.name(I);
+imdb.images.class = imdb.images.class(I);
+imdb.images.set = imdb.images.set(I);
 imdb.images.id = 1:length(imdb.images.name);
 imdb.meta.nShapes = cntShapes;
 
-% shuffle
-fprintf('Shuffling ... ');
-order = randperm(length(imdb.images.name));
-imdb.images.name = imdb.images.name(order);
-imdb.images.sid = imdb.images.sid(order);
-% imdb.images.id = imdb.images.id(order);
-imdb.images.class = imdb.images.class(order);
-imdb.images.set = imdb.images.set(order);
-fprintf('done! \n');
-
 function shapename = get_shape_name(filename)
-
 suffix_idx = strfind(filename,'_');
 if isempty(suffix_idx), 
     shapename = []; 
 else
     shapename = filename(1:suffix_idx(end)-1);
+end
+
+function vid = get_shape_vid(filename)
+suffix_idx = strfind(filename,'_');
+ext_idx = strfind(filename,'.');
+if isempty(suffix_idx) || isempty(ext_idx), 
+    vid = []; 
+else
+    vid = str2double(filename(suffix_idx(end)+1:ext_idx(end)-1));
 end
