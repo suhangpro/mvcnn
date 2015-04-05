@@ -60,18 +60,6 @@ opts = vl_argparse(opts,varargin);
 % -------------------------------------------------------------------------
 imdb = get_imdb(imdbName);
 nImgs = numel(imdb.images.name);
-if isfield(imdb.images,'sid'), 
-    [imdb.images.sid,I] = sort(imdb.images.sid);
-    imdb.images.name = imdb.images.name(I);
-    imdb.images.class = imdb.images.class(I);
-    imdb.images.set = imdb.images.set(I);
-    imdb.images.id = imdb.images.id(I);
-else
-    [imdb.images.id,I] = sort(imdb.images.id);
-    imdb.images.name = imdb.images.name(I);
-    imdb.images.class = imdb.images.class(I);
-    imdb.images.set = imdb.images.set(I);
-end
 
 % -------------------------------------------------------------------------
 %                                                                CNN Model
@@ -111,8 +99,18 @@ if ~isempty(viewpoolIdx),
         error('More than one viewpool layers found!'); 
     end
     nViews = net.layers{viewpoolIdx}.stride;
+    [imdb.images.sid,I] = sort(imdb.images.sid);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.id = imdb.images.id(I);
 else
     nViews = 1;
+    [imdb.images.id,I] = sort(imdb.images.id);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.sid = imdb.images.sid(I);
 end
 nImgs = nImgs / nViews;
 
