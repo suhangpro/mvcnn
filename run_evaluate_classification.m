@@ -48,18 +48,38 @@ if isfield(feat,'imdb'),
 else
     imdb = opts.imdb;
 end
+[imdb.images.id,I] = sort(imdb.images.id);
+imdb.images.name = imdb.images.name(I);
+imdb.images.class = imdb.images.class(I);
+imdb.images.set = imdb.images.set(I);
+if isfield(imdb.images,'sid'), imdb.images.sid = imdb.images.sid(I); end
 
-trainIdxs   = find(imdb.images.set==1 | imdb.images.set==2)';
-testIdxs    = find(imdb.images.set==3)';
+if isfield(feat, 'sid'), 
+    [feat.sid, I] = sort(feat.sid);
+    feat.x = feat.x(I,:);
+    nViews = length(imdb.images.id) / imdb.meta.nShapes;
+    [~, I] = sort(imdb.images.sid); 
+    sset = imdb.images.set(I(1:nViews:end)); 
+    slabel = imdb.images.class(I(1:nViews:end));
+    opts.multiview = false;
+else
+    [feat.id, I] = sort(feat.id);
+    feat.x = feat.x(I,:);
+    sset = imdb.images.set;
+    slabel = imdb.images.class;
+end
 
-trainLabel  = imdb.images.class(trainIdxs)';
-testLabel   = imdb.images.class(testIdxs)';
+trainIdxs   = find(sset==1 | sset==2)';
+testIdxs    = find(sset==3)';
+
+trainLabel  = slabel(trainIdxs)';
+testLabel   = slabel(testIdxs)';
 
 % only keep training samples from same classes with testing instances 
 labelIdxs   = sort(unique(testLabel));
 nClasses    = length(labelIdxs); 
 trainIdxs   = trainIdxs(ismember(trainLabel,labelIdxs));
-trainLabel  = imdb.images.class(trainIdxs)';
+trainLabel  = slabel(trainIdxs)';
 
 trainFeat   = sparse(feat.x(trainIdxs,:));
 testFeat    = sparse(feat.x(testIdxs,:));

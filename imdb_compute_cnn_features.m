@@ -1,12 +1,12 @@
 function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %IMDB_COMPUTE_CNN_FEATURES Compute and save CNN activations features
 %
-%   imdb:: 'Pf4q'
+%   imdb:: 'modelnet10toon'
 %       name of a folder under 'data/'
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
 %       model will be searched/saved under 'data/models'
-%   `augmentation`:: 'nr3'
+%   `augmentation`:: 'none'
 %       1st field(f|n) indicates whether include flipped copy or not
 %       2nd field(s|r) indicates type of region - Square or Rectangle
 %       3rd field(1..4) indicates number of levels
@@ -33,7 +33,7 @@ if nargin<2 || isempty(model),
     model = 'imagenet-vgg-m';
 end
 if nargin<1 || isempty(imdbName),
-    imdbName = 'Pf4q';
+    imdbName = 'modelnet10toon';
 end
 if ischar(model), 
     modelName = model; 
@@ -44,7 +44,7 @@ else
 end
 
 % default options
-opts.augmentation = 'nr3';
+opts.augmentation = 'none';
 opts.gpuMode = false;
 opts.restart = false;
 opts.readOp = @imread_255;
@@ -59,6 +59,11 @@ opts = vl_argparse(opts,varargin);
 %                                                                 Get imdb
 % -------------------------------------------------------------------------
 imdb = get_imdb(imdbName);
+[imdb.images.id,I] = sort(imdb.images.id);
+imdb.images.name = imdb.images.name(I);
+imdb.images.class = imdb.images.class(I);
+imdb.images.set = imdb.images.set(I);
+if isfield(imdb.images,'sid'), imdb.images.sid = imdb.images.sid(I); end
 nImgs = numel(imdb.images.name);
 
 % -------------------------------------------------------------------------
@@ -106,11 +111,6 @@ if ~isempty(viewpoolIdx),
     imdb.images.id = imdb.images.id(I);
 else
     nViews = 1;
-    [imdb.images.id,I] = sort(imdb.images.id);
-    imdb.images.name = imdb.images.name(I);
-    imdb.images.class = imdb.images.class(I);
-    imdb.images.set = imdb.images.set(I);
-    imdb.images.sid = imdb.images.sid(I);
 end
 nImgs = nImgs / nViews;
 
@@ -199,24 +199,21 @@ parfor (i=1:nImgs, poolSize)
     if exist(fullfile(cacheDir, [num2str(i) '.mat']),'file'),
         continue;
     end
-    im = zeros(net.normalization.imageSize(1), ...
-        net.normalization.imageSize(2), nChannels, nViews, 'single') * 255;
+    im = cell(1,nViews);
     for v = 1:nViews, 
-        im(:,:,:,v) = imresize(opts.readOp(...
+        im{v} = opts.readOp(...
             fullfile(imdb.imageDir, imdb.images.name{(i-1)*nViews+v}), ...
-            nChannels), net.normalization.imageSize(1:2));
-    end
-    
-    if isfield(imdb.meta,'invert') && imdb.meta.invert, 
-        im = 255 - im;
+            nChannels);
+        if isfield(imdb.meta,'invert') && imdb.meta.invert,
+            im{v} = 255 - im{v};
+        end
     end
     
     feat = get_cnn_activations( im, net, subWins, layers, ...
         'gpuMode', opts.gpuMode);
     parsave(fullfile(cacheDir, [num2str(i) '.mat']),feat);
     
-    fprintf(' %s\n', fullfile(imdb.imageDir,imdb.images.name{(i-1)*nViews+1}));
-    
+    fprintf(' %s\n',fullfile(imdb.imageDir,imdb.images.name{(i-1)*nViews+1}));
 end
 
 % -------------------------------------------------------------------------

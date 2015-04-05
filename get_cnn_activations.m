@@ -7,14 +7,13 @@ function [ feat ] = get_cnn_activations( im, net, subWins, layers, varargin)
 %       cnn model structure 
 %   subWins:: [0; 1; 0; 1; 0]
 %       see get_augmentation_matrix.m for details 
-%   layers:: {'fc6'}
+%   layers:: {'fc7'}
 %       can be either a structure (.name, .sizes, .index) or string array 
 %   `gpuMode`:: false 
 %       set to true to compute on GPU 
-% TODO return multiple descriptors at once
 
 if nargin<4 || isempty(layers), 
-    layers = {'fc6'};
+    layers = {'fc7'};
 end
 if nargin<3 || isempty(subWins), 
     subWins = get_augmentation_matrix('none');
@@ -29,6 +28,10 @@ if iscell(im),
         nChannels, ...
         numel(imCell));
     for i=1:numel(imCell), 
+        if size(imCell{i},3) ~= nChannels, 
+            error('image (%d channels) is not compatible with net (%d channels)', ...
+                size(imCell{i},3), nChannels);
+        end
         im(:,:,:,i) = imresize(imCell{i}, net.normalization.imageSize(1:2));
     end
 elseif size(im,3) ~= nChannels, 
@@ -56,10 +59,7 @@ if iscell(layers),
     % name 
     layers.name = layersName;
     % index 
-    allLayersName = cell(1,length(net.layers));
-    for i=1:length(allLayersName),
-        allLayersName{i} = net.layers{i}.name;
-    end
+    allLayersName = cellfun(@(s) s.name,net.layers,'UniformOutput',false); 
     [~,layers.index] = ismember(layers.name,allLayersName);
     layers.index = layers.index + 1;
     % sizes

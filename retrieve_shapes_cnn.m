@@ -43,6 +43,22 @@ opts.refSets = {'test'};
 opts.metric = 'L2';
 opts = vl_argparse(opts,varargin);
 
+% -------------------------------------------------------------------------
+%                       sort imdb.images & feat.x w.r.t (sid,view) or (id)
+% -------------------------------------------------------------------------
+imdb = feat.imdb;
+if ~isfield(imdb.meta,'nShapes'), 
+    imdb.meta.nShapes = numel(imdb.images.name); 
+end;
+
+% sort imdb.images wrt id
+[imdb.images.id, I] = sort(imdb.images.id);
+imdb.images.name = imdb.images.name(I);
+imdb.images.class = imdb.images.class(I);
+imdb.images.set = imdb.images.set(I);
+if isfield(imdb.images,'sid'), imdb.images.sid = imdb.images.sid(I); end
+
+% sort feat.x wrt id/sid
 if isfield(feat, 'sid'), 
     pooledFeat = true; 
     [feat.sid,I] = sort(feat.sid);
@@ -52,29 +68,31 @@ else
     [feat.id,I] = sort(feat.id);
     feat.x = feat.x(I,:);
 end
-imdb = feat.imdb;
+
+% sort imdb.images wrt sid
+if isfield(imdb.images,'sid'),
+    [imdb.images.sid, I] = sort(imdb.images.sid);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.id = imdb.images.id(I);
+    if ~pooledFeat, feat.x = feat.x(I,:); end
+end
+
+% -------------------------------------------------------------------------
+%                                                      feature descriptors
+% -------------------------------------------------------------------------
 nRefViews = length(imdb.images.name)/imdb.meta.nShapes;
 nRefDescPerShape = size(feat.x,1)/imdb.meta.nShapes;
-
-% sort and group images according to shape id
-[imdb.images.sid, order] = sort(imdb.images.sid);
-imdb.images.name = imdb.images.name(order);
-imdb.images.class = imdb.images.class(order);
-imdb.images.set = imdb.images.set(order);
-imdb.images.id = imdb.images.id(order);
 shapeGtClasses = imdb.images.class(1:nRefViews:end);
 shapeSets = imdb.images.set(1:nRefViews:end);
-% quick n' dirty fix TODO 
-if ~pooledFeat, 
-    feat.x = feat.x(order,:);
-end
 
 % refX
 [~,I] = ismember(opts.refSets,imdb.meta.sets);
 refImgInds = ismember(imdb.images.set,I);
 refShapeIds=find(ismember(shapeSets,I));
 nRefShapes = numel(refShapeIds);
-if pooledFeat, 
+if nRefDescPerShape>1, % TODO make sure this is correct 
     tmp = zeros(nRefDescPerShape, imdb.meta.nShapes);
     tmp(:,refShapeIds) = 1;
     refX = feat.x(find(tmp)', :); 
@@ -134,7 +152,7 @@ else
     queryImgInds = ismember(imdb.images.set,I);
     queryShapeIds=find(ismember(shapeSets,I));
     nQueryShapes = numel(queryShapeIds);
-    if pooledFeat,
+    if nDescPerShape>1, % TODO make sure this is correct 
         tmp = zeros(nDescPerShape, imdb.meta.nShapes);
         tmp(:,queryShapeIds) = 1;
         queryX = feat.x(find(tmp)', :);
@@ -143,7 +161,9 @@ else
     end
 end
 
-% retrieve by sorting distances
+% -------------------------------------------------------------------------
+%                                            retrieve by sorting distances
+% -------------------------------------------------------------------------
 switch opts.method,
     case 'mindist',
         dists = vl_alldist2(queryX',refX',opts.metric);
@@ -187,7 +207,9 @@ switch opts.method,
         error('Unknown retrieval method: %s', opts.method);
 end
 
-% prepare and return results
+% -------------------------------------------------------------------------
+%                                               prepare and return results
+% -------------------------------------------------------------------------
 if ~isempty(shape), % retrieval given a query shape
     [~,I] = sort(dists,'ascend');
     results = refShapeIds(I(1:min(opts.nTop,nRefShapes)));
