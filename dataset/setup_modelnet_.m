@@ -82,7 +82,7 @@ for ci = 1:length(imdb.meta.classes),
     [~,imSids] = ismember(imSnames, snamesUnique);
     imdb.images.set = [imdb.images.set 3*ones(1,nTest)];
     imdb.images.name = [imdb.images.name cellfun(@(s) fullfile('testing', ...
-        imdb.meta.classes{ci}, s), {files.name}, 'UniformOutput', false)];
+        imdb.meta.classes{ci}, s), fileNames, 'UniformOutput', false)];
     imdb.images.class = [imdb.images.class ci*ones(1,nTest)];
     imdb.images.sid = [imdb.images.sid imSids+cntShapes];
     cntShapes = cntShapes + nShapes;
