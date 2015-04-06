@@ -13,6 +13,8 @@ function run_evaluate_classification(feat, varargin)
 %       liblinear parameter (-q)
 %   `multiview`:: false
 %       set to true to evaluate on multiple views of same instances 
+%   `method`:: 'avgdesc'
+%       used only if multiview is true; other choices: 'avgsvmscore'
 %   `logPath`:: 'log/eval.txt'
 %       place to save log information
 %   `predPath`:: 'data/pred.mat'
@@ -20,11 +22,15 @@ function run_evaluate_classification(feat, varargin)
 %   `confusionPath`:: 'data/confusion.pdf' 
 %       place to save confusion matrix plot 
 %   
+% NOTE: assume all classes in imdb appear in training set 
+
+% default options 
 opts.imdb = [];
 opts.cv = 5;
 opts.log2c = [-4:2:4];
 opts.quiet = true;
 opts.multiview = false;
+opts.method = 'avgsdesc';
 opts.logPath = fullfile('log','eval.txt');
 opts.predPath = fullfile('data','pred.mat');
 [opts, varargin] = vl_argparse(opts, varargin) ;
@@ -38,53 +44,102 @@ end
 if ~exist(fileparts(opts.predPath),'dir'), 
     vl_xmkdir(fileparts(opts.predPath)); 
 end
-
 if ischar(feat), 
     feat = load(feat);
 end
 
+% -------------------------------------------------------------------------
+%                       sort imdb.images & feat.x w.r.t (sid,view) or (id)
+% -------------------------------------------------------------------------
 if isfield(feat,'imdb'), 
     imdb = feat.imdb; 
 else
     imdb = opts.imdb;
 end
+if ~isfield(imdb.meta,'nShapes'), 
+    imdb.meta.nShapes = numel(imdb.images.name); 
+end;
+
+% sort imdb.images wrt id
 [imdb.images.id,I] = sort(imdb.images.id);
 imdb.images.name = imdb.images.name(I);
 imdb.images.class = imdb.images.class(I);
 imdb.images.set = imdb.images.set(I);
 if isfield(imdb.images,'sid'), imdb.images.sid = imdb.images.sid(I); end
 
+% sort feat.x wrt id/sid
 if isfield(feat, 'sid'), 
-    [feat.sid, I] = sort(feat.sid);
-    feat.x = feat.x(I,:);
-    nViews = length(imdb.images.id) / imdb.meta.nShapes;
-    [~, I] = sort(imdb.images.sid); 
-    sset = imdb.images.set(I(1:nViews:end)); 
-    slabel = imdb.images.class(I(1:nViews:end));
+    pooledFeat = true;
     opts.multiview = false;
-else
-    [feat.id, I] = sort(feat.id);
+    [feat.sid,I] = sort(feat.sid);
     feat.x = feat.x(I,:);
-    sset = imdb.images.set;
-    slabel = imdb.images.class;
+else
+    pooledFeat = false;
+    [feat.id,I] = sort(feat.id);
+    feat.x = feat.x(I,:);
 end
 
-trainIdxs   = find(sset==1 | sset==2)';
-testIdxs    = find(sset==3)';
+% sort imdb.images wrt sid
+if isfield(imdb.images,'sid'),
+    [imdb.images.sid, I] = sort(imdb.images.sid);
+    imdb.images.name = imdb.images.name(I);
+    imdb.images.class = imdb.images.class(I);
+    imdb.images.set = imdb.images.set(I);
+    imdb.images.id = imdb.images.id(I);
+    if ~pooledFeat, feat.x = feat.x(I,:); end
+end
 
-trainLabel  = slabel(trainIdxs)';
-testLabel   = slabel(testIdxs)';
+% -------------------------------------------------------------------------
+%                                                      feature descriptors
+% -------------------------------------------------------------------------
+nViews = length(imdb.images.name)/imdb.meta.nShapes;
+nDescPerShape = size(feat.x,1)/imdb.meta.nShapes;
+shapeGtClasses = imdb.images.class(1:nViews:end);
+shapeSets = imdb.images.set(1:nViews:end);
+nDims = size(feat.x,2);
 
-% only keep training samples from same classes with testing instances 
-labelIdxs   = sort(unique(testLabel));
-nClasses    = length(labelIdxs); 
-trainIdxs   = trainIdxs(ismember(trainLabel,labelIdxs));
-trainLabel  = slabel(trainIdxs)';
+% train & val
+trainSets = {'train','val'};
+testSets = {'test'};
+[~,I] = ismember(trainSets,imdb.meta.sets);
+trainSids = find(ismember(shapeSets, I));
+tmp = zeros(nDescPerShape, imdb.meta.nShapes);
+tmp(:,trainSids) = 1;
+trainFeat = feat.x(find(tmp)',:);
+trainLabel = shapeGtClasses(trainSids)';
+nTrainShapes = length(trainLabel); 
 
-trainFeat   = sparse(feat.x(trainIdxs,:));
-testFeat    = sparse(feat.x(testIdxs,:));
+% test 
+[~,I] = ismember(testSets,imdb.meta.sets);
+testSids = find(ismember(shapeSets, I));
+tmp = zeros(nDescPerShape, imdb.meta.nShapes);
+tmp(:,testSids) = 1;
+testFeat = feat.x(find(tmp)',:);
+testLabel = shapeGtClasses(testSids)';
+nTestShapes = length(testLabel);
+
+if ~pooledFeat, 
+    if opts.multiview && strcmp(opts.method,'avgdesc'), 
+        % average descriptor across views 
+        trainFeat = reshape(mean(reshape(trainFeat, ...
+            [nDescPerShape nTrainShapes*nDims]),1),[nTrainShapes nDims]);
+        testFeat = reshape(mean(reshape(testFeat, ...
+            [nDescPerShape nTestShapes*nDims]),1),[nTestShapes nDims]);
+    else
+        % expand labels across views 
+        trainLabel = reshape(repmat(trainLabel',[nDescPerShape 1]),...
+            [nDescPerShape*nTrainShapes 1]);
+        testLabel = reshape(repmat(testLabel',[nDescPerShape 1]),...
+            [nDescPerShape*nTestShapes 1]);
+    end
+end   
+trainFeat = sparse(trainFeat);
+testFeat = sparse(testFeat); 
 
 
+% -------------------------------------------------------------------------
+%                                                   train and evaluate SVM
+% -------------------------------------------------------------------------
 if exist(opts.predPath, 'file'), 
     load(opts.predPath); 
     fprintf('SVM model and predictions loaded from %s. \n', opts.predPath);
@@ -116,68 +171,37 @@ else
     accuTest = accuTest(1)/100;
     accuTrain = accuTrain(1)/100;
     
+    if opts.multiview && strcmp(opts.method,'avgsvmscore'),
+        testLabel = testLabel(1:nDescPerShape:end);
+        nClasses = length(model.Label);
+        decTest = reshape(mean(reshape(decTest, ...
+            [nDescPerShape nTestShapes*nClasses]),1),[nTestShapes nClasses]);
+        [~,predTest] = max(decTest,[],2);
+        accuTest = sum(predTest==testLabel)/length(predTest);
+    end
+
     save(opts.predPath,'bestc','accuTrain','predTest','accuTest','decTest',...
-        'model');
+        'model','opts');
 end
 
-if opts.multiview, 
-    imNames = cellfun(@(s) parse_name_with_view(s), ...
-        imdb.images.name(testIdxs)', 'UniformOutput', false); 
-    imNamesUnique = unique(imNames); 
-    nUniques = length(imNamesUnique); 
-    [~, imIds] = ismember(imNames, imNamesUnique); 
-    
-    testLabel0 = testLabel;
-    testLabel = zeros(nUniques,1);
-    for i=1:nUniques, 
-        testLabel(i) = testLabel0(find(imIds==i,1));
-    end
-    
-    %{
-    histCnt = zeros(nUniques, nClasses);
-    for ci = 1:nClasses, 
-        c = labelIdxs(ci); 
-        histCnt(:,ci) = histc(imIds(predTest==c),1:nUniques);
-    end
-    decTest = bsxfun(@rdivide, histCnt, sum(histCnt,2)); % normalize
-    %}
-    
-    %{:-)
-    decSum  = zeros(nUniques, nClasses); 
-    cnt = zeros(nUniques,1);
-    for i = 1:nUniques, 
-        decSum(i,:) = sum(decTest(imIds==i,:));
-        cnt(i) = sum(imIds==i); 
-    end
-    decTest = bsxfun(@rdivide, decSum, cnt); % average 
-    %}
-    
-    [~,I] = max(decTest,[],2);
-    predTest = labelIdxs(I);
-    accuTest = sum(predTest==testLabel)/length(predTest); 
-    
-end
-
-% compute mAP for test set
-AP = zeros(1,nClasses);
-for ci=1:nClasses,
-    [~,~,info] = vl_pr((testLabel==labelIdxs(ci))-0.5,decTest(:,ci));
-    AP(ci) = info.ap;
-end
-mAP = mean(AP);
+% -------------------------------------------------------------------------
+%                                                   write & output results 
+% -------------------------------------------------------------------------
 
 % confusion matrix
-plot_confusionmat(testLabel, predTest, imdb.meta.classes(labelIdxs), ...
+plot_confusionmat(testLabel, predTest, imdb.meta.classes, ...
     opts.confusionPath, [imdb.imageDir ' : ' feat.modelName]);
 
+STR_01 = {'false', 'true'};
 fprintf('Evaluation finished! \n');
 fprintf('\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf('\tdataset: %s\n', imdb.imageDir);
 fprintf('\tmodel: %s\n',feat.modelName);
 fprintf('\tlayer: %s\n',feat.layerName);
+fprintf('\tmultiview: %s', STR_01{(opts.multiview~=0)+1});
+if opts.multiview, fprintf(' (%s)', opts.method); end; fprintf('\n');
 fprintf('\taccuracy (train): %g%%\n',accuTrain*100);
 fprintf('\taccuracy (test): %g%%\n',accuTest*100);
-fprintf('\tmAP (test): %g\n\n',mAP);
 
 fid = fopen(opts.logPath,'a+');
 fprintf(fid, '(%s) \n', datestr(now));
@@ -185,19 +209,8 @@ fprintf(fid, '\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);
 fprintf(fid, '\tlayer: %s\n',feat.layerName);
+fprintf(fid, '\tmultiview: %s', STR_01{(opts.multiview~=0)+1});
+if opts.multiview, fprintf(fid,' (%s)', opts.method); end; fprintf(fid,'\n');
 fprintf(fid, '\taccuracy (train): %g%%\n',accuTrain*100);
 fprintf(fid, '\taccuracy (test): %g%%\n',accuTest*100);
-fprintf(fid, '\tmAP (test): %g\n\n',mAP);
 fclose(fid);
-
-function [name, view] = parse_name_with_view(filename)
-[pathstr, name0, ~] = fileparts(filename); 
-name0 = fullfile(pathstr, name0); 
-idx = strfind(name0,'_'); 
-view = [];
-if isempty(idx) || isempty(str2double(name0(idx(end)+1:end))), 
-    name = name0;
-    return;
-end
-name = name0(1:idx(end)-1);
-view = str2num(name0(idx(end)+1:end));
