@@ -89,16 +89,11 @@ shapeSets = imdb.images.set(1:nRefViews:end);
 
 % refX
 [~,I] = ismember(opts.refSets,imdb.meta.sets);
-refImgInds = ismember(imdb.images.set,I);
 refShapeIds=find(ismember(shapeSets,I));
 nRefShapes = numel(refShapeIds);
-if nRefDescPerShape>1, % TODO make sure this is correct 
-    tmp = zeros(nRefDescPerShape, imdb.meta.nShapes);
-    tmp(:,refShapeIds) = 1;
-    refX = feat.x(find(tmp)', :); 
-else
-    refX = feat.x(refImgInds, :);
-end
+tmp = zeros(nRefDescPerShape, imdb.meta.nShapes);
+tmp(:,refShapeIds) = 1;
+refX = feat.x(find(tmp)', :);
 nDims = size(refX,2);
 
 % queryX
@@ -129,7 +124,7 @@ if ~isempty(shape), % retrieval given a query shape
         nDescPerShape = size(queryX,1);
     else
         nDescPerShape = nViews;
-        queryX = zeros(nDescPerShape,size(feat.x,2));
+        queryX = zeros(nDescPerShape, nDims);
         for i=1:nDescPerShape,
             desc0 = get_cnn_activations(shape{i}, net, [], {feat.layerName}, ...
                 'gpuMode', opts.gpuMode);
@@ -149,16 +144,11 @@ if ~isempty(shape), % retrieval given a query shape
 else 
     nDescPerShape = nRefDescPerShape;
     [~,I] = ismember(opts.querySets,imdb.meta.sets);
-    queryImgInds = ismember(imdb.images.set,I);
     queryShapeIds=find(ismember(shapeSets,I));
     nQueryShapes = numel(queryShapeIds);
-    if nDescPerShape>1, % TODO make sure this is correct 
-        tmp = zeros(nDescPerShape, imdb.meta.nShapes);
-        tmp(:,queryShapeIds) = 1;
-        queryX = feat.x(find(tmp)', :);
-    else
-        queryX = feat.x(queryImgInds, :);
-    end
+    tmp = zeros(nDescPerShape, imdb.meta.nShapes);
+    tmp(:,queryShapeIds) = 1;
+    queryX = feat.x(find(tmp)', :);
 end
 
 % -------------------------------------------------------------------------
