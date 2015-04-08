@@ -16,8 +16,8 @@ function [ results ] = retrieve_shapes_cnn( shape, feat, varargin )
 %       .pcaMean
 %       .pcaCoeff
 %       .powerTrans
-%   `method`:: 'minavgdist'
-%       other choices: 'avgdist', 'mindist', 'avgmindist', 'avgdesc'
+%   `method`:: 'avgdesc'
+%       other choices: 'avgdist', 'mindist', 'avgmindist', 'minavgdist'
 %   `net`::[]
 %       preloaded cnn model (required when feat.modelName is not available)
 %   `gpuMode`:: false
@@ -34,7 +34,7 @@ function [ results ] = retrieve_shapes_cnn( shape, feat, varargin )
 % Hang Su
 
 % default options
-opts.method = 'minavgdist';
+opts.method = 'avgdesc';
 opts.net = [];
 opts.gpuMode = false;
 opts.nTop = Inf;
@@ -165,7 +165,7 @@ switch opts.method,
         dists = vl_nnpool(single(dists),[nDescPerShape nRefDescPerShape], ...
             'stride', [nDescPerShape nRefDescPerShape], ...
             'method', 'avg');
-    case 'minavgdist',
+    case 'avgmindist',
         dists = vl_alldist2(queryX',refX',opts.metric);
         dists_1 = -1*vl_nnpool(-1*single(dists),[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','max');
@@ -176,7 +176,7 @@ switch opts.method,
         dists_2 = vl_nnpool(dists_2,[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','avg');
         dists = 0.5*(dists_1+dists_2);
-    case 'avgmindist',
+    case 'minavgdist',
         dists = vl_alldist2(queryX',refX',opts.metric);
         dists_1 = vl_nnpool(single(dists),[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','avg');
