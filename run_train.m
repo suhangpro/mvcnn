@@ -120,7 +120,7 @@ end
 
 % Add dropout layers
 if opts.addDropout, 
-    dropoutLayer = struct('type', 'dropout', 'rate', 0.5) ;
+    dropoutLayer = struct('type', 'dropout', 'rate', 0.5, 'name','dropout') ;
     net.layers = horzcat(net.layers(1:end-4), ...
                             dropoutLayer, ...
                             net.layers(end-3:end-2), ...
@@ -129,16 +129,15 @@ if opts.addDropout,
 end
 
 % Add viewpool layer if multiview is enabled
-if opts.multiview,
+if opts.multiview, 
+    priorLayer = 'conv3';
     viewpoolLayer = struct('name', 'viewpool', ...
         'type', 'custom', ...
         'stride', opts.nViews, ...
         'method', 'max', ...
         'forward', @viewpool_fw, ...
         'backward', @viewpool_bw);
-    net.layers = horzcat(net.layers(1:end-1), ...
-                            viewpoolLayer, ...
-                            net.layers(end));
+    net = modify_net(net,'mode','add_layer','layer',viewpoolLayer,'loc',priorLayer);
 end
 
 % -------------------------------------------------------------------------
@@ -152,7 +151,7 @@ trainOpts.multiview = opts.multiview;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
 trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
-% trainOpts.learningRate = [0.0001*ones(1, 3) 0.00001*ones(1, 3) 0.000001*ones(1,3)] ;
+% trainOpts.learningRate = [0.0001*ones(1, 5) 0.00001*ones(1, 5) 0.000001*ones(1,5)] ;
 trainOpts.conserveMemory = true;
 
 fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
@@ -246,7 +245,7 @@ if ~isempty(modelName),
                            'biasesWeightDecay', 0);
     
     % Last layer is softmaxloss (switch to softmax for prediction)
-    net.layers{end} = struct('type', 'softmaxloss') ;
+    net.layers{end} = struct('type', 'softmaxloss', 'name', 'loss') ;
 
     % Rename classes
     net.classes.name = classNames;
