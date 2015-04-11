@@ -27,6 +27,8 @@ function net = run_train(imdbName, varargin)
 %   `multiview`:: false 
 %       if true, use shapes (w/ multiple views) instead of images as
 %       instances 
+%   `viewpoolLoc` :: 'fc7'
+%       location of the viewpool layer, only used when multiview is true
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -39,6 +41,7 @@ opts.augmentation = 'f2';
 opts.addDropout = true;
 opts.border = [];
 opts.multiview = false;
+opts.viewpoolLoc = 'fc7';
 opts = vl_argparse(opts, varargin) ;
 
 if ~isempty(opts.modelName), 
@@ -130,14 +133,16 @@ end
 
 % Add viewpool layer if multiview is enabled
 if opts.multiview, 
-    priorLayer = 'conv3';
     viewpoolLayer = struct('name', 'viewpool', ...
         'type', 'custom', ...
         'stride', opts.nViews, ...
         'method', 'max', ...
         'forward', @viewpool_fw, ...
         'backward', @viewpool_bw);
-    net = modify_net(net,'mode','add_layer','layer',viewpoolLayer,'loc',priorLayer);
+    net = modify_net(net, ...
+        'mode','add_layer', ...
+        'layer',viewpoolLayer, ...
+        'loc',opts.viewpoolLoc);
 end
 
 % -------------------------------------------------------------------------
@@ -150,8 +155,8 @@ trainOpts.numEpochs = opts.numEpochs ;
 trainOpts.multiview = opts.multiview;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
-trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
-% trainOpts.learningRate = [0.0001*ones(1, 5) 0.00001*ones(1, 5) 0.000001*ones(1,5)] ;
+% trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
+trainOpts.learningRate = [0.0001*ones(1, 5) 0.00001*ones(1, 5) 0.000001*ones(1,5)] ;
 trainOpts.conserveMemory = true;
 
 fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
