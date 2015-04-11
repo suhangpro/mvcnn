@@ -38,6 +38,10 @@ P = K * Rcam * [eye(3), -C];
 vmat = scalePoints(Robj * offobj.vmat, [objx;1.3;objz], [1;1;1]);
 result = RenderMex(P, imw, imh, vmat, uint32(offobj.fmat))';
 depth = z_near./(1-double(result)/2^32);
+if isempty(find(abs(depth)<100)), 
+    depth = [];
+    return;
+end
 maxDepth = max(depth(abs(depth) < 100));
 cropmask = (depth < z_near) | (depth > z_far_ratio * maxDepth);
 crop = findCropRegion(~cropmask);
