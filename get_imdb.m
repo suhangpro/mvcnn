@@ -7,7 +7,7 @@ datasetDir = fullfile('data',datasetName);
 datasetFnName = ['setup_' datasetName];
 imdbPath = fullfile(datasetDir,'imdb.mat');
 
-if ~exist(datasetDir,'dir') || ~exist([datasetFnName '.m'],'file'), 
+if ~exist(imdbPath,'file') && ~exist([datasetFnName '.m'],'file'), 
     error('Unknown dataset: %s', datasetName);
 end
 

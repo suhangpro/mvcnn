@@ -29,9 +29,10 @@ if opts.multiview,
     opts.train = opts.train(I);
     [~,I] = sort(imdb.images.sid(opts.val));
     opts.val = opts.val(I);
-    nViews = length(imdb.images.id)/imdb.meta.nShapes;
+    nInstances = length(unique(imdb.images.sid));
+    nViews = length(imdb.images.id)/nInstances;
     if mod(opts.batchSize,nViews)~=0, 
-        error('All shapes should have same number of views');
+        error('Batch size incompatible with #views');
     end
 else
     nViews = 1;

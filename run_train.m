@@ -81,7 +81,8 @@ else
     opts.invert = false;
 end
 if opts.multiview, 
-    opts.nViews = length(imdb.images.id)/imdb.meta.nShapes;
+    nShapes = length(unique(imdb.images.sid));
+    opts.nViews = length(imdb.images.id)/nShapes;
 end
 
 % -------------------------------------------------------------------------

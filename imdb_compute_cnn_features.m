@@ -18,8 +18,8 @@ function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %   `readOp`:: @imread_255
 %       the operator that reads data from file
 %   `normalization`:: true
-%       set to false to turn off all normalization (incl. pca, whitening,
-%       powerTrans)
+%       set to false to turn off all forms of post-processing
+%       (normalization, pca, whitening, powerTrans)
 %   `pca`:: 500
 %       set to Inf to disable pca
 %   `pcaNumSamples`:: 10^5
