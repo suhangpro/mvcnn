@@ -14,7 +14,7 @@ function run_evaluate_classification(feat, varargin)
 %   `multiview`:: false
 %       set to true to evaluate on multiple views of same instances 
 %   `method`:: 'avgdesc'
-%       used only if multiview is true; other choices: 'avgsvmscore'
+%       used only if multiview is true; other choices: 'maxdesc','avgsvmscore'
 %   `logPath`:: 'log/eval.txt'
 %       place to save log information
 %   `predPath`:: 'data/pred.mat'
@@ -125,6 +125,12 @@ if ~pooledFeat,
             [nDescPerShape nTrainShapes*nDims]),1),[nTrainShapes nDims]);
         testFeat = reshape(mean(reshape(testFeat, ...
             [nDescPerShape nTestShapes*nDims]),1),[nTestShapes nDims]);
+    elseif opts.multiview && strcmp(opts.method,'maxdesc'), 
+        % max descriptor across views 
+        trainFeat = reshape(max(reshape(trainFeat, ...
+            [nDescPerShape nTrainShapes*nDims]),[],1),[nTrainShapes nDims]);
+        testFeat = reshape(max(reshape(testFeat, ...
+            [nDescPerShape nTestShapes*nDims]),[],1),[nTestShapes nDims]);
     else
         % expand labels across views 
         trainLabel = reshape(repmat(trainLabel',[nDescPerShape 1]),...

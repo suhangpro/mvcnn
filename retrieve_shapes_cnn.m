@@ -17,7 +17,7 @@ function [ results ] = retrieve_shapes_cnn( shape, feat, varargin )
 %       .pcaCoeff
 %       .powerTrans
 %   `method`:: 'avgdesc'
-%       other choices: 'avgdist', 'mindist', 'avgmindist', 'minavgdist'
+%       other choices: 'maxdesc','avgdist','mindist','avgmindist','minavgdist'
 %   `net`::[]
 %       preloaded cnn model (required when feat.modelName is not available)
 %   `gpuMode`:: false
@@ -192,6 +192,12 @@ switch opts.method,
             [nDescPerShape nQueryShapes*nDims]),1),[nQueryShapes nDims]);
         descs = reshape(mean(reshape(refX, ...
             [nRefDescPerShape nRefShapes*nDims]),1),[nRefShapes nDims]);
+        dists = vl_alldist2(desc',descs',opts.metric);
+    case 'maxdesc',
+        desc = reshape(max(reshape(queryX, ...
+            [nDescPerShape nQueryShapes*nDims]),[],1),[nQueryShapes nDims]);
+        descs = reshape(max(reshape(refX, ...
+            [nRefDescPerShape nRefShapes*nDims]),[],1),[nRefShapes nDims]);
         dists = vl_alldist2(desc',descs',opts.metric);
     otherwise,
         error('Unknown retrieval method: %s', opts.method);
