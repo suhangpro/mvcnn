@@ -30,13 +30,11 @@ if isempty(poolobj),
 else
     poolSize = poolobj.NumWorkers;
 end
-% parfor (i=1:nInstances, poolSize)
-for i=1:nInstances, 
+parfor (i=1:nInstances, poolSize)
     im = imread(fullfile(imdb.imageDir,imdb.images.name{i}));
-    % fprintf(' %s\n', imdb.images.name{i});
+    fprintf(' %s\n', imdb.images.name{i});
     for ri = 1:nViews, 
         [pathstr, name, ext] = fileparts(imdb.images.name{i});
-        imdb2.images.name{(i-1)*nViews+ri} = fullfile(pathstr,[name '_' num2str(ri) ext]);
         vl_xmkdir(fullfile(saveDir,pathstr));
         savePath = fullfile(saveDir,fullfile(pathstr,[name '_' num2str(ri) ext]));
         if exist(savePath,'file'), continue; end
@@ -44,10 +42,15 @@ for i=1:nInstances,
         if flips(ri), im_r = fliplr(im_r); end
         imwrite(im_r,savePath);
     end
+end
+for i=1:nInstances, 
+    for ri = 1:nViews, 
+        [pathstr, name, ext] = fileparts(imdb.images.name{i});
+        imdb2.images.name{(i-1)*nViews+ri} = fullfile(pathstr,[name '_' num2str(ri) ext]);
+    end
     if mod(i,10)==0, fprintf('.'); end
     if mod(i,500)==0, fprintf(' [%d/%d]\n',i,nInstances); end
 end
-
 save(fullfile(saveDir,'imdb.mat'),'-struct','imdb2');
 
 end
