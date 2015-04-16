@@ -1,4 +1,4 @@
-function [ results ] = retrieve_shapes_cnn( shape, feat, varargin )
+function [ results,info ] = retrieve_shapes_cnn( shape, feat, varargin )
 %RETRIEVE_SHAPES_CNN Retrieve 3d shapes using CNN features
 %
 %   shape::
@@ -47,9 +47,6 @@ opts = vl_argparse(opts,varargin);
 %                       sort imdb.images & feat.x w.r.t (sid,view) or (id)
 % -------------------------------------------------------------------------
 imdb = feat.imdb;
-if ~isfield(imdb.meta,'nShapes'), 
-    imdb.meta.nShapes = numel(imdb.images.name); 
-end;
 
 % sort imdb.images wrt id
 [imdb.images.id, I] = sort(imdb.images.id);
@@ -82,18 +79,36 @@ end
 % -------------------------------------------------------------------------
 %                                                      feature descriptors
 % -------------------------------------------------------------------------
-nRefViews = length(imdb.images.name)/imdb.meta.nShapes;
-nRefDescPerShape = size(feat.x,1)/imdb.meta.nShapes;
-shapeGtClasses = imdb.images.class(1:nRefViews:end);
-shapeSets = imdb.images.set(1:nRefViews:end);
+if isfield(imdb.images,'sid'), 
+    shapeStartIdx = find(imdb.images.sid-circshift(imdb.images.sid,[0 1]));
+    shapeIds = imdb.images.sid(shapeStartIdx);
+else
+    shapeStartIdx = 1:length(imdb.images.id);
+    shapeIds = imdb.images.id;
+end
+shapeGtClasses = imdb.images.class(shapeStartIdx);
+shapeSets = imdb.images.set(shapeStartIdx);
 
 % refX
 [~,I] = ismember(opts.refSets,imdb.meta.sets);
-refShapeIds=find(ismember(shapeSets,I));
+shapeRefInds = ismember(shapeSets,I);
+refShapeIds = shapeIds(shapeRefInds);
 nRefShapes = numel(refShapeIds);
-tmp = zeros(nRefDescPerShape, imdb.meta.nShapes);
-tmp(:,refShapeIds) = 1;
-refX = feat.x(find(tmp)', :);
+if ~pooledFeat && isfield(imdb.images,'sid'), 
+    nRefDescPerShape = sum(imdb.images.sid==refShapeIds(1));
+else
+    nRefDescPerShape = 1;
+end
+if isfield(imdb.images,'sid'), 
+    if pooledFeat, 
+        descRefInds = shapeRefInds;
+    else
+        descRefInds = ismember(imdb.images.sid,refShapeIds); 
+    end
+else
+    descRefInds = ismember(imdb.images.id,refShapeIds); 
+end
+refX = feat.x(descRefInds, :);
 nDims = size(refX,2);
 
 % queryX
@@ -112,7 +127,7 @@ if ~isempty(shape), % retrieval given a query shape
         end
         net = load(netFilePath);
     end  
-	% get raw responses
+    % get raw responses
     nViews = numel(shape);
     for i=1:numel(shape), 
         if ischar(shape{i}), shape{i} = imread(shape{i}); end
@@ -142,13 +157,25 @@ if ~isempty(shape), % retrieval given a query shape
         end
     end
 else 
-    nDescPerShape = nRefDescPerShape;
     [~,I] = ismember(opts.querySets,imdb.meta.sets);
-    queryShapeIds=find(ismember(shapeSets,I));
+    shapeQueryInds = ismember(shapeSets,I);
+    queryShapeIds = shapeIds(shapeQueryInds);
     nQueryShapes = numel(queryShapeIds);
-    tmp = zeros(nDescPerShape, imdb.meta.nShapes);
-    tmp(:,queryShapeIds) = 1;
-    queryX = feat.x(find(tmp)', :);
+    if ~pooledFeat && isfield(imdb.images,'sid'), 
+        nDescPerShape = sum(imdb.images.sid==queryShapeIds(1));
+    else
+        nDescPerShape = 1;
+    end
+    if isfield(imdb.images,'sid'), 
+        if pooledFeat, 
+            descQueryInds = shapeQueryInds;
+        else
+            descQueryInds = ismember(imdb.images.sid,queryShapeIds); 
+        end
+    else
+        descQueryInds = ismember(imdb.images.id,queryShapeIds); 
+    end
+    queryX = feat.x(descQueryInds, :);
 end
 
 % -------------------------------------------------------------------------
@@ -156,33 +183,33 @@ end
 % -------------------------------------------------------------------------
 switch opts.method,
     case 'mindist',
-        dists = vl_alldist2(queryX',refX',opts.metric);
-        dists = -1*vl_nnpool(-1*single(dists),[nDescPerShape nRefDescPerShape], ...
+        dists0 = vl_alldist2(queryX',refX',opts.metric);
+        dists = -1*vl_nnpool(-1*single(dists0),[nDescPerShape nRefDescPerShape], ...
             'stride', [nDescPerShape nRefDescPerShape], ...
             'method', 'max');
     case 'avgdist',
-        dists = vl_alldist2(queryX',refX',opts.metric);
-        dists = vl_nnpool(single(dists),[nDescPerShape nRefDescPerShape], ...
+        dists0 = vl_alldist2(queryX',refX',opts.metric);
+        dists = vl_nnpool(single(dists0),[nDescPerShape nRefDescPerShape], ...
             'stride', [nDescPerShape nRefDescPerShape], ...
             'method', 'avg');
     case 'avgmindist',
-        dists = vl_alldist2(queryX',refX',opts.metric);
-        dists_1 = -1*vl_nnpool(-1*single(dists),[nDescPerShape 1], ...
+        dists0 = vl_alldist2(queryX',refX',opts.metric);
+        dists_1 = -1*vl_nnpool(-1*single(dists0),[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','max');
         dists_1 = vl_nnpool(dists_1,[1 nRefDescPerShape], ...
             'stride',[1 nRefDescPerShape], 'method','avg');
-        dists_2 = -1*vl_nnpool(-1*single(dists),[1 nRefDescPerShape], ...
+        dists_2 = -1*vl_nnpool(-1*single(dists0),[1 nRefDescPerShape], ...
             'stride',[1 nRefDescPerShape], 'method','max');
         dists_2 = vl_nnpool(dists_2,[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','avg');
         dists = 0.5*(dists_1+dists_2);
     case 'minavgdist',
-        dists = vl_alldist2(queryX',refX',opts.metric);
-        dists_1 = vl_nnpool(single(dists),[nDescPerShape 1], ...
+        dists0 = vl_alldist2(queryX',refX',opts.metric);
+        dists_1 = vl_nnpool(single(dists0),[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','avg');
         dists_1 = -1*vl_nnpool(-1*dists_1,[1 nRefDescPerShape], ...
             'stride',[1 nRefDescPerShape], 'method','max');
-        dists_2 = vl_nnpool(single(dists),[1 nRefDescPerShape], ...
+        dists_2 = vl_nnpool(single(dists0),[1 nRefDescPerShape], ...
             'stride',[1 nRefDescPerShape], 'method','avg');
         dists_2 = -1*vl_nnpool(-1*dists_2,[nDescPerShape 1], ...
             'stride',[nDescPerShape 1], 'method','max');
@@ -192,13 +219,15 @@ switch opts.method,
             [nDescPerShape nQueryShapes*nDims]),1),[nQueryShapes nDims]);
         descs = reshape(mean(reshape(refX, ...
             [nRefDescPerShape nRefShapes*nDims]),1),[nRefShapes nDims]);
-        dists = vl_alldist2(desc',descs',opts.metric);
+        dists0 = vl_alldist2(desc',descs',opts.metric);
+        dists = dists0;
     case 'maxdesc',
         desc = reshape(max(reshape(queryX, ...
             [nDescPerShape nQueryShapes*nDims]),[],1),[nQueryShapes nDims]);
         descs = reshape(max(reshape(refX, ...
             [nRefDescPerShape nRefShapes*nDims]),[],1),[nRefShapes nDims]);
-        dists = vl_alldist2(desc',descs',opts.metric);
+        dists0 = vl_alldist2(desc',descs',opts.metric);
+        dists = dists0;
     otherwise,
         error('Unknown retrieval method: %s', opts.method);
 end
@@ -209,6 +238,7 @@ end
 if ~isempty(shape), % retrieval given a query shape
     [~,I] = sort(dists,'ascend');
     results = refShapeIds(I(1:min(opts.nTop,nRefShapes)));
+    info = [];
 else                % no query given, evaluation within dataset
     % pr curves 
     recall = zeros(nQueryShapes, nRefShapes+1);
@@ -240,15 +270,20 @@ else                % no query given, evaluation within dataset
         ap_i(q) = info.ap;
         auc_i(q) = info.auc;
     end
+    clear info;
+    info.recall = recall;
+    info.precision = precision;
+    info.ap = ap;
+    info.auc = auc;
+    info.recall_i = recall_i;
+    info.precision_i = precision_i;
+    info.ap_i = ap_i;
+    info.auc_i = auc_i;
     clear results;
-    results.recall = recall;
-    results.precision = precision;
-    results.ap = ap;
-    results.auc = auc;
-    results.recall_i = recall_i;
-    results.precision_i = precision_i;
-    results.ap_i = ap_i;
-    results.auc_i = auc_i;
+    results.dists = dists; 
+    results.dists0 = dists0;
+    [~,I] = sort(dists,2,'ascend');
+    results.rankings = refShapeIds(I(:,1:min(opts.nTop,nRefShapes)));
 end
 
 end
