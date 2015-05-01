@@ -38,7 +38,7 @@ maxNum = maxmem / numbytes;
 w = ceil(max(sqrt(n1*n2/opts.maxParts),2*n1*n2*D/maxNum));
 npar = ceil([n1 n2]/w);
 while npar(1)*npar(2)>opts.maxParts, 
-    npar = npar - 1;
+    npar = max(1,npar - 1);
     w = ceil(max([n1 n2]./npar));
     npar = ceil([n1 n2]/w);
 end
@@ -72,6 +72,8 @@ tt=tic;vl_alldist2(tmp,tmp,opts.measure);tc=toc(tt);
 estTime = (D*n1*n2/10e9)*tc;
 
 % real work
+%{-
+% comment this block for ealier MATLAB versions 
 pool = gcp('nocreate');
 if isempty(pool) || pool.NumWorkers<opts.numWorkers, 
     if ~isempty(pool), delete(pool); end
@@ -81,6 +83,7 @@ if opts.verbose,
     fprintf('[2/3] Computing distances using %d threads (~%s) ...', ...
     pool.NumWorkers, timestr(estTime/pool.NumWorkers));
 end
+%}
 parfor i=1:t,
     distcell{i} = vl_alldist2(x1cell{i},x2cell{i},opts.measure);
 end

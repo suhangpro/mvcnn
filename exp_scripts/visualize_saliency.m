@@ -1,4 +1,4 @@
-function visualize_saliency( imdb, net )
+function visualize_saliency( imdb, net, c )
 
 [imdb.images.id, I] = sort(imdb.images.id);
 imdb.images.name = imdb.images.name(I);
@@ -21,11 +21,11 @@ gts = imdb.images.class(1:nViews:end);
 
 toonDir = 'data/modelnet40view';
 
-figure;
+% figure;
 mag = zeros(1,nViews);
 saliency = cell(1,nViews);
 for i=randperm(length(sids)), 
-    if ~strcmp(imdb.meta.classes{imdb.images.class((i-1)*nViews+1)},'desk');
+    if ~strcmp(imdb.meta.classes{imdb.images.class((i-1)*nViews+1)},c);
         continue;
     end
     names = cellfun(@(s) fullfile(imdb.imageDir,s), ...
@@ -34,6 +34,12 @@ for i=randperm(length(sids)),
     dzdy = zeros(1,1,length(imdb.meta.classes));
     dzdy(gts(i)) = 1;
     res = vl_simplenn(net,ims,dzdy);
+    [~,I] = max(res(end).x);
+    if imdb.images.class((i-1)*nViews+1)~=I,
+        fprintf('%s: %s (passed)\n',imdb.meta.classes{imdb.images.class((i-1)*nViews+1)}, ...
+            imdb.images.name{(i-1)*nViews+1});
+        continue;
+    end
     max_v = 0;
     min_v = Inf;
     for v=1:nViews, 
