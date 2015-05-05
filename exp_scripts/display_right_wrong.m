@@ -9,13 +9,17 @@ Cs = {
     'pen'
     'crab'
     'snail'
-    %'squirrel'
-    %'guitar'
-    %'butterfly'
+    'squirrel'
+    'guitar'
+    'butterfly'
     'church'
     'flying bird'
-    % 'laptop'
-    %'strawberry'
+    'laptop'
+    'strawberry'
+    'knife'
+    'bicycle'
+    'grapes',
+    'hammer'
     };
 Cs = Cs(randperm(length(Cs)));
 [~,CIs] = ismember(Cs,imdb.meta.classes);

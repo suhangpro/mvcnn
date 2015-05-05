@@ -5,8 +5,19 @@ function offobj = offLoader(filename)
 offobj = struct();
 fid = fopen(filename, 'r');
 words = fscanf(fid, 'OFF %d %d %d');
+if isempty(words), 
+    words = fscanf(fid,'COFF %d %d %d');
+    c_off = true;
+else
+    c_off = false;
+end
 nV = words(1); nF = words(2); nE = words(3);
-offobj.vmat = reshape(fscanf(fid, '%f', nV*3), 3, nV);
+if c_off, 
+    offobj.vmat = reshape(fscanf(fid, '%f', nV*7), 7, nV);
+    offobj.vmat = offobj.vmat(1:3,:);
+else
+    offobj.vmat = reshape(fscanf(fid, '%f', nV*3), 3, nV);
+end
 fstr = textscan(fid, '%s', nF, 'delimiter', '\n', 'MultipleDelimsAsOne', 1);
 tfmat = zeros(nF*2,4);
 nf3 = 0;
