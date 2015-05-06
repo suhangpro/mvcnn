@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 import os
 import os.path
 import sys
 
 top_n = {'test':20,'train':80}
-#rootdir = sys.argv[1]
-rootdir = '/scratch1/Hang/Projects/deep-shape/data/modelnet40off'
+rootdir = sys.argv[1]
+#rootdir = '/scratch1/Hang/Projects/deep-shape/data/modelnet40off'
 
 classes = [s for s in os.listdir(rootdir) if os.path.isdir(os.path.join(rootdir,s))]
 top_n = {'test':20,'train':80}
