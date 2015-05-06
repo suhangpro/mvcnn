@@ -17,6 +17,8 @@ function ims = render_views( mesh, varargin )
 %       minimun margin ratio in output images
 %   `maxArea`:: 0.3
 %       maximun area ratio in output images 
+%   `figHandle`:: []
+%       handle to temporary figure
 %   
 
 opts.az = [0:30:330];
@@ -25,10 +27,17 @@ opts.colorMode = 'gray';
 opts.outputSize = 224;
 opts.minMargin = 0.1;
 opts.maxArea = 0.3;
+opts.figHandle = [];
 opts = vl_argparse(opts,varargin);
 
 if ~strcmpi(opts.colorMode,'gray'), 
     error('color mode (%s) not supported.',opts.colorMode);
+end
+
+if isempty(opts.figHandle), 
+    fh = figure;
+else
+    fh = opts.figHandle;
 end
 
 if ischar(mesh), 
@@ -39,8 +48,7 @@ if ischar(mesh),
     end
 end
 
-fh = figure;
-tmp_file = 'tmp.png';
+tmp_file = sprintf('tmp_%010s.png',dec2hex(floor(rand()*1e12)));
 ims = cell(1,length(opts.az));
 for i=1:length(opts.az), 
     plotMesh(mesh,'solid',opts.az(i),opts.el);
@@ -50,10 +58,10 @@ for i=1:length(opts.az),
     ims{i} = resize_im(im,opts.outputSize,opts.minMargin,opts.maxArea);
 end
 
+if isempty(opts.figHandle), close(fh); end
 delete(tmp_file);
 
 end
-
 
 function im = resize_im(im,outputSize,minMargin,maxArea)
 
