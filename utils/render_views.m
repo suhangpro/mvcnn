@@ -42,13 +42,13 @@ end
 
 if ischar(mesh), 
     if strcmpi(mesh(end-2:end),'off'), 
-        mesh = offLoader(mesh);
+        mesh = loadMesh(mesh);
     else
         error('file type (.%s) not supported.',mesh(end-2:end));
     end
 end
 
-tmp_file = sprintf('tmp_%010s.png',dec2hex(floor(rand()*1e12)));
+tmp_file = sprintf('tmp_%08s.png',dec2hex(fh));
 ims = cell(1,length(opts.az));
 for i=1:length(opts.az), 
     plotMesh(mesh,'solid',opts.az(i),opts.el);

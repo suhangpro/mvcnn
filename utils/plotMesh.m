@@ -1,19 +1,11 @@
 function plotMesh(mesh, style, az, el)
 
+% mesh.F = mesh.f;
+% mesh.V = mesh.v;
+% plotMesh(mesh)
+% plotMesh(mesh, style)
+%
 % style     {figure} | mesh | solid | solidbw
-
-if isfield(mesh,'fmat'), mesh.F = mesh.fmat; end;
-if isfield(mesh,'vmat'), mesh.V = mesh.vmat; end;
-
-if isfield(mesh, 'F'), 
-    if size(mesh.F,1)==4, mesh.F(4,:) = []; end;
-    if min(mesh.F(:))==0, mesh.F = mesh.F + 1; end;
-end
-
-if ~isfield(mesh, 'F')
-    plotVertex(mesh);
-    return;
-end
 
 if nargin < 2
     style = 'figure';
@@ -54,7 +46,7 @@ elseif strcmpi(style, 'solid')
     
     if isfield(mesh, 'C')
         set(h, 'FaceVertexCData', mesh.C);
-        set(h, 'FaceColor', 'interp');
+        set(h, 'FaceColor', 'flat');
     end
     
     set(gcf, 'Color', 'w', 'Renderer', 'OpenGL');

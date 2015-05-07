@@ -16,6 +16,8 @@ function imdb_render_views( imdb, saveDir, varargin )
 %       minimun margin ratio in output images
 %   `maxArea`:: 0.3
 %       maximun area ratio in output images 
+%   `figureStartIdx`:: floor(rand()*1e8)
+%       used to avoid conflict
 
 opts.az = [0:30:330];
 opts.el = 30;
@@ -23,20 +25,24 @@ opts.colorMode = 'gray';
 opts.outputSize = 224;
 opts.minMargin = 0.1;
 opts.maxArea = 0.3;
+opts.figureStartIdx = floor(rand()*1e8);
 opts = vl_argparse(opts,varargin);
+renderOpts = rmfield(opts,'figureStartIdx');
 
+%{
 poolObj = gcp('nocreate');
 if isempty(poolObj), 
     poolSize = 1;
 else
     poolSize = poolObj.NumWorkers;
 end
-
 parfor (i=1:numel(imdb.images.name),poolSize), 
+%}
+for i=1:numel(imdb.images.name), 
     shapePath = fullfile(imdb.imageDir,imdb.images.name{i});
-    fprintf('%s\n',shapePath);
-    fh = figure(i);
-    ims = render_views(shapePath,'figHandle',fh,opts);
+    fprintf('%d %s\n',i,shapePath);
+    fh = figure(i+opts.figureStartIdx-1);
+    ims = render_views(shapePath,'figHandle',fh,renderOpts);
     [pathstr,namestr,extstr] = fileparts(imdb.images.name{i});
     savePathPrefix = fullfile(saveDir,pathstr);
     vl_xmkdir(savePathPrefix);
