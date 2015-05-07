@@ -48,7 +48,8 @@ if ischar(mesh),
     end
 end
 
-tmp_file = sprintf('tmp_%08s.png',dec2hex(fh));
+fh_id = fh; if ~isnumeric(fh_id), fh_id = fh_id.Number; end
+tmp_file = sprintf('tmp_%08s.png',dec2hex(fh_id));
 ims = cell(1,length(opts.az));
 for i=1:length(opts.az), 
     plotMesh(mesh,'solid',opts.az(i),opts.el);

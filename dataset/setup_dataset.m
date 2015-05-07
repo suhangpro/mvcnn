@@ -57,7 +57,9 @@ for ci = 1:length(imdb.meta.classes),
             nTrainShapes = length(sNamesUniq);
             sNamesUniq = sNamesUniq(randperm(nTrainShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
-            imdb.images.sid = [imdb.images.sid max(imdb.images.sid)+imSids];
+            if isempty(imdb.images.sid), maxSid = 0; 
+            else maxSid = max(imdb.images.sid); end
+            imdb.images.sid = [imdb.images.sid maxSid+imSids];
         end
         imdb.images.set = [imdb.images.set ones(1,nTrainImages)];
         imdb.images.class = [imdb.images.class ci*ones(1,nTrainImages)];
@@ -85,7 +87,9 @@ for ci = 1:length(imdb.meta.classes),
             nValShapes = length(sNamesUniq);
             sNamesUniq = sNamesUniq(randperm(nValShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
-            imdb.images.sid = [imdb.images.sid max(imdb.images.sid)+imSids];
+            if isempty(imdb.images.sid), maxSid = 0; 
+            else maxSid = max(imdb.images.sid); end
+            imdb.images.sid = [imdb.images.sid maxSid+imSids];
         end
         imdb.images.set = [imdb.images.set 2*ones(1,nValImages)];
         imdb.images.class = [imdb.images.class ci*ones(1,nValImages)];
@@ -130,7 +134,9 @@ for ci = 1:length(imdb.meta.classes),
             nTestShapes = length(sNamesUniq);
             sNamesUniq = sNamesUniq(randperm(nTestShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
-            imdb.images.sid = [imdb.images.sid max(imdb.images.sid)+imSids];
+            if isempty(imdb.images.sid), maxSid = 0; 
+            else maxSid = max(imdb.images.sid); end
+            imdb.images.sid = [imdb.images.sid maxSid+imSids];
         end
         imdb.images.set = [imdb.images.set 3*ones(1,nTestImages)];
         imdb.images.class = [imdb.images.class ci*ones(1,nTestImages)];
