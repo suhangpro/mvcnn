@@ -335,18 +335,18 @@ else                % no query given, evaluation within dataset
         fprintf('\tdataset: %s\n', imdb.imageDir);
         fprintf('\tmodel: %s\n',feat.modelName);
         fprintf('\tlayer: %s\n',feat.layerName);
-        fprintf('\tmethod: %s', opts.method);
+        fprintf('\tmethod: %s\n', opts.method);
         fprintf('\tmAP: %g%%\n',mean(info.ap)*100);
         fprintf('\tAUC: %g%%\n',mean(info.auc)*100);
         fprintf('\tmAP (interpolated): %g%%\n',mean(info.ap_i)*100);
         fprintf('\tAUC (interpolated): %g%%\n',mean(info.auc_i)*100);
         
         fid = fopen(opts.logPath,'a+');
-        fprintf(fid, 'Retrieval (%s) \n', datestr(now));
+        fprintf(fid, '(%s) -- Retrieval\n', datestr(now));
         fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
         fprintf(fid, '\tmodel: %s\n',feat.modelName);
         fprintf(fid, '\tlayer: %s\n',feat.layerName);
-        fprintf(fid, '\tmethod: %s', opts.method);
+        fprintf(fid, '\tmethod: %s\n', opts.method);
         fprintf(fid, '\tmAP: %g%%\n',mean(info.ap)*100);
         fprintf(fid, '\tAUC: %g%%\n',mean(info.auc)*100);
         fprintf(fid, '\tmAP (interpolated): %g%%\n',mean(info.ap_i)*100);

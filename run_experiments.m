@@ -122,3 +122,6 @@ for i=1:length(ex),
     end
     
 end
+
+% delete parallel pool if there is one
+delete(gcp('nocreate'));

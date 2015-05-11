@@ -212,7 +212,7 @@ fprintf('\taccuracy (train): %g%%\n',accuTrain*100);
 fprintf('\taccuracy (test): %g%%\n',accuTest*100);
 
 fid = fopen(opts.logPath,'a+');
-fprintf(fid, 'Classification (%s) \n', datestr(now));
+fprintf(fid, '(%s) -- Classification\n', datestr(now));
 fprintf(fid, '\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);
