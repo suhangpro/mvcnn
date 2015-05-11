@@ -1,13 +1,12 @@
-function net = modify_net(net, varargin)
+function net = modify_net(net, layer, varargin)
 
 opts.mode = [];
-opts.layer = [];
 opts.loc = [];
 opts = vl_argparse(opts,varargin); 
 
 switch opts.mode,
     case 'add_layer',
-        if isempty(opts.layer), 
+        if nargin<2 || isempty(layer), 
             error('Please provide the layer to be inserted!');
         end
         if isempty(opts.loc), 
@@ -20,7 +19,7 @@ switch opts.mode,
             end;
         end
         net.layers = horzcat(net.layers(1:I), ...
-                                opts.layer, ...
+                                layer, ...
                                 net.layers(I+1:end));
     case 'rm_layer',
         if isempty(opts.loc), 
