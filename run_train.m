@@ -11,13 +11,13 @@ function net = run_train(imdbName, varargin)
 %       set to a higher value when training from scratch
 %   `gpuMode`:: false
 %       set to true to compute on GPU
-%   `modelName`:: 'imagenet-vgg-m'
+%   `baseModel`:: 'imagenet-vgg-m'
 %       set to empty to train from scratch
 %   `prefix`:: 'v1'
 %       additional experiment identifier
 %   `numFetchThreads`::
 %       #threads for vl_imreadjpeg
-%   `augmentation`:: 'f2'
+%   `aug`:: 'none'
 %       specifies the operations (fliping, perturbation, etc.) used 
 %       to get sub-regions
 %   `addDropout`:: true
@@ -29,29 +29,35 @@ function net = run_train(imdbName, varargin)
 %       instances 
 %   `viewpoolLoc` :: 'fc7'
 %       location of the viewpool layer, only used when multiview is true
+%   `learningRate`:: [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)]
+%       learning rate
+%   `momentum`:: 0.9
+%       learning momentum
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
 opts.numEpochs = 30;
 opts.gpuMode = false;
-opts.modelName = 'imagenet-vgg-m';
+opts.baseModel = 'imagenet-vgg-m';
 opts.prefix = 'v1' ;
 opts.numFetchThreads = 0 ;
-opts.augmentation = 'f2';
+opts.aug = 'none';
 opts.addDropout = true;
 opts.border = [];
 opts.multiview = false;
 opts.viewpoolLoc = 'fc7';
-opts = vl_argparse(opts, varargin) ;
+opts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)];
+opts.momentum = 0.9;
+[opts, varargin] = vl_argparse(opts, varargin) ;
 
-if ~isempty(opts.modelName), 
-    opts.expDir = sprintf('%s-finetuned-%s', opts.modelName, imdbName); 
+if ~isempty(opts.baseModel), 
+    opts.expDir = sprintf('%s-finetuned-%s', opts.baseModel, imdbName); 
 else
     opts.expDir = imdbName; 
 end
 opts.expDir = fullfile('data', opts.prefix, ...
     sprintf('%s-seed-%02d', opts.expDir, opts.seed));
-opts = vl_argparse(opts,varargin) ;
+[opts, varargin] = vl_argparse(opts,varargin) ;
 
 if length(opts.border) == 1, opts.border = [opts.border opts.border]; end
 
@@ -89,7 +95,7 @@ end
 %                                                    Network initialization
 % -------------------------------------------------------------------------
 
-net = initializeNetwork(opts.modelName, imdb.meta.classes) ;
+net = initializeNetwork(opts.baseModel, imdb.meta.classes) ;
 if ~isempty(opts.border), 
     net.normalization.border = opts.border; 
 end
@@ -104,7 +110,7 @@ if isempty(net.normalization.averageImage),
       train = find(imdb.images.set == 1) ;
       bs = 256 ;
       fn = getBatchWrapper(net.normalization, 'numThreads',...
-          opts.numFetchThreads,'augmentation', opts.augmentation);
+          opts.numFetchThreads,'augmentation', opts.aug);
       for t=1:bs:numel(train)
         batch_time = tic ;
         batch = train(t:min(t+bs-1, numel(train))) ;
@@ -154,14 +160,14 @@ trainOpts.useGpu = opts.gpuMode ;
 trainOpts.expDir = opts.expDir ;
 trainOpts.numEpochs = opts.numEpochs ;
 trainOpts.multiview = opts.multiview;
+trainOpts.learningRate = opts.learningRate ;
+trainOpts.momentum = opts.momentum;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
-% trainOpts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)] ;
-trainOpts.learningRate = [0.0001*ones(1, 5) 0.00001*ones(1, 5) 0.000001*ones(1,5)] ;
 trainOpts.conserveMemory = true;
 
 fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
-    'augmentation', opts.augmentation, 'invert', opts.invert);
+    'augmentation', opts.aug, 'invert', opts.invert);
 
 [net,info] = cnn_train(net, imdb, fn, trainOpts) ;
 
@@ -218,25 +224,25 @@ images = strcat([imdb.imageDir '/'], imdb.images.name(batch)) ;
 labels = imdb.images.class(batch(idxs)) ;
 
 % -------------------------------------------------------------------------
-function net = initializeNetwork(modelName, classNames)
+function net = initializeNetwork(baseModel, classNames)
 % -------------------------------------------------------------------------
 scal = 1 ;
 init_bias = 0.1;
 numClass = length(classNames);
 
-if ~isempty(modelName), 
-    netFilePath = fullfile('data','models', [modelName '.mat']);
+if ~isempty(baseModel), 
+    netFilePath = fullfile('data','models', [baseModel '.mat']);
     % download model if not found
     if ~exist(netFilePath,'file'),
-        fprintf('Downloading model (%s) ...', modelName) ;
+        fprintf('Downloading model (%s) ...', baseModel) ;
         vl_xmkdir(fullfile('data','models')) ;
         urlwrite(fullfile('http://www.vlfeat.org/matconvnet/models', ...
-            [modelName '.mat']), netFilePath) ;
+            [baseModel '.mat']), netFilePath) ;
         fprintf(' done!\n');
     end
     net = load(netFilePath); % Load model if specified
     
-    fprintf('Initializing from model: %s\n', modelName);
+    fprintf('Initializing from model: %s\n', baseModel);
     % Replace the last but one layer with random weights
     widthPenultimate = size(net.layers{end-1}.filters,3); 
     net.layers{end-1} = struct('name','fc8', ...

@@ -32,6 +32,8 @@ function [ results,info ] = retrieve_shapes_cnn( shape, feat, varargin )
 %       set of reference images
 %   `metric`:: 'L2'
 %       other choices: 'LINF', 'L1', 'L0', 'CHI2', 'HELL'
+%   `logPath:: []
+%       place to save log information
 %
 % Hang Su
 
@@ -44,7 +46,8 @@ opts.nTop = Inf;
 opts.querySets = {'test'};
 opts.refSets = {'test'};
 opts.metric = 'L2';
-opts = vl_argparse(opts,varargin);
+opts.logPath = [];
+[opts, varargin] = vl_argparse(opts,varargin);
 
 if opts.numWorkers>1, 
     pool = gcp('nocreate');
@@ -325,6 +328,32 @@ else                % no query given, evaluation within dataset
     results.dists0 = dists0;
     [~,I] = sort(dists,2,'ascend');
     results.rankings = refShapeIds(I(:,1:min(opts.nTop,nRefShapes)));
+    
+    % output to log
+    if ~isempty(opts.logPath), 
+        fprintf('Evaluation finished! \n');
+        fprintf('\tdataset: %s\n', imdb.imageDir);
+        fprintf('\tmodel: %s\n',feat.modelName);
+        fprintf('\tlayer: %s\n',feat.layerName);
+        fprintf('\tmethod: %s', opts.method);
+        fprintf('\tmAP: %g%%\n',mean(info.ap)*100);
+        fprintf('\tAUC: %g%%\n',mean(info.auc)*100);
+        fprintf('\tmAP (interpolated): %g%%\n',mean(info.ap_i)*100);
+        fprintf('\tAUC (interpolated): %g%%\n',mean(info.auc_i)*100);
+        
+        fid = fopen(opts.logPath,'a+');
+        fprintf(fid, 'Retrieval (%s) \n', datestr(now));
+        fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
+        fprintf(fid, '\tmodel: %s\n',feat.modelName);
+        fprintf(fid, '\tlayer: %s\n',feat.layerName);
+        fprintf(fid, '\tmethod: %s', opts.method);
+        fprintf(fid, '\tmAP: %g%%\n',mean(info.ap)*100);
+        fprintf(fid, '\tAUC: %g%%\n',mean(info.auc)*100);
+        fprintf(fid, '\tmAP (interpolated): %g%%\n',mean(info.ap_i)*100);
+        fprintf(fid, '\tAUC (interpolated): %g%%\n',mean(info.auc_i)*100);
+        fclose(fid);
+    end
+    
 end
 
 end

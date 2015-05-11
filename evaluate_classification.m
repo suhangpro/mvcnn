@@ -1,5 +1,5 @@
-function run_evaluate_classification(feat, varargin)
-%RUN_EVALUATE_CLASSIFICATION Evaluate CNN features for classification 
+function evaluate_classification(feat, varargin)
+%EVALUATE_CLASSIFICATION Evaluate CNN features for classification 
 %
 %   feat::
 %       a structure containing cnn feature
@@ -36,7 +36,7 @@ opts.predPath = fullfile('data','pred.mat');
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
 opts.confusionPath = fullfile(fileparts(opts.predPath), 'confusion.pdf');
-opts = vl_argparse(opts, varargin) ;
+[opts, varargin] = vl_argparse(opts, varargin) ;
 
 if ~exist(fileparts(opts.logPath),'dir'), 
     vl_xmkdir(fileparts(opts.logPath)); 
@@ -212,7 +212,7 @@ fprintf('\taccuracy (train): %g%%\n',accuTrain*100);
 fprintf('\taccuracy (test): %g%%\n',accuTest*100);
 
 fid = fopen(opts.logPath,'a+');
-fprintf(fid, '(%s) \n', datestr(now));
+fprintf(fid, 'Classification (%s) \n', datestr(now));
 fprintf(fid, '\tc: %g (cv=%d)\n', bestc, opts.cv);
 fprintf(fid, '\tdataset: %s\n', imdb.imageDir);
 fprintf(fid, '\tmodel: %s\n',feat.modelName);

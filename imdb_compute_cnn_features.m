@@ -6,13 +6,15 @@ function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
 %       model will be searched/saved under 'data/models'
-%   `augmentation`:: 'none'
+%   `aug`:: 'none'
 %       1st field(f|n) indicates whether include flipped copy or not
 %       2nd field(s|r) indicates type of region - Square or Rectangle
 %       3rd field(1..4) indicates number of levels
 %       note: 'none', 'ns1', 'nr1' are equivalent
 %   `gpuMode`:: false
 %       set to true to compute on GPU
+%   `numWorkers`:: 12
+%       number of CPU workers, only in use when gpuMode is false
 %   `restart`:: false
 %       set to true to re-compute all features
 %   `readOp`:: @imread_255
@@ -33,7 +35,7 @@ if nargin<2 || isempty(model),
     model = 'imagenet-vgg-m';
 end
 if nargin<1 || isempty(imdbName),
-    imdbName = 'modelnet10toon';
+    imdbName = 'modelnet40phong';
 end
 if ischar(model), 
     modelName = model; 
@@ -44,8 +46,9 @@ else
 end
 
 % default options
-opts.augmentation = 'none';
+opts.aug = 'none';
 opts.gpuMode = false;
+opts.numWorkers = 12;
 opts.restart = false;
 opts.readOp = @imread_255;
 opts.normalization = true;
@@ -53,7 +56,7 @@ opts.pca = 500;
 opts.pcaNumSamples = 10^5;
 opts.whiten = true;
 opts.powerTrans = 0.5;
-opts = vl_argparse(opts,varargin);
+[opts,varargin] = vl_argparse(opts,varargin);
 
 % -------------------------------------------------------------------------
 %                                                                 Get imdb
@@ -140,7 +143,7 @@ fprintf(' done!\n');
 % -------------------------------------------------------------------------
 % saving directory
 saveDir = fullfile('data','features',sprintf('%s-%s-%s', ...
-    imdbName, modelName, opts.augmentation));
+    imdbName, modelName, opts.aug));
 if ~opts.normalization, 
     expSuffix = 'NORM0';
 else
@@ -185,14 +188,18 @@ end
 %                                                    Get raw CNN responses
 % -------------------------------------------------------------------------
 % data augmentation
-subWins = get_augmentation_matrix(opts.augmentation);
+subWins = get_augmentation_matrix(opts.aug);
 nSubWins = size(subWins,2);
 
-poolobj = gcp('nocreate');
-if isempty(poolobj) || opts.gpuMode,
+if opts.numWorkers<=1 || opts.gpuMode, 
     poolSize = 0;
 else
-    poolSize = poolobj.NumWorkers;
+    poolObj = gcp('nocreate');
+    if isempty(poolObj) || poolObj.NumWorkers<opts.numWorkers, 
+        if ~isempty(poolObj), delete(poolObj); end
+        poolObj = parpool(opts.numWorkers);
+    end
+    poolSize = poolObj.NumWorkers;
 end
 parfor (i=1:nImgs, poolSize)
 %  for  i=1:nImgs, % if no parallel computing toolbox

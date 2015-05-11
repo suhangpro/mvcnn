@@ -8,7 +8,7 @@ opts.numWorkers = 20;
 opts.verbose = true;
 opts = vl_argparse(opts,varargin);
 
-if opts.numWorkers==1, 
+if opts.numWorkers<=1, 
     Dist = vl_alldist(x1,x2,opts.measure);
     return;
 end
