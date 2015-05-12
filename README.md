@@ -1,8 +1,8 @@
 # CNNs for shape recognition
 
-The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for image recognition using covolutional neural networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art images where color is removed, or renderings of 3D models where there is little texture information present. 
+The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for image recognition using covolutional neural networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art images where color is removed, or **renderings of 3D models** where there is little texture information present. 
 
-## Installing and compiling
+## Installation and Usage
 
 * install dependencies
 ``` 
@@ -11,29 +11,51 @@ git submodule init
 git submodule update
 ```
 * compile
+
+(1) compile for CPU
 ``` 
 #!bash
-MEX=MATLAB_DIR/bin/mex matlab -nodisplay -r "setup(true);exit;"
+MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true);exit;"
 ```
-to compile with GPU support: 
+(2) compile for GPU: 
 ``` 
 #!bash
-MEX=MATLAB_DIR/bin/mex matlab -nodisplay -r "setup(true,true);exit;"
+MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',true));exit;"
+```
+(3) compile with cuDNN support: 
+``` 
+#!bash
+MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',true,
+'cudaRoot',<CUDA_ROOT>,'cudaMethod','nvcc','enableCudnn',true,'cudnnRoot',<CUDNN_ROOT>));exit;"
 ```
 * download datasets 
 ```
 #!bash
-#clipartgpb (316M)
+#modelnet40 (286M)
 cd data
-wget http://pegasus.cs.umass.edu/deep-shape-data/clipartgpb.tar
-tar xf clipartgpb.tar
+wget http://pegasus.cs.umass.edu/deep-shape-data/modelnet40phong.tar
+tar xf modelnet40phong.tar
 
-#sketch (525M)
+#sketch (211M)
 cd data
-wget http://cybertron.cg.tu-berlin.de/eitz/projects/classifysketch/sketches_png.zip
-mkdir sketch
-unzip sketches_png.zip -d sketch/
+wget http://pegasus.cs.umass.edu/deep-shape-data/sketch160.tar
+tar xf sketch160.tar
+
+#clipart (701M)
+cd data
+wget http://pegasus.cs.umass.edu/deep-shape-data/clipart100.tar
+tar xf clipart100.tar
 ```
+* run experiments
+```
+#!bath
+LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
+```
+*LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
+
+## **NOTE**
+Information below this point may be outdated. Please check [our arXiv paper](http://arxiv.org/abs/1505.00880) for additional details. 
+
 ## Datasets
 
 ### Collecting a new dataset of shapes
