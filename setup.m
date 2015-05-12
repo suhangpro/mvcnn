@@ -1,24 +1,21 @@
-function setup(doCompile, gpuMode)
+function setup(doCompile, matconvnetOpts)
 % SETUP  Setup paths, dependencies, etc.
 % 
 %   doCompile:: false
 %       Set to true to compile the libraries
-%   gpuMode:: false
-%       Set to true to enable GPU support
+%   matconvnetOpts:: struct('enableGpu',false)
+%       Options for vl_compilenn
 
 if nargin==0, 
     doCompile = false;
 elseif nargin<2, 
-    gpuMode = false; 
+    matconvnetOpts = struct('enableGpu', false); 
 end
 
-if doCompile && gpuDeviceCount()==0 && gpuMode, 
+if doCompile && gpuDeviceCount()==0 ...
+    && isfield(matconvnetOpts,'enableGpu') && matconvnetOpts.enableGpu, 
     fprintf('No supported gpu detected! ');
-    gpuMode = false;
-    reply = input('Continue w/ cpu mode? Y/N [Y]:','s');
-	if ~isempty(reply) && reply~='Y', 
-        return;
-	end
+    return;
 end
 
 addpath(genpath('dataset'));
@@ -49,7 +46,7 @@ run dependencies/vlfeat/toolbox/vl_setup.m
 if doCompile, 
     run dependencies/matconvnet/matlab/vl_setupnn.m
     cd dependencies/matconvnet
-    vl_compilenn('enableGpu', gpuMode, 'enableImreadJpeg', gpuMode);
+    vl_compilenn(matconvnetOpts);
     cd ../..
 end
 run dependencies/matconvnet/matlab/vl_setupnn.m
