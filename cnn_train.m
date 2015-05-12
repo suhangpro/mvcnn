@@ -43,31 +43,30 @@ end
 % -------------------------------------------------------------------------
 
 for i=1:numel(net.layers)
-  if ~strcmp(net.layers{i}.type,'conv'), continue; end
-  net.layers{i}.filtersMomentum = zeros(size(net.layers{i}.filters), ...
-    class(net.layers{i}.filters)) ;
-  net.layers{i}.biasesMomentum = zeros(size(net.layers{i}.biases), ...
-    class(net.layers{i}.biases)) ; %#ok<*ZEROLIKE>
-  if ~isfield(net.layers{i}, 'filtersLearningRate')
-    net.layers{i}.filtersLearningRate = 1 ;
-  end
-  if ~isfield(net.layers{i}, 'biasesLearningRate')
-    net.layers{i}.biasesLearningRate = 1 ;
-  end
-  if ~isfield(net.layers{i}, 'filtersWeightDecay')
-    net.layers{i}.filtersWeightDecay = 1 ;
-  end
-  if ~isfield(net.layers{i}, 'biasesWeightDecay')
-    net.layers{i}.biasesWeightDecay = 1 ;
+  if isfield(net.layers{i},'weights'),
+    J = numel(net.layers{i}.weights);
+    for j=1:J
+      net.layers{i}.momentum{j} = zeros(size(net.layers{i}.weights{j}), ...
+        class(net.layers{i}.weights{j})) ;
+    end
+    if ~isfield(net.layers{i}, 'learningRate')
+      net.layers{i}.learningRate = ones(1,J,class(net.layers{i}.weights{j}));
+    end
+    if ~isfield(net.layers{i}, 'weightDecay')
+      net.layers{i}.weightDecay = ones(1,J,class(net.layers{i}.weights{j}));
+    end
   end
 end
 
 if opts.useGpu
   net = vl_simplenn_move(net, 'gpu') ;
   for i=1:numel(net.layers)
-    if ~strcmp(net.layers{i}.type,'conv'), continue; end
-    net.layers{i}.filtersMomentum = gpuArray(net.layers{i}.filtersMomentum) ;
-    net.layers{i}.biasesMomentum = gpuArray(net.layers{i}.biasesMomentum) ;
+    if isfield(net.layers{i},'weights'),
+      J = numel(net.layers{i}.weights);
+      for j=1:J
+        net.layers{i}.momentum{j} = gpuArray(net.layers{i}.momentum{j}) ;
+      end
+    end
   end
 end
 
@@ -122,9 +121,11 @@ for epoch=1:opts.numEpochs
   if prevLr ~= lr
     fprintf('learning rate changed (%f --> %f): resetting momentum\n', prevLr, lr) ;
     for l=1:numel(net.layers)
-      if ~strcmp(net.layers{l}.type, 'conv'), continue ; end
-      net.layers{l}.filtersMomentum = 0 * net.layers{l}.filtersMomentum ;
-      net.layers{l}.biasesMomentum = 0 * net.layers{l}.biasesMomentum ;
+      if isfield(net.layers{l},'weights'),
+        for j=1:numel(net.layers{l}.momentum),
+          net.layers{l}.momentum{j} = 0 * net.layers{l}.momentum{j} ;
+        end
+      end
     end
   end
 
@@ -156,22 +157,17 @@ for epoch=1:opts.numEpochs
 
     % gradient step
     for l=1:numel(net.layers)
-      if ~strcmp(net.layers{l}.type, 'conv'), continue ; end
-
-      net.layers{l}.filtersMomentum = ...
-        opts.momentum * net.layers{l}.filtersMomentum ...
-          - (lr * net.layers{l}.filtersLearningRate) * ...
-          (opts.weightDecay * net.layers{l}.filtersWeightDecay) * net.layers{l}.filters ...
-          - (lr * net.layers{l}.filtersLearningRate) / numel(labels) * res(l).dzdw{1} ;
-
-      net.layers{l}.biasesMomentum = ...
-        opts.momentum * net.layers{l}.biasesMomentum ...
-          - (lr * net.layers{l}.biasesLearningRate) * ....
-          (opts.weightDecay * net.layers{l}.biasesWeightDecay) * net.layers{l}.biases ...
-          - (lr * net.layers{l}.biasesLearningRate) / numel(labels) * res(l).dzdw{2} ;
-
-      net.layers{l}.filters = net.layers{l}.filters + net.layers{l}.filtersMomentum ;
-      net.layers{l}.biases = net.layers{l}.biases + net.layers{l}.biasesMomentum ;
+      if isfield(net.layers{l},'weights'), 
+        J = numel(net.layers{l}.weights);
+        for j=1:J,
+          net.layers{l}.momentum{j} = ...
+            opts.momentum * net.layers{l}.momentum{j} ...
+            - (lr * net.layers{l}.learningRate(j)) * ...
+            (opts.weightDecay * net.layers{l}.weightDecay(j)) * net.layers{l}.weights{j} ...
+            - (lr * net.layers{l}.learningRate(j)) / numel(labels) * res(l).dzdw{j} ;
+          net.layers{l}.weights{j} = net.layers{l}.weights{j} + net.layers{l}.momentum{j};
+        end
+      end
     end
 
     % print information

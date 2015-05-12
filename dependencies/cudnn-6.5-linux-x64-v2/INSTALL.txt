@@ -1,0 +1,31 @@
+PREREQUISITES
+
+    CUDA 6.5 and a GPU of compute capability 3.0 or higher are required.
+
+ALL PLATFORMS
+
+    Extract the cuDNN archive to a directory of your choice, referred to below as <installpath>.
+    Then follow the platform-specific instructions as follows.
+
+LINUX
+
+    cd <installpath>
+    export LD_LIBRARY_PATH=`pwd`:$LD_LIBRARY_PATH
+
+    Add <installpath> to your build and link process by adding -I<installpath> to your compile
+    line and -L<installpath> -lcudnn to your link line.
+
+OS X
+
+    cd <installpath>
+    export DYLD_LIBRARY_PATH=`pwd`:$DYLD_LIBRARY_PATH
+
+    Add <installpath> to your build and link process by adding -I<installpath> to your compile
+    line and -L<installpath> -lcudnn to your link line.
+
+WINDOWS
+
+    Add <installpath> to the PATH environment variable.
+
+    In your Visual Studio project properties, add <installpath> to the Include Directories 
+    and Library Directories lists and add cudnn.lib to Linker->Input->Additional Dependencies.
