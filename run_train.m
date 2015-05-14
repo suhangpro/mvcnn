@@ -33,6 +33,8 @@ function net = run_train(imdbName, varargin)
 %       learning rate
 %   `momentum`:: 0.9
 %       learning momentum
+%   `includeVal`:: false
+%       if true, validation set is also used for training 
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -48,6 +50,7 @@ opts.multiview = false;
 opts.viewpoolLoc = 'fc7';
 opts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)];
 opts.momentum = 0.9;
+opts.includeVal = false;
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
 if ~isempty(opts.baseModel), 
@@ -164,6 +167,11 @@ trainOpts.momentum = opts.momentum;
 trainOpts.continue = true ;
 trainOpts.prefetch = false ;
 trainOpts.conserveMemory = true;
+
+if opts.includeVal, 
+  trainOpts.train = find(imdb.images.set==1 | imdb.images.set==2);
+  trainOpts.val = [];
+end
 
 fn = getBatchWrapper(net.normalization,'numThreads',opts.numFetchThreads, ...
     'augmentation', opts.aug, 'invert', opts.invert);

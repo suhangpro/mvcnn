@@ -1,9 +1,8 @@
 function [net, info] = cnn_train(net, imdb, getBatch, varargin)
 % CNN_TRAIN   modified from matconvnet/examples/cnn_train.m
 
-
-opts.train = [] ;
-opts.val = [] ;
+opts.train = find(imdb.images.set==1) ;
+opts.val = find(imdb.images.set==2) ;
 opts.numEpochs = 300 ;
 opts.multiview = false;
 opts.batchSize = 256 ;
@@ -20,10 +19,6 @@ opts.errorType = 'multiclass' ;
 opts.plotDiagnostics = false ;
 opts = vl_argparse(opts, varargin) ;
 
-if ~exist(opts.expDir, 'dir'), mkdir(opts.expDir) ; end
-if isempty(opts.train), opts.train = find(imdb.images.set==1) ; end
-if isempty(opts.val), opts.val = find(imdb.images.set==2) ; end
-if isnan(opts.train), opts.train = [] ; end
 if opts.multiview, 
     [~,I] = sort(imdb.images.sid(opts.train));
     opts.train = opts.train(I);
@@ -37,6 +32,8 @@ if opts.multiview,
 else
     nViews = 1;
 end
+
+if ~exist(opts.expDir, 'dir'), mkdir(opts.expDir) ; end
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization

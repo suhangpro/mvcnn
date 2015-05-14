@@ -3,6 +3,8 @@
 setup;
 
 logPath = fullfile('log','eval0.txt'); 
+skipTrain = false; 
+skipEval = false; 
 ex = struct([]);
 
 % experiment unit 
@@ -57,7 +59,7 @@ for i=1:length(ex),
     % ---------------------------------------------------------------------
     %                                                    train / fine-tune 
     % ---------------------------------------------------------------------
-    if isfield(ex(i),'trainOpts'), 
+    if isfield(ex(i),'trainOpts') && ~skipTrain, 
         trainOpts = ex(i).trainOpts;
         prefix = sprintf('BS%d_AUG%s', trainOpts.batchSize, trainOpts.aug);
         if isfield(trainOpts,'multiview') && trainOpts.multiview, 
@@ -77,7 +79,7 @@ for i=1:length(ex),
     %                                                     compute features 
     % ---------------------------------------------------------------------
     clear feats;
-    if isfield(ex(i),'featOpts'),
+    if isfield(ex(i),'featOpts') && ~skipEval,
         featOpts = ex(i).featOpts;
         featDir = fullfile('data', 'features', ...
             [featOpts.dataset '-' featOpts.model '-' featOpts.aug], 'NORM0');
@@ -91,7 +93,7 @@ for i=1:length(ex),
     % ---------------------------------------------------------------------
     %                                            classification evaluation
     % ---------------------------------------------------------------------
-    if isfield(ex(i),'claOpts') && exist('feats','var'), 
+    if isfield(ex(i),'claOpts') && exist('feats','var') && ~skipEval, 
         claOpts = ex(i).claOpts;
         evalClaPath = fullfile(featDir,claOpts.feat,'evalCla.mat');
         if exist(evalClaPath, 'file'), 
@@ -109,7 +111,7 @@ for i=1:length(ex),
     % ---------------------------------------------------------------------
     %                                                 retrieval evaluation 
     % ---------------------------------------------------------------------
-    if isfield(ex(i),'retOpts') && exist('feats','var'), 
+    if isfield(ex(i),'retOpts') && exist('feats','var') && ~skipEval, 
         retOpts = ex(i).retOpts;
         evalRetPath = fullfile(featDir,retOpts.feat,'evalRet.mat');
         if exist(evalRetPath, 'file'), 
