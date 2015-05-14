@@ -43,7 +43,7 @@ end
 % -------------------------------------------------------------------------
 
 for i=1:numel(net.layers)
-  if isfield(net.layers{i},'weights'),
+  if isfield(net.layers{i},'weights'), 
     J = numel(net.layers{i}.weights);
     for j=1:J
       net.layers{i}.momentum{j} = zeros(size(net.layers{i}.weights{j}), ...
@@ -54,6 +54,23 @@ for i=1:numel(net.layers)
     end
     if ~isfield(net.layers{i}, 'weightDecay')
       net.layers{i}.weightDecay = ones(1,J,class(net.layers{i}.weights{j}));
+    end
+  elseif isfield(net.layers{i},'filters') % old format 
+    net.layers{i}.filtersMomentum = zeros(size(net.layers{i}.filters), ...
+      class(net.layers{i}.filters)) ;
+    net.layers{i}.biasesMomentum = zeros(size(net.layers{i}.biases), ...
+      class(net.layers{i}.biases)) ;
+    if ~isfield(net.layers{i}, 'filtersLearningRate')
+      net.layers{i}.filtersLearningRate = 1 ;
+    end
+    if ~isfield(net.layers{i}, 'biasesLearningRate')
+      net.layers{i}.biasesLearningRate = 1 ;
+    end
+    if ~isfield(net.layers{i}, 'filtersWeightDecay')
+      net.layers{i}.filtersWeightDecay = 1 ;
+    end
+    if ~isfield(net.layers{i}, 'biasesWeightDecay')
+      net.layers{i}.biasesWeightDecay = 1 ;
     end
   end
 end
@@ -66,6 +83,9 @@ if opts.useGpu
       for j=1:J
         net.layers{i}.momentum{j} = gpuArray(net.layers{i}.momentum{j}) ;
       end
+    elseif isfield(net.layers{i},'filters'), % old format
+      net.layers{i}.filtersMomentum = gpuArray(net.layers{i}.filtersMomentum) ;
+      net.layers{i}.biasesMomentum = gpuArray(net.layers{i}.biasesMomentum) ;
     end
   end
 end
@@ -125,6 +145,9 @@ for epoch=1:opts.numEpochs
         for j=1:numel(net.layers{l}.momentum),
           net.layers{l}.momentum{j} = 0 * net.layers{l}.momentum{j} ;
         end
+      elseif isfield(net.layers{l},'filters'), % old format
+        net.layers{l}.filtersMomentum = 0 * net.layers{l}.filtersMomentum ;
+        net.layers{l}.biasesMomentum = 0 * net.layers{l}.biasesMomentum ;
       end
     end
   end
@@ -167,6 +190,21 @@ for epoch=1:opts.numEpochs
             - (lr * net.layers{l}.learningRate(j)) / numel(labels) * res(l).dzdw{j} ;
           net.layers{l}.weights{j} = net.layers{l}.weights{j} + net.layers{l}.momentum{j};
         end
+      elseif isfield(net.layers{l},'filters'), % old format
+        net.layers{l}.filtersMomentum = ...
+          opts.momentum * net.layers{l}.filtersMomentum ...
+          - (lr * net.layers{l}.filtersLearningRate) * ...
+          (opts.weightDecay * net.layers{l}.filtersWeightDecay) * net.layers{l}.filters ...
+          - (lr * net.layers{l}.filtersLearningRate) / numel(labels) * res(l).dzdw{1} ;
+        
+        net.layers{l}.biasesMomentum = ...
+          opts.momentum * net.layers{l}.biasesMomentum ...
+          - (lr * net.layers{l}.biasesLearningRate) * ....
+          (opts.weightDecay * net.layers{l}.biasesWeightDecay) * net.layers{l}.biases ...
+          - (lr * net.layers{l}.biasesLearningRate) / numel(labels) * res(l).dzdw{2} ;
+        
+        net.layers{l}.filters = net.layers{l}.filters + net.layers{l}.filtersMomentum ;
+        net.layers{l}.biases = net.layers{l}.biases + net.layers{l}.biasesMomentum ;
       end
     end
 

@@ -119,7 +119,11 @@ nImgs = nImgs / nViews;
 
 % response dimensions
 fprintf('Testing model (%s) ...', modelName) ;
-nChannels = size(net.layers{1}.weights{1},3); 
+if isfield(net.layers{1},'weights'), 
+  nChannels = size(net.layers{1}.weights{1},3); 
+else
+  nChannels = size(net.layers{1}.filters,3);  % old format
+end
 im0 = zeros(net.normalization.imageSize(1), ...
     net.normalization.imageSize(2), nChannels, nViews, 'single') * 255; 
 if opts.gpuMode, im0 = gpuArray(im0); end

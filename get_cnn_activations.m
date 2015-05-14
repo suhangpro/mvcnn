@@ -19,7 +19,11 @@ if nargin<3 || isempty(subWins),
     subWins = get_augmentation_matrix('none');
 end
 nSubWins = size(subWins,2);
-nChannels = size(net.layers{1}.weights{1},3);
+if isfield(net.layers{1},'weights'), 
+  nChannels = size(net.layers{1}.weights{1},3);
+else
+  nChannels = size(net.layers{1}.filters,3); % old format
+end
 
 if iscell(im), 
     imCell = im;
