@@ -57,6 +57,12 @@ if opts.numWorkers>1,
     end
 end
 
+if isequal(opts.querySets,opts.refSets), 
+    isSelfRef = true;
+else
+    isSelfRef = false;
+end
+
 % -------------------------------------------------------------------------
 %                       sort imdb.images & feat.x w.r.t (sid,view) or (id)
 % -------------------------------------------------------------------------
@@ -272,12 +278,24 @@ else                % no query given, evaluation within dataset
     auc_i = zeros(nQueryShapes, 1);
     
     refClass = shapeGtClasses(refShapeIds);
+    refClass = repmat(refClass, [nQueryShapes, 1]);
     queryClass = shapeGtClasses(queryShapeIds);
+    qrDists = dists;
+    
+    if isSelfRef, 
+        assert(nRefShapes==nQueryShapes);
+        recall(:,end) = [];
+        precision(:,end) = [];
+        recall_i(:,end) = [];
+        precision_i(:,end) = [];
+        refClass = rmDiag(refClass);
+        qrDists = rmDiag(qrDists);
+    end
     if opts.numWorkers>1,
         parfor q = 1:nQueryShapes,
             [r, p, info] = vl_pr(...
-                (refClass==queryClass(q))-0.5, ... % LABELS
-                -1*dists(q,:), ... % SCORES
+                (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
+                -1*qrDists(q,:), ... % SCORES
                 'Interpolate', false);
             recall(q,:) = r;
             precision(q,:) = p;
@@ -285,8 +303,8 @@ else                % no query given, evaluation within dataset
             auc(q) = info.auc;
             % interpolated
             [r, p, info] = vl_pr(...
-                (refClass==queryClass(q))-0.5, ... % LABELS
-                -1*dists(q,:), ... % SCORES
+                (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
+                -1*qrDists(q,:), ... % SCORES
                 'Interpolate', true);
             recall_i(q,:) = r;
             precision_i(q,:) = p;
@@ -296,8 +314,8 @@ else                % no query given, evaluation within dataset
     else
         for q = 1:nQueryShapes,
             [r, p, info] = vl_pr(...
-                (refClass==queryClass(q))-0.5, ... % LABELS
-                -1*dists(q,:), ... % SCORES
+                (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
+                -1*qrDists(q,:), ... % SCORES
                 'Interpolate', false);
             recall(q,:) = r;
             precision(q,:) = p;
@@ -305,8 +323,8 @@ else                % no query given, evaluation within dataset
             auc(q) = info.auc;
             % interpolated
             [r, p, info] = vl_pr(...
-                (refClass==queryClass(q))-0.5, ... % LABELS
-                -1*dists(q,:), ... % SCORES
+                (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
+                -1*qrDists(q,:), ... % SCORES
                 'Interpolate', true);
             recall_i(q,:) = r;
             precision_i(q,:) = p;
@@ -358,3 +376,9 @@ end
 
 end
 
+function M = rmDiag(M)
+    assert(size(M,1)==size(M,2) && ismatrix(M));
+    u = triu(M,1);
+    l = tril(M,-1);
+    M = u(:,2:end) + l(:,1:end-1);
+end
