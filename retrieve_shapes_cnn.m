@@ -32,6 +32,8 @@ function [ results,info ] = retrieve_shapes_cnn( shape, feat, varargin )
 %       set of reference images
 %   `metric`:: 'L2'
 %       other choices: 'LINF', 'L1', 'L0', 'CHI2', 'HELL'
+%   `multiview`:: true
+%       set to false to evaluate on single views of each instance 
 %   `logPath:: []
 %       place to save log information
 %
@@ -46,6 +48,7 @@ opts.nTop = Inf;
 opts.querySets = {'test'};
 opts.refSets = {'test'};
 opts.metric = 'L2';
+opts.multiview = true;
 opts.logPath = [];
 [opts, varargin] = vl_argparse(opts,varargin);
 
@@ -196,6 +199,14 @@ else
         descQueryInds = ismember(imdb.images.id,queryShapeIds); 
     end
     queryX = feat.x(descQueryInds, :);
+    
+    nDescPerShapeOri = nDescPerShape;
+    nQueryShapesOri = nQueryShapes;
+    if ~opts.multiview,
+        nDescPerShape = 1;
+        nQueryShapes = nQueryShapes * nDescPerShapeOri;
+    end
+    
 end
 
 % -------------------------------------------------------------------------
@@ -280,16 +291,20 @@ else                % no query given, evaluation within dataset
     refClass = shapeGtClasses(refShapeIds);
     refClass = repmat(refClass, [nQueryShapes, 1]);
     queryClass = shapeGtClasses(queryShapeIds);
+    if ~opts.multiview, 
+        queryClass = reshape(repmat(queryClass,[nDescPerShapeOri 1]), ...
+            [1 nQueryShapes]);
+    end
     qrDists = dists;
     
     if isSelfRef, 
-        assert(nRefShapes==nQueryShapes);
+        assert(nRefShapes==nQueryShapesOri);
         recall(:,end) = [];
         precision(:,end) = [];
         recall_i(:,end) = [];
         precision_i(:,end) = [];
-        refClass = rmDiag(refClass);
-        qrDists = rmDiag(qrDists);
+        refClass = rmDiagOnRow(refClass);
+        qrDists = rmDiagOnRow(qrDists);
     end
     if opts.numWorkers>1,
         parfor q = 1:nQueryShapes,
@@ -376,9 +391,28 @@ end
 
 end
 
-function M = rmDiag(M)
-    assert(size(M,1)==size(M,2) && ismatrix(M));
-    u = triu(M,1);
-    l = tril(M,-1);
-    M = u(:,2:end) + l(:,1:end-1);
+function M = rmDiagOnRow(M)
+    assert(ismatrix(M));
+    [sz1, sz2] = size(M);
+    if mod(sz1,sz2)==0, 
+        sy = sz1/sz2;
+        sx = 1;
+    elseif mod(sz2,sz1)==0, 
+        sy = 1;
+        sx = sz2/sz1;
+    elseif sz1==sz2,
+        u = triu(M,1);
+        l = tril(M,-1);
+        M = u(:,2:end) + l(:,1:end-1);
+        return; 
+    else
+        error('Wrong matrix size: [%d %d]',sz1, sz2);
+    end
+    ix = 1;
+    M0 = M;
+    M = zeros(sz1, sz2-sx);
+    for iy=1:sy:sz1, 
+        M(iy:iy+sy-1,:) = M0(iy:iy+sy-1,[1:ix-1 ix+sx:sz2]);
+        ix = ix + sx;
+    end
 end
