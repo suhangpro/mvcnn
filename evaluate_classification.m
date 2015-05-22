@@ -11,8 +11,8 @@ function evaluate_classification(feat, varargin)
 %       tunable liblinear svm parameter (-c) 
 %   `quiet`:: true
 %       liblinear parameter (-q)
-%   `multiview`:: false
-%       set to true to evaluate on multiple views of same instances 
+%   `multiview`:: true
+%       set to false to evaluate on every single views of same instances 
 %   `method`:: 'avgdesc'
 %       used only if multiview is true; other choices: 'maxdesc','avgsvmscore'
 %   `logPath`:: 'log/eval.txt'
@@ -29,7 +29,7 @@ opts.imdb = [];
 opts.cv = 5;
 opts.log2c = [-4:2:4];
 opts.quiet = true;
-opts.multiview = false;
+opts.multiview = true;
 opts.method = 'avgsdesc';
 opts.logPath = fullfile('log','eval.txt');
 opts.predPath = fullfile('data','pred.mat');
