@@ -46,7 +46,7 @@ params.b = [];
 % TODO - hyperparameter grid-search by cross-validation
 params.gammaBias = 0.001; 
 params.gamma = 0.0001;
-params.lambda = 100;
+params.lambda = 0;
 
 % The projection matrix is modelDimRedFV.W
 tic
