@@ -13,8 +13,12 @@ if opts.numWorkers<=1,
     return;
 end
 
-[D1, n1] = size(x1);
-[D2, n2] = size(x2);
+typeX1 = class(x1); typeX2 = class(x2);
+if ~strcmp(typeX1,typeX2), 
+    error('Wrong input: x1 and x2 should be of same data type');
+end
+
+[D1, n1] = size(x1); [D2, n2] = size(x2);
 if D1~=D2, 
     error('Wrong input: x1 and x2 don''t match in 1st dimention'); 
 end; 
@@ -91,7 +95,7 @@ if opts.verbose, fprintf(' done!\n'); end;
 
 % assemble results
 if opts.verbose, fprintf('[3/3] Assembling distance matrix \n'); end;
-Dist = zeros(n1,n2);
+Dist = zeros(n1,n2,typeX1);
 for i = 1:t,
     i1 = mod(i-1,npar(1))+1;
     i2 = floor((i-1)/npar(1))+1;
