@@ -78,7 +78,7 @@ if isempty(net),
     if ~exist(netFilePath,'file'),
         fprintf('Downloading model (%s) ...', modelName) ;
         vl_xmkdir(fullfile('data','models')) ;
-        urlwrite(fullfile('http://www.vlfeat.org/matconvnet/models', ...
+        urlwrite(fullfile('http://pegasus.cs.umass.edu/deep-shape-data/models', ...
             [modelName '.mat']), netFilePath) ;
         fprintf(' done!\n');
     end
