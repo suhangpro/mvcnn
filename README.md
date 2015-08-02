@@ -33,7 +33,15 @@ setup(true,struct('enableGpu',true,'cudaRoot','C:\Program Files\NVIDIA GPU Compu
 You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64)
 ```
 
-* download datasets 
+* extract descriptor for a shape (off/obj mesh) - the descriptor will be saved in a txt file (bunny_descriptor.txt)
+shape_compute_descriptor('bunny.off');
+```
+
+* extract descriptor for all shapes in a folder (off/obj meshes),  the descriptor will be saved in txt files in the same folder
+shape_compute_descriptor('my_mesh_folder/');
+```
+
+* download datasets for training/evaluation
 ```
 #!bash
 #modelnet40 (286M)
@@ -51,7 +59,7 @@ cd data
 wget http://pegasus.cs.umass.edu/deep-shape-data/clipart100.tar
 tar xf clipart100.tar
 ```
-* run experiments
+* run experiments of the paper
 ```
 #!bath
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
