@@ -1,6 +1,6 @@
 # CNNs for shape recognition
 
-The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for image recognition using covolutional neural networks (CNNs) where shape is the only cue. Examples include line-drawings, clip art images where color is removed, or **renderings of 3D models** where there is little texture information present. 
+The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for shape recognition using convolutional neural networks (CNNs) where view-based shape representations are the only cues. Examples include line-drawings, clip art images where color is removed, or **renderings of 3D models** where there is little or no texture information present. 
 
 ## Installation and Usage
 
@@ -10,8 +10,8 @@ The goal of the project is to learn a general purpose descriptor for shape recog
 git submodule init
 git submodule update
 ```
-* compile
 
+* compile
 (1) compile for CPU
 ``` 
 #!bash
@@ -28,6 +28,11 @@ MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',tr
 MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',true,
 'cudaRoot',<CUDA_ROOT>,'cudaMethod','nvcc','enableCudnn',true,'cudnnRoot',<CUDNN_ROOT>));exit;"
 ```
+(note) You can alternatively run directly the scripts from the Matlab command window e.g. for Windows installations:
+setup(true,struct('enableGpu',true,'cudaRoot','C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0','cudaMethod','nvcc'));
+You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64)
+```
+
 * download datasets 
 ```
 #!bash

@@ -25,8 +25,17 @@ addpath(genpath('utils'));
 %                                                                liblinear
 % -------------------------------------------------------------------------
 if doCompile, 
-    !make -C dependencies/liblinear-1.96/ clean
-    !make -C dependencies/liblinear-1.96/
+    if ispc
+        cd('dependencies/liblinear-1.96/');
+        % change to vcvars32 for 32-bit platforms
+        !vcvars64 
+        !nmake -f Makefile.win clean
+        !nmake -f Makefile.win lib
+        cd('../../');
+    else
+        !make -C dependencies/liblinear-1.96/ clean
+        !make -C dependencies/liblinear-1.96/
+    end
     run dependencies/liblinear-1.96/matlab/make.m
 end
 addpath('dependencies/liblinear-1.96/matlab');
@@ -35,8 +44,10 @@ addpath('dependencies/liblinear-1.96/matlab');
 %                                                                   vlfeat
 % -------------------------------------------------------------------------
 if doCompile,
-	!make -C dependencies/vlfeat/ clean
-    !make -C dependencies/vlfeat/
+    if ~ispc    
+    	!make -C dependencies/vlfeat/ clean
+        !make -C dependencies/vlfeat/
+    end
 end
 run dependencies/vlfeat/toolbox/vl_setup.m
 
