@@ -37,7 +37,7 @@ You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., 
 shape_compute_descriptor('bunny.off');
 ```
 
-* extract descriptor for all shapes in a folder (off/obj meshes),  the descriptor will be saved in txt files in the same folder
+* extract descriptor for all shapes in a folder (off/obj meshes),  the descriptors will be saved in txt files in the same folder
 shape_compute_descriptor('my_mesh_folder/');
 ```
 
