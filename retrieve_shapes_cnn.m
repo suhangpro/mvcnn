@@ -144,7 +144,7 @@ if ~isempty(shape), % retrieval given a query shape
         if ~exist(netFilePath,'file'),
             fprintf('Downloading model (%s) ...', feat.modelName) ;
             vl_xmkdir(fullfile('data','models')) ;
-            urlwrite(fullfile('http://pegasus.cs.umass.edu/deep-shape-data/models', ...
+            urlwrite(fullfile('http://maxwell.cs.umass.edu/deep-shape-data/models', ...
                 [feat.modelName '.mat']), netFilePath) ;
             fprintf(' done!\n');
         end

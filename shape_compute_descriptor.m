@@ -48,7 +48,7 @@ if exist(opts.cnn_model, 'file')
     fprintf('Done.\n');
 else
     fprintf('Downloading CNN model from our server...');
-    url = ['http://pegasus.cs.umass.edu/deep-shape-data/models/' opts.cnn_model];
+    url = ['http://maxwell.cs.umass.edu/deep-shape-data/models/' opts.cnn_model];
     websave(opts.cnn_model,url);
     if exist(opts.cnn_model, 'file')
         cnn = load(opts.cnn_model);
@@ -65,7 +65,7 @@ if opts.post_process_desriptor_metric
         fprintf('Done.\n');
     else
         fprintf('Downloading metric model from our server...');
-        url = ['http://pegasus.cs.umass.edu/deep-shape-data/models/' opts.metric_model];
+        url = ['http://maxwell.cs.umass.edu/deep-shape-data/models/' opts.metric_model];
         websave(opts.metric_model,url);
         if exist(opts.metric_model, 'file')
             modelDimRedFV = load(opts.metric_model);
