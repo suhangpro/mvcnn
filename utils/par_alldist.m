@@ -28,9 +28,14 @@ D = D1;
 tmp = x1(1);
 info = whos('tmp');
 numbytes = info.bytes;
-[~,w] = unix('free | grep Mem');
-stats = str2double(regexp(w, '[0-9]*', 'match'));
-freemem = (stats(3)+stats(end))*1e3;
+if ~ispc
+    [~,w] = unix('free | grep Mem');
+    stats = str2double(regexp(w, '[0-9]*', 'match'));
+    freemem = (stats(3)+stats(end))*1e3;
+else
+    stats = memory;
+    freemem = stats.MemAvailableAllArrays;
+end
 if isempty(opts.maxMem), 
     maxmem = freemem * 0.8;
 else

@@ -28,9 +28,7 @@ if doCompile,
     if ispc
         cd('dependencies/liblinear-1.96/');
         % change to vcvars32 for 32-bit platforms
-        !vcvars64 
-        !nmake -f Makefile.win clean
-        !nmake -f Makefile.win lib
+        !vcvars64 & nmake /f Makefile.win clean & nmake /f Makefile.win lib
         cd('../../');
     else
         !make -C dependencies/liblinear-1.96/ clean
@@ -44,7 +42,16 @@ addpath('dependencies/liblinear-1.96/matlab');
 %                                                                   vlfeat
 % -------------------------------------------------------------------------
 if doCompile,
-    if ~ispc    
+    if ispc
+        cd('dependencies/vlfeat/');
+        % change to vcvars32 for 32-bit platforms
+        % if there is a crash here, you need to explicitly change
+        % the paths and parameters in vlfeat's Makefile.mak        
+        % also remove "-f $(MEXOPT)" from Makefile.mak for latest VS
+        % versions. 
+        !vcvars64 & nmake /f Makefile.mak clean & nmake /f Makefile.mak
+        cd('../../');
+    else    
     	!make -C dependencies/vlfeat/ clean
         !make -C dependencies/vlfeat/
     end

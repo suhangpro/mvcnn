@@ -311,7 +311,7 @@ else                % no query given, evaluation within dataset
             [r, p, info] = vl_pr(...
                 (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
                 -1*qrDists(q,:), ... % SCORES
-                'Interpolate', false);
+                'interpolate', false);
             recall(q,:) = r;
             precision(q,:) = p;
             ap(q) = info.ap;
@@ -320,7 +320,7 @@ else                % no query given, evaluation within dataset
             [r, p, info] = vl_pr(...
                 (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
                 -1*qrDists(q,:), ... % SCORES
-                'Interpolate', true);
+                'interpolate', true);
             recall_i(q,:) = r;
             precision_i(q,:) = p;
             ap_i(q) = info.ap;
@@ -331,7 +331,7 @@ else                % no query given, evaluation within dataset
             [r, p, info] = vl_pr(...
                 (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
                 -1*qrDists(q,:), ... % SCORES
-                'Interpolate', false);
+                'interpolate', false);
             recall(q,:) = r;
             precision(q,:) = p;
             ap(q) = info.ap;
@@ -340,7 +340,7 @@ else                % no query given, evaluation within dataset
             [r, p, info] = vl_pr(...
                 (refClass(q,:)==queryClass(q))-0.5, ... % LABELS
                 -1*qrDists(q,:), ... % SCORES
-                'Interpolate', true);
+                'interpolate', true);
             recall_i(q,:) = r;
             precision_i(q,:) = p;
             ap_i(q) = info.ap;
