@@ -117,8 +117,8 @@ for i=1:length(mesh_filenames)
     else
         ims = render_views(mesh, 'use_dodecahedron_views', true, 'figHandle', fig);
     end
-    outs = get_cnn_activations(ims, cnn, [], {'fc7','prob'});
-    out = outs.fc7(:);
+    outs = get_cnn_activations(ims, cnn, [], {'relu7','prob'});
+    out = outs.relu7(:);
     if opts.post_process_desriptor_metric
         out = double(modelDimRedFV.W*out);
     end
