@@ -1,7 +1,7 @@
 function h = plotMesh(mesh, style, az, el)
 
 if nargin < 2
-    style = 'figure';
+    style = 'solid';
 end
 
 if strcmpi(style, 'mesh')    
@@ -18,7 +18,7 @@ elseif strcmpi(style, 'solid')
     if isfield(mesh, 'Nv')
         set(h, 'VertexNormals', -mesh.Nv(1:3,:)');
     end    
-    set(gcf, 'Color', 'w');
+    set(gcf, 'Color', 'w', 'Renderer', 'OpenGL');
     set(gca, 'Projection', 'perspective');    
     axis equal;
     axis off;

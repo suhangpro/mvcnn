@@ -103,7 +103,7 @@ else
 end
 
 descr = cell( 1, length(mesh_filenames));
-fig = figure('Visible','off');
+fig = figure; %('Visible','off');
 for i=1:length(mesh_filenames)
     fprintf('Loading input shape %s...', mesh_filenames(i).name);
     mesh = loadMesh( mesh_filenames(i).name );

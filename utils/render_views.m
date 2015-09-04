@@ -13,7 +13,7 @@ function ims = render_views( mesh, varargin )
 %       upright oriented according to +Z axis!
 %   `use_dodecahedron_views`:: (default) false
 %       ignores az, el -  places cameras on the vertices of a unit
-%       dodecahedron, rotates them, and produces 160 views.
+%       dodecahedron, rotates them, and produces 80 views.
 %       use this setting for shapes that are not upright oriented.
 %   `colorMode`:: (default)  'rgb'
 %       color mode of output images ('rgb' or 'gray')
@@ -92,27 +92,33 @@ if ischar(mesh),
 end
 
 if opts.use_dodecahedron_views
-    ims = cell(1, length(opts.az) * 8);
+    ims = cell(1, length(opts.az) * 4);
     im_counter = 0;
     for i=1:length(opts.az)
         plotMesh(mesh,'solid',opts.az(i),opts.el(i));
-        for cv=1:8
+        for cv=1:4
             im_counter = im_counter + 1;
-            ims{im_counter} = frame2im(getframe(opts.figHandle));            
+            saveas(opts.figHandle, '__temp__.png');
+            ims{im_counter} = imread('__temp__.png');
+            %ims{im_counter} = frame2im(getframe(opts.figHandle));            
             if strcmpi(opts.colorMode,'gray'), ims{im_counter} = rgb2gray(ims{im_counter}); end
             ims{im_counter} = resize_im(ims{im_counter}, opts.outputSize, opts.minMargin, opts.maxArea);            
-            camroll(45);
+            camroll(90);
         end        
     end
 else
     ims = cell(1,length(opts.az));
     for i=1:length(opts.az),
         plotMesh(mesh,'solid',opts.az(i),opts.el);
-        ims{i} = frame2im(getframe(opts.figHandle));
+        saveas(opts.figHandle, '__temp__.png');
+        ims{i} = imread('__temp__.png');
+        %ims{i} = frame2im(getframe(opts.figHandle));
         if strcmpi(opts.colorMode,'gray'), ims{i} = rgb2gray(ims{i}); end
         ims{i} = resize_im(ims{i}, opts.outputSize, opts.minMargin, opts.maxArea);
     end
 end
+
+%delete('__temp__.png');
 
 end
 

@@ -10,8 +10,15 @@ end
 mesh.filename = strtrim( filestr );
 
 if strcmp( filestr(end-3:end), '.off')
-    fgetl(file);
     line = strtrim(fgetl(file));
+    skipline = 0;
+    if strcmp(line, 'OFF')
+        line = strtrim(fgetl(file));
+        skipline = 2;
+    else
+        line = line(4:end);
+        skipline = 1;
+    end
     [token,line] = strtok(line);
     numverts = eval(token);
     [token,line] = strtok(line);
@@ -21,7 +28,7 @@ if strcmp( filestr(end-3:end), '.off')
     mesh.V = zeros( 3, numverts, 'single' );
     mesh.F = zeros( 3, numfaces, 'single' );
     
-    DATA = dlmread(filestr, ' ', 2, 0);
+    DATA = dlmread(filestr, ' ', skipline, 0);
     DATA = DATA(1:numverts+numfaces, :);
     mesh.V(1:3, 1:numverts) = DATA(1:numverts, 1:3)';
     mesh.F(1:3, 1:numfaces) = DATA(numverts+1:numverts+numfaces, 2:4)' + 1;
