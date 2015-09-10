@@ -71,7 +71,7 @@ cd data
 wget http://pegasus.cs.umass.edu/deep-shape-data/clipart100.tar
 tar xf clipart100.tar
 ```
-* run experiments of the paper
+* run experiments in the paper
 ```
 #!bath
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
@@ -92,4 +92,3 @@ For details on MVCNN read the following paper:
   	volume    = {abs/1505.00880},
   	year      = {2015},
   	url       = {http://arxiv.org/abs/1505.00880}}
-
