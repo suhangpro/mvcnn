@@ -98,9 +98,9 @@ if opts.use_dodecahedron_views
         plotMesh(mesh,'solid',opts.az(i),opts.el(i));
         for cv=1:4
             im_counter = im_counter + 1;
-            saveas(opts.figHandle, '__temp__.png');
-            ims{im_counter} = imread('__temp__.png');
-            %ims{im_counter} = frame2im(getframe(opts.figHandle));            
+			ims{im_counter} = print('-RGBImage', '-r100'); %in case of an error,you have an old matlab version: comment this line and uncomment the following 2 ones
+            %saveas(opts.figHandle, '__temp__.png');
+            %ims{im_counter} = imread('__temp__.png');
             if strcmpi(opts.colorMode,'gray'), ims{im_counter} = rgb2gray(ims{im_counter}); end
             ims{im_counter} = resize_im(ims{im_counter}, opts.outputSize, opts.minMargin, opts.maxArea);            
             camroll(90);
@@ -110,9 +110,9 @@ else
     ims = cell(1,length(opts.az));
     for i=1:length(opts.az),
         plotMesh(mesh,'solid',opts.az(i),opts.el);
-        saveas(opts.figHandle, '__temp__.png');
-        ims{i} = imread('__temp__.png');
-        %ims{i} = frame2im(getframe(opts.figHandle));
+		ims{i} = print('-RGBImage', '-r100');  %in case of an error,you have an old matlab version: comment this line and uncomment the following 2 ones
+        %saveas(opts.figHandle, '__temp__.png');
+        %ims{i} = imread('__temp__.png');
         if strcmpi(opts.colorMode,'gray'), ims{i} = rgb2gray(ims{i}); end
         ims{i} = resize_im(ims{i}, opts.outputSize, opts.minMargin, opts.maxArea);
     end

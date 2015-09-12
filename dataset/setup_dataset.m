@@ -217,7 +217,7 @@ for ci = 1:length(imdb.meta.classes),
     numShapes = length(mesh_filenames);
     fprintf('Found %d meshes.\n', numShapes);
     
-    fig = figure; %('Visible','off');
+    fig = figure('Visible','off');
     for fi=1:numShapes
         fprintf('Loading and rendering input shape %s...', mesh_filenames{fi});
         mesh = loadMesh( mesh_filenames{fi} );
