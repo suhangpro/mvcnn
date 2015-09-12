@@ -14,6 +14,8 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %       server.
 %       Note: The default mat file assumes that shapes that are
 %       upright oriented according to +Z axis!
+%       if you want to use the CNN trained *without upright assumption*, use
+%       'cnn-modelnet40-v2.mat'
 %   `post_process_desriptor_metric`:: (default) true
 %       set to false to disable transforming descriptor based on our
 %       learned distance metric
@@ -21,6 +23,8 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %       this is a matlab file with the saved metric parameters
 %       if the default file is not found, it will be downloaded from our
 %       server
+%       if you want to use the model trained *without upright assumption*, use
+%       'metric-relu7-v2.mat'
 %   `gpuMode`:: (default) false
 %       set to true to compute on GPU
 %   `numWorkers`:: (default) 12

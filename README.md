@@ -2,6 +2,12 @@
 
 The goal of the project is to learn a general purpose descriptor for shape recognition. To do this we train discriminative models for shape recognition using convolutional neural networks (CNNs) where view-based shape representations are the only cues. Examples include line-drawings, clip art images where color is removed, or **renderings of 3D models** where there is little or no texture information present. 
 
+If you use any part of the code from this project, please cite:
+
+Multi-view Convolutional Neural Networks for 3D Shape Recognition
+Hang Su, Subhransu Maji, Evangelos Kalogerakis, Erik Learned-Miller
+Proceedings of the IEEE International Conference on Computer Vision 2015 (ICCV 2015)
+
 ## Installation
 
 * install dependencies
@@ -35,16 +41,22 @@ You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., 
 
 ## Usage
 
-* extract descriptor for a shape (off/obj mesh) - the descriptor will be saved in a txt file (bunny_descriptor.txt)
+* extract descriptor for a shape (off/obj mesh) - the descriptor will be saved in a txt file (bunny_descriptor.txt) [assumes upright orientation]
 
 ```
 shape_compute_descriptor('bunny.off');
 ```
 
-* extract descriptor for all shapes in a folder (off/obj meshes),  the descriptors will be saved in txt files in the same folder
+* extract descriptor for all shapes in a folder (off/obj meshes),  the descriptors will be saved in txt files in the same folder [assumes upright orientation]
 
 ```
 shape_compute_descriptor('my_mesh_folder/');
+```
+
+* extract descriptor for all shapes in a folder (off/obj meshes), post-process descriptor with learned metric, and use the model that *does not assume* upright orientation [*-v2 models do not assume upright orientations]
+
+```
+shape_compute_descriptor('my_mesh_folder/', 'cnn_model', 'cnn-modelnet40-v2.mat', 'metric_model', 'metric-relu7-v2.mat','post_process_desriptor_metric',true);
 ```
 
 * download datasets for training/evaluation
@@ -71,24 +83,10 @@ cd data
 wget http://pegasus.cs.umass.edu/deep-shape-data/clipart100.tar
 tar xf clipart100.tar
 ```
-* run experiments in the paper
+* run experiments in the paper (see run_experiments.m for options and other details)
 ```
 #!bath
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
 ```
 *LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
-
-## Reference
-
-For details on MVCNN read the following paper:
-
-	@article{DBLP:journals/corr/SuMKL15,
-  	author    = {	Hang Su and
-               		Subhransu Maji and
-               		Evangelos Kalogerakis and
-               		Erik G. Learned{-}Miller},
-  	title     = {Multi-view Convolutional Neural Networks for 3D Shape Recognition},
-  	journal   = {CoRR},
-  	volume    = {abs/1505.00880},
-  	year      = {2015},
-  	url       = {http://arxiv.org/abs/1505.00880}}
+*LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
