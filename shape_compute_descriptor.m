@@ -8,7 +8,7 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %   path_to_shape:: (default) 'data/'
 %        can be either a filename for a mesh in OBJ/OFF format
 %        or a name of folder containing multiple OBJ/OFF meshes
-%   `cnn_model`:: (default) 'imagenet-vgg-m-finetuned-modelnet40-v2.mat'
+%   `cnn_model`:: (default) 'cnn-modelnet40-v1.mat'
 %       this is a matlab file with the saved CNN parameters
 %       if the default file is not found, it will be downloaded from our
 %       server.
@@ -17,7 +17,7 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %   `post_process_desriptor_metric`:: (default) true
 %       set to false to disable transforming descriptor based on our
 %       learned distance metric
-%   `metric_model`:: (default:) 'modelDimRedFV-relu7.mat'
+%   `metric_model`:: (default:) 'metric-relu7-v1.mat'
 %       this is a matlab file with the saved metric parameters
 %       if the default file is not found, it will be downloaded from our
 %       server
@@ -35,9 +35,9 @@ if nargin<1 || isempty(path_to_shape),
 end
 
 % default options
-opts.cnn_model = 'imagenet-vgg-m-finetuned-modelnet40-v2.mat';
+opts.cnn_model = 'cnn-modelnet40-v1.mat';
 opts.post_process_desriptor_metric = true;
-opts.metric_model = 'modelDimRedFV-relu7.mat';
+opts.metric_model = 'metric-relu7-v1.mat';
 opts.gpuMode = false;
 opts.numWorkers = 12;
 opts = vl_argparse(opts,varargin);

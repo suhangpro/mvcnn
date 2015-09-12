@@ -1,7 +1,7 @@
 function feats = imdb_compute_cnn_features( imdbName, model, varargin )
 %IMDB_COMPUTE_CNN_FEATURES Compute and save CNN activations features
 %
-%   imdb:: 'modelnet10toon'
+%   imdb:: 'ModelNet40'
 %       name of a folder under 'data/'
 %   model:: 'imagenet-vgg-m'
 %       can be either string (model name) or the actual net model
@@ -35,7 +35,7 @@ if nargin<2 || isempty(model),
     model = 'imagenet-vgg-m';
 end
 if nargin<1 || isempty(imdbName),
-    imdbName = 'modelnet40phong';
+    imdbName = 'ModelNet40';
 end
 if ischar(model), 
     modelName = model; 
