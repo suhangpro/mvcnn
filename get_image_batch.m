@@ -92,7 +92,8 @@ for i=1:nImages
 
   % acquire image
   if isempty(im{i})
-    imt = imread(images{i}) ;
+    imPath = strrep(images{i},'\',filesep);
+    imt = imread(imPath) ;
     imt = single(imt) ; % faster than im2single (and multiplies by 255)
   else
     imt = im{i} ;

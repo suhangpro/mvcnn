@@ -9,7 +9,7 @@ if ~(nChannels==1 || nChannels==3),
     error('Unsupported type of image format: %d channels', nChannels);
 end
 
-im = imread(path); 
+im = imread(strrep(path,'\',filesep)); 
 
 if size(im,3)~=nChannels, 
     if size(im,3)==3, 

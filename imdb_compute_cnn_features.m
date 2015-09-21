@@ -83,6 +83,7 @@ if isempty(net),
         fprintf(' done!\n');
     end
     net = load(netFilePath);
+    net = convert_net_format(net,'old'); 
 end
 
 % use gpu if requested and possible

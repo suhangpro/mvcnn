@@ -149,11 +149,12 @@ if ~isempty(shape), % retrieval given a query shape
             fprintf(' done!\n');
         end
         net = load(netFilePath);
+	net = convert_net_format(net,'old');
     end  
     % get raw responses
     nViews = numel(shape);
     for i=1:numel(shape), 
-        if ischar(shape{i}), shape{i} = imread(shape{i}); end
+        if ischar(shape{i}), shape{i} = imread(strrep(shape{i},'\',filesep)); end
     end
     if pooledFeat, 
         queryX = get_cnn_activations(shape, net, [], {feat.layerName}, ...

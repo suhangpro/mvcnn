@@ -31,7 +31,8 @@ else
     poolSize = poolobj.NumWorkers;
 end
 parfor (i=1:nInstances, poolSize)
-    im = imread(fullfile(imdb.imageDir,imdb.images.name{i}));
+    imPath = strrep(fullfile(imdb.imageDir,imdb.images.name{i}),'\',filesep);
+    im = imread(imPath);
     fprintf(' %s\n', imdb.images.name{i});
     for ri = 1:nViews, 
         [pathstr, name, ext] = fileparts(imdb.images.name{i});

@@ -251,6 +251,7 @@ if ~isempty(baseModel),
         fprintf(' done!\n');
     end
     net = load(netFilePath); % Load model if specified
+    net = convert_net_format(net,'old');
     
     fprintf('Initializing from model: %s\n', baseModel);
     % Replace the last but one layer with random weights

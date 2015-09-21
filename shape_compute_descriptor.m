@@ -56,6 +56,7 @@ else
     websave(opts.cnn_model,url);
     if exist(opts.cnn_model, 'file')
         cnn = load(opts.cnn_model);
+	cnn = convert_net_format(cnn,'old');
         fprintf('Done.\n');
     else
         error('Could not download mat file from our server. Please check internet connection or contact us.');
