@@ -141,8 +141,8 @@ if ~pooledFeat,
             [nDescPerShape*nTestShapes 1]);
     end
 end   
-trainFeat = sparse(trainFeat);
-testFeat = sparse(testFeat); 
+trainFeat = sparse(double(trainFeat));
+testFeat = sparse(double(testFeat)); 
 
 
 % -------------------------------------------------------------------------

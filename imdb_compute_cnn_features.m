@@ -206,6 +206,7 @@ else
     end
     poolSize = poolObj.NumWorkers;
 end
+parfor_progress(nImgs); 
 parfor (i=1:nImgs, poolSize)
 %  for  i=1:nImgs, % if no parallel computing toolbox
     if exist(fullfile(cacheDir, [num2str(i) '.mat']),'file'),
@@ -225,8 +226,10 @@ parfor (i=1:nImgs, poolSize)
         'gpuMode', opts.gpuMode);
     parsave(fullfile(cacheDir, [num2str(i) '.mat']),feat);
     
-    fprintf(' %s\n',fullfile(imdb.imageDir,imdb.images.name{(i-1)*nViews+1}));
+    % fprintf(' %s\n',fullfile(imdb.imageDir,imdb.images.name{(i-1)*nViews+1}));
+    parfor_progress();
 end
+parfor_progress(0);
 
 % -------------------------------------------------------------------------
 %                               Construct feature descriptors and encoders
