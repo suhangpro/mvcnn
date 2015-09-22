@@ -49,6 +49,11 @@ if opts.useShape,
     imdb.images.name = imdb.images.name(I);
     imdb.images.class = imdb.images.class(I);
     imdb.images.set = imdb.images.set(I);
+
+    nViews = sum(imdb.images.sid==1); 
+    assert((nViews==12 && opts.useUprightAssumption) ...
+        || (nViews==80 && ~opts.useUprightAssumption), ...
+        'Number of views (%d) wrong', nViews); 
 end
 imdb.images.id = 1:length(imdb.images.name);
 

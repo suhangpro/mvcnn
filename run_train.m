@@ -35,6 +35,9 @@ function net = run_train(imdbName, varargin)
 %       learning momentum
 %   `includeVal`:: false
 %       if true, validation set is also used for training 
+%   `useUprightAssumption`:: true
+%       if true, 12 views will be used to render meshes, 
+%       otherwise 80 views based on a dodecahedron
 % 
 opts.seed = 1 ;
 opts.batchSize = 128 ;
@@ -51,6 +54,7 @@ opts.viewpoolLoc = 'fc7';
 opts.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)];
 opts.momentum = 0.9;
 opts.includeVal = false;
+opts.useUprightAssumption = true;
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
 if ~isempty(opts.baseModel), 
@@ -83,7 +87,7 @@ end
 % -------------------------------------------------------------------------
 %                                                                 Get imdb
 % -------------------------------------------------------------------------
-imdb = get_imdb(imdbName);
+imdb = get_imdb(imdbName,'useUprightAssumption',opts.useUprightAssumption);
 if isfield(imdb.meta,'invert'), 
     opts.invert = imdb.meta.invert;
 else

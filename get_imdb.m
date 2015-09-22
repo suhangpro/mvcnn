@@ -13,6 +13,9 @@ end
 
 if exist(imdbPath,'file'), 
     imdb = load(imdbPath);
+    if ~isempty(varargin), 
+        warning('imdb loaded from %s, options might be ignored',imdbPath);
+    end
 else
     if exist([datasetFnName '.m'],'file'),
         imdb = eval([datasetFnName '(''' datasetDir ''')']);
