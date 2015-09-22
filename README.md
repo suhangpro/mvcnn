@@ -63,15 +63,15 @@ shape_compute_descriptor('my_mesh_folder/', 'cnn_model', 'cnn-modelnet40-v2.mat'
 
 ```
 #!bash
-#ModelNet40 (v1 - 12 views w/ upright assumption) (4.8G)
+#ModelNet40v1 (12 views w/ upright assumption) (4.8G)
 cd data
-wget http://maxwell.cs.umass.edu/deep-shape-data/modelnet40-v1.tar
-tar xf modelnet40-v1.tar
+wget http://maxwell.cs.umass.edu/deep-shape-data/ModelNet40v1.tar
+tar xf ModelNet40v1.tar
 
-#ModelNet40 (v2 - 80 views w/o upright assumption) (7.2G)
+#ModelNet40v2 (80 views w/o upright assumption) (7.2G)
 cd data
-wget http://maxwell.cs.umass.edu/deep-shape-data/modelnet40-v2.tar
-tar xf modelnet40-v2.tar
+wget http://maxwell.cs.umass.edu/deep-shape-data/ModelNet40v2.tar
+tar xf ModelNet40v2.tar
 
 #sketch (211M)
 cd data
@@ -89,4 +89,4 @@ tar xf clipart100.tar
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
 ```
 *LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
-*LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
+*LD_LIBRARY_PATH* may not be necessary depending on your installation, e.g. whether includes cuDNN support.
