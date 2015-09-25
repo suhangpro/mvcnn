@@ -18,8 +18,7 @@ If you use any part of the code from this project, please cite:
 * install dependencies
 ``` 
 #!bash
-git submodule init
-git submodule update
+git submodule update --init
 ```
 
 * compile
@@ -94,4 +93,4 @@ tar xf clipart100.tar
 #!bath
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
 ```
-**Note**: setting *LD_LIBRARY_PATH* variable may not be necessary depending on your installation, e.g. whether includes cuDNN support. 
+**Note**: setting *LD_LIBRARY_PATH* variable may not be necessary depending on your installation, e.g. whether includes cuDNN support.
