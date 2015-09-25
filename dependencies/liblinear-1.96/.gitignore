@@ -1,0 +1,5 @@
+*.o
+*.a
+*.mexa64
+predict
+train
