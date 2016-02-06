@@ -32,23 +32,23 @@ elseif strcmpi(style, 'solidphong')
     axis off;
     view(az,el);
     camlight;    
-% elseif strcmpi(style, 'soliddoublesided')
-%     mesh = normals(mesh);    
-%     lx = cos(az) * cos(el);
-%     ly = cos(az) * sin(el);
-%     lz = sin(az);
-%     lightdir = [lx ly lz]';
-%     mesh.C = zeros( size(mesh.V, 2), 3 );
-%     for i=1:size(mesh.V, 2)
-%         mesh.C(i, :) = .3 + .6 * max( sum( lightdir .* mesh.Nv(:, i) ), sum( -lightdir .* mesh.Nv(:, i) ) );
-%     end  
-%     h = trimesh(mesh.F', mesh.V(1,:)', mesh.V(2,:)' ,mesh.V(3,:)', 'EdgeColor', 'none', ...
-%         'FaceVertexCData', mesh.C, 'FaceColor', 'interp' );
-%     set(gcf, 'Color', 'w', 'Renderer', 'OpenGL');
-%     set(gca, 'Projection', 'perspective');    
-%     axis equal;
-%     axis off;
-%     view(az,el);
-%     camlight;        
+elseif strcmpi(style, 'soliddoublesided')
+    mesh = normals(mesh);    
+    lx = cos(az) * cos(el);
+    ly = cos(az) * sin(el);
+    lz = sin(az);
+    lightdir = [lx ly lz]';
+    mesh.C = zeros( size(mesh.V, 2), 3 );
+    for i=1:size(mesh.V, 2)
+        mesh.C(i, :) = .3 + .6 * max( sum( lightdir .* mesh.Nv(:, i) ), sum( -lightdir .* mesh.Nv(:, i) ) );
+    end  
+    h = trimesh(mesh.F', mesh.V(1,:)', mesh.V(2,:)' ,mesh.V(3,:)', 'EdgeColor', 'none', ...
+        'FaceVertexCData', mesh.C, 'FaceColor', 'interp' );
+    set(gcf, 'Color', 'w', 'Renderer', 'OpenGL');
+    set(gca, 'Projection', 'perspective');    
+    axis equal;
+    axis off;
+    view(az,el);
+    camlight;        
 end
 
