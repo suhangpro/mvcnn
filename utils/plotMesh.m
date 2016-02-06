@@ -20,7 +20,7 @@ elseif strcmpi(style, 'solid')
     axis equal;
     axis off;
     view(az,el);
-    camlight;    
+    camlight('HEADLIGHT');    
 elseif strcmpi(style, 'solidphong')
     mesh = normals(mesh);
     h = trimesh(mesh.F', mesh.V(1,:)', mesh.V(2,:)' ,mesh.V(3,:)', 'FaceColor', 'w', 'EdgeColor', 'none', ...
@@ -31,7 +31,7 @@ elseif strcmpi(style, 'solidphong')
     axis equal;
     axis off;
     view(az,el);
-    camlight;    
+    camlight('HEADLIGHT');    
 elseif strcmpi(style, 'soliddoublesided')
     mesh = normals(mesh);    
     lx = cos(az) * cos(el);
