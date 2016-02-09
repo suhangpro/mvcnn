@@ -7,11 +7,11 @@ The goal of the project is to learn a general purpose descriptor for shape recog
 
 If you use any part of the code from this project, please cite:
 
-	@inproceedings{su15mvcnn,
-	author    = {Hang Su and Subhransu Maji and Evangelos Kalogerakis and Erik G. Learned{-}Miller},
-	title     = {Multi-view convolutional neural networks for 3d shape recognition},
-	booktitle = {Proc. ICCV, to appear},
-	year      = {2015}}
+  @inproceedings{su15mvcnn,
+  author    = {Hang Su and Subhransu Maji and Evangelos Kalogerakis and Erik G. Learned{-}Miller},
+  title     = {Multi-view convolutional neural networks for 3d shape recognition},
+  booktitle = {Proc. ICCV}, 
+  year      = {2015}}
 
 ## Installation
 
@@ -33,7 +33,7 @@ Option 2: compile for GPU
 #!bash
 MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',true));exit;"
 ```
-Option 3: compile with cuDNN support
+Option 3: compile with cuDNN support (with optional compilation arguments that might not be needed)
 ``` 
 #!bash
 MEX=<MATLAB_ROOT>/bin/mex matlab -nodisplay -r "setup(true,struct('enableGpu',true,
@@ -83,4 +83,4 @@ tar xf ModelNet40v2.tar
 #!bath
 LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> matlab -nodisplay -r "run_experiments;exit;"
 ```
-**Note**: setting *LD_LIBRARY_PATH* variable may not be necessary depending on your installation, e.g. whether includes cuDNN support.
+**Note**: setting *LD_LIBRARY_PATH* variable may not be necessary depending on your installation.

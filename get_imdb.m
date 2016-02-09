@@ -4,7 +4,7 @@ function [ imdb ] = get_imdb( datasetName, varargin )
 %   should be name of a directory under '/data'
 
 datasetDir = fullfile('data',datasetName);
-datasetFnName = ['setup_' datasetName];
+datasetFnName = ['setup_imdb_' datasetName];
 imdbPath = fullfile(datasetDir,'imdb.mat');
 
 if ~exist(datasetDir,'dir'), 
@@ -18,9 +18,9 @@ if exist(imdbPath,'file'),
     end
 else
     if exist([datasetFnName '.m'],'file'),
-        imdb = eval([datasetFnName '(''' datasetDir ''')']);
+        imdb = eval([datasetFnName '(''' datasetDir ''',varargin{:})']);
     else
-        imdb = setup_dataset(datasetDir, varargin{:});
+        imdb = setup_imdb_generic(datasetDir, varargin{:});
     end
     save(imdbPath,'-struct','imdb');
 end

@@ -1,4 +1,4 @@
-function imdb = setup_dataset(datasetDir, varargin)
+function imdb = setup_imdb_modelnet(datasetDir, varargin)
 
 opts.seed = 0 ;             % random seed generator
 opts.ratio = [0.8 0.2];     % train:val ratio
@@ -58,8 +58,6 @@ end
 imdb.images.id = 1:length(imdb.images.name);
 
 end
-
-
 
 function [imdb, nTrainShapes] = scan_images(imdb, opts)
 for ci = 1:length(imdb.meta.classes),
@@ -189,6 +187,7 @@ for ci = 1:length(imdb.meta.classes),
 end
 end
 
+
 function numShapes = render_meshes(imdb, opts)
 for ci = 1:length(imdb.meta.classes),
     fprintf('  [%2d/%2d] %s ... ', ci, length(imdb.meta.classes), ...
@@ -247,9 +246,6 @@ end
 end
 
 
-
-
-
 function shapename = get_shape_name(filename)
 suffix_idx = strfind(filename,'_');
 if isempty(suffix_idx),
@@ -258,6 +254,7 @@ else
     shapename = filename(1:suffix_idx(end)-1);
 end
 end
+
 
 function vid = get_shape_vid(filename)
 suffix_idx = strfind(filename,'_');
