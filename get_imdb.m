@@ -2,26 +2,29 @@ function [ imdb ] = get_imdb( datasetName, varargin )
 %GET_IMDB Get imdb structure for the specified dataset
 % datasetName 
 %   should be name of a directory under '/data'
+% 'func'
+%   the function that actually builds the imdb 
+%   default: @setup_imdb_generic
+% 'rebuild'
+%   whether to rebuild imdb if one exists already
+%   default: false
+
+
+args.func = @setup_imdb_generic;
+args.rebuild = false;
+args = vl_argparse(args,varargin);
 
 datasetDir = fullfile('data',datasetName);
-datasetFnName = ['setup_imdb_' datasetName];
 imdbPath = fullfile(datasetDir,'imdb.mat');
 
 if ~exist(datasetDir,'dir'), 
     error('Unknown dataset: %s', datasetName);
 end
 
-if exist(imdbPath,'file'), 
+if exist(imdbPath,'file') && ~args.rebuild, 
     imdb = load(imdbPath);
-    if ~isempty(varargin), 
-        warning('imdb loaded from %s, options might be ignored',imdbPath);
-    end
 else
-    if exist([datasetFnName '.m'],'file'),
-        imdb = eval([datasetFnName '(''' datasetDir ''',varargin{:})']);
-    else
-        imdb = setup_imdb_generic(datasetDir, varargin{:});
-    end
+    imdb = args.func(datasetDir);
     save(imdbPath,'-struct','imdb');
 end
 
