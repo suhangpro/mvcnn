@@ -89,6 +89,8 @@ for ci = 1:length(imdb.meta.classes),
             if isempty(imdb.images.sid), maxSid = 0;
             else maxSid = max(imdb.images.sid); end
             imdb.images.sid = [imdb.images.sid maxSid+imSids];
+        else
+            nTrainShapes = nTrainImages;
         end
         imdb.images.set = [imdb.images.set ones(1,nTrainImages)];
         imdb.images.class = [imdb.images.class ci*ones(1,nTrainImages)];
