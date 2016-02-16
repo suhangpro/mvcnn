@@ -2,7 +2,6 @@ function imdb = setup_imdb_modelnet(datasetDir, varargin)
 
 opts.seed = 0 ;             % random seed generator
 opts.ratio = [0.8 0.2];     % train:val ratio
-opts.invert = false;        % if true, for each pixel: v --> 255-v
 opts.ext = '.png';          % extension of target files
 opts.extmesh = '.off';      % extension of target mesh files
 opts.useShape = true;       % if true, instances are grouped by shape id
@@ -21,7 +20,6 @@ for i=1:numel(contents),
     if contents(i).isdir, folders = [folders contents(i).name]; end
 end
 imdb.meta.classes = setdiff(folders,{'.','..'});
-imdb.meta.invert = opts.invert;
 imdb.meta.sets = {'train', 'val', 'test'};
 fprintf('%d classes found! \n', length(imdb.meta.classes));
 
@@ -75,7 +73,6 @@ for ci = 1:length(imdb.meta.classes),
         files = dir(fullfile(trainDir, ['*' opts.ext]));
         fileNames = {files.name};
         nTrainImages = length(fileNames);
-        fileNames = fileNames(randperm(nTrainImages));
         if opts.useShape,
             imVids = cellfun(@(s) get_shape_vid(s), fileNames);
             [~,I] = sort(imVids);
@@ -84,7 +81,6 @@ for ci = 1:length(imdb.meta.classes),
                 'UniformOutput', false);
             sNamesUniq = unique(sNames);
             nTrainShapes = length(sNamesUniq);
-            sNamesUniq = sNamesUniq(randperm(nTrainShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
             if isempty(imdb.images.sid), maxSid = 0;
             else maxSid = max(imdb.images.sid); end
@@ -107,7 +103,6 @@ for ci = 1:length(imdb.meta.classes),
         files = dir(fullfile(valDir, ['*' opts.ext]));
         fileNames = {files.name};
         nValImages = length(fileNames);
-        fileNames = fileNames(randperm(nValImages));
         if opts.useShape,
             imVids = cellfun(@(s) get_shape_vid(s), fileNames);
             [~,I] = sort(imVids);
@@ -116,7 +111,6 @@ for ci = 1:length(imdb.meta.classes),
                 'UniformOutput', false);
             sNamesUniq = unique(sNames);
             nValShapes = length(sNamesUniq);
-            sNamesUniq = sNamesUniq(randperm(nValShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
             if isempty(imdb.images.sid), maxSid = 0;
             else maxSid = max(imdb.images.sid); end
@@ -132,6 +126,7 @@ for ci = 1:length(imdb.meta.classes),
             inds = (imdb.images.set==1 & imdb.images.class==ci);
             trainvalSids = unique(imdb.images.sid(inds));
             nValShapes = floor(opts.ratio(2)*numel(trainvalSids));
+            trainvalSids = trainvalSids(randperm(numel(trainvalSids)));
             valSids = trainvalSids(1:nValShapes);
             inds = ismember(imdb.images.sid,valSids);
             imdb.images.set(inds) = 2;
@@ -141,6 +136,7 @@ for ci = 1:length(imdb.meta.classes),
         else
             idxs = find(imdb.images.set==1 & imdb.images.class==ci);
             nValImages = floor(opts.ratio(2)*length(idxs));
+            idxs = idxs(randperm(numel(idxs)));
             imdb.images.set(idxs(1:nValImages)) = 2;
             nTrainImages = nTrainImages - nValImages;
         end
@@ -154,7 +150,6 @@ for ci = 1:length(imdb.meta.classes),
         files = dir(fullfile(testDir, ['*' opts.ext]));
         fileNames = {files.name};
         nTestImages = length(fileNames);
-        fileNames = fileNames(randperm(nTestImages));
         if opts.useShape,
             imVids = cellfun(@(s) get_shape_vid(s), fileNames);
             [~,I] = sort(imVids);
@@ -163,7 +158,6 @@ for ci = 1:length(imdb.meta.classes),
                 'UniformOutput', false);
             sNamesUniq = unique(sNames);
             nTestShapes = length(sNamesUniq);
-            sNamesUniq = sNamesUniq(randperm(nTestShapes));
             [~,imSids] = ismember(sNames,sNamesUniq);
             if isempty(imdb.images.sid), maxSid = 0;
             else maxSid = max(imdb.images.sid); end
