@@ -80,12 +80,14 @@ assert(strcmp(opts.networkType,'simplenn'), 'Only simplenn is supported currentl
 imdb = get_imdb(dataName, ...
   'func', @(s) setup_imdb_modelnet(s, ...
     'useUprightAssumption', opts.useUprightAssumption,...
-    'ext', opts.imageExt, ...
-    'useShape', opts.multiview), ...
+    'ext', opts.imageExt), ...
   'rebuild', true);
-if ~isfield(imdb.images, 'sid'), imdb.images.sid = imdb.images.id; end
-nShapes = length(unique(imdb.images.sid));
-nViews = length(imdb.images.id)/nShapes;
+if ~opts.multiview, 
+  nViews = 1;
+else
+  nShapes = length(unique(imdb.images.sid));
+  nViews = length(imdb.images.id)/nShapes;
+end
 imdb.meta.nViews = nViews; 
 
 opts.train.train = find(imdb.images.set==1);
@@ -167,9 +169,9 @@ batch = batch(:)';
 images = strcat([imdb.imageDir filesep], imdb.images.name(batch)) ;
 
 if ~isVal, % training
-  im = cnn_shape_get_batch(images, opts, 'prefetch', nargout == 0); 
+  im = cnn_get_batch(images, opts, 'prefetch', nargout == 0); 
 else
-  im = cnn_shape_get_batch(images, opts, 'prefetch', nargout == 0, ...
+  im = cnn_get_batch(images, opts, 'prefetch', nargout == 0, ...
     'transformation', 'none'); 
 end
 

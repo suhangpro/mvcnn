@@ -1,7 +1,8 @@
-function imo = cnn_shape_get_batch(images, varargin)
+function imo = cnn_get_batch(images, varargin)
 % Modified from CNN_IMAGENET_GET_BATCH
 % 
-% `pad` option added by Hang Su 
+% - added `pad` option
+% - deals with images of types other than jpeg
 
 opts.imageSize = [227, 227] ;
 opts.border = [29, 29] ;
