@@ -14,15 +14,19 @@ init_bias = 0.1;
 nClass = length(classNames);
 
 % Load model, try to download it if not readily available
-netFilePath = fullfile('data','models', [opts.base '.mat']);
-if ~exist(netFilePath,'file'),
-  fprintf('Downloading model (%s) ...', opts.base) ;
-  vl_xmkdir(fullfile('data','models')) ;
-  urlwrite(fullfile('http://www.vlfeat.org/matconvnet/pretrained/', ...
-            [opts.base '.mat']), netFilePath) ;
-  fprintf(' done!\n');
+if ~ischar(opts.base), 
+  net = opts.base; 
+else
+  netFilePath = fullfile('data','models', [opts.base '.mat']);
+  if ~exist(netFilePath,'file'),
+    fprintf('Downloading model (%s) ...', opts.base) ;
+    vl_xmkdir(fullfile('data','models')) ;
+    urlwrite(fullfile('http://www.vlfeat.org/matconvnet/pretrained/', ...
+      [opts.base '.mat']), netFilePath) ;
+    fprintf(' done!\n');
+  end
+  net = load(netFilePath);
 end
-net = load(netFilePath);
 assert(strcmp(net.layers{end}.type, 'softmax'), 'Wrong network format'); 
 dataTyp = class(net.layers{end-1}.weights{1}); 
 

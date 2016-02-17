@@ -45,18 +45,26 @@ opts.viewpoolPos = 'relu5';
 opts.useUprightAssumption = true;
 opts.aug = 'stretch';
 opts.pad = 32; 
+opts.numEpochs = [10 20]; 
 opts.includeVal = false;
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
+if strcmpi(opts.baseModel(end-3:end),'.mat'), 
+  opts.baseModel = load(opts.baseModel);
+  [~,modelNameStr] = fileparts(opts.baseModel); 
+else
+  modelNameStr = opts.baseModel; 
+end
+
 if opts.multiview, 
   opts.expDir = sprintf('%s-ft-%s-%s-%s', ...
-    opts.baseModel, ...
+    modelNameStr, ...
     dataName, ...
     opts.viewpoolPos, ...
     opts.networkType); 
 else
   opts.expDir = sprintf('%s-ft-%s-%s', ...
-    opts.baseModel, ...
+    modelNameStr, ...
     dataName, ...
     opts.networkType); 
 end
@@ -64,7 +72,6 @@ opts.expDir = fullfile(opts.dataRoot, opts.expDir);
 [opts, varargin] = vl_argparse(opts,varargin) ;
 
 opts.train.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)];
-opts.train.numEpochs = numel(opts.train.learningRate); 
 opts.train.momentum = 0.9; 
 opts.train.batchSize = 5; 
 opts.train.gpus = []; 
@@ -80,8 +87,7 @@ assert(strcmp(opts.networkType,'simplenn'), 'Only simplenn is supported currentl
 imdb = get_imdb(dataName, ...
   'func', @(s) setup_imdb_modelnet(s, ...
     'useUprightAssumption', opts.useUprightAssumption,...
-    'ext', opts.imageExt), ...
-  'rebuild', true);
+    'ext', opts.imageExt));
 if ~opts.multiview, 
   nViews = 1;
 else
@@ -117,10 +123,28 @@ switch opts.networkType
   case 'dagnn', trainFn = @cnn_train_dag ;
 end
 
-net = trainFn(net, imdb, getBatchFn(opts, net.meta), ...
-  'expDir', opts.expDir, ...
-  net.meta.trainOpts, ...
-  opts.train) ;
+trainable_layers = find(cellfun(@(l) isfield(l,'weights'),net.layers)); 
+lr = cellfun(@(l) l.learningRate, net.layers(trainable_layers),'UniformOutput',false); 
+layers_for_update = cell(1,2);
+layers_for_update{1} = trainable_layers(end);
+layers_for_update{2} = trainable_layers; 
+
+for s=1:numel(opts.numEpochs), 
+  if opts.numEpochs(s)<1, continue; end
+  for i=1:numel(trainable_layers), 
+    l = trainable_layers(i);
+    if ismember(l,layers_for_update{s}), 
+      net.layers{l}.learningRate = lr{i};
+    else
+      net.layers{l}.learningRate = lr{i}*0;
+    end
+  end
+  net = trainFn(net, imdb, getBatchFn(opts, net.meta), ...
+    'expDir', opts.expDir, ...
+    net.meta.trainOpts, ...
+    opts.train, ...
+    'numEpochs', opts.numEpochs(s)) ;
+end
 
 % -------------------------------------------------------------------------
 %                                                                   Deploy
