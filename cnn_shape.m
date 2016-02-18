@@ -203,6 +203,6 @@ else
     'transformation', 'none'); 
 end
 
-nAugs = numel(im)/numel(images); 
-if nargout > 1, labels = repmat(labels(:)',[1 nViews]); end
+nAugs = size(im,4)/numel(images); 
+if nargout > 1, labels = repmat(labels(:)',[1 nAugs]); end
 
