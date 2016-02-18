@@ -1,12 +1,14 @@
-function imo = cnn_get_batch(images, varargin)
+function imo = cnn_shape_get_batch(images, varargin)
 % Modified from CNN_IMAGENET_GET_BATCH
 % 
 % - added `pad` option
 % - deals with images of types other than jpeg
+% - augmentation made consistent across views 
 
 opts.imageSize = [227, 227] ;
 opts.border = [29, 29] ;
 opts.pad = 0;  % [TOP BOTTOM LEFT RIGHT]
+opts.nViews = 1; 
 opts.keepAspect = true ;
 opts.numAugments = 1 ;
 opts.transformation = 'none' ;
@@ -26,6 +28,10 @@ fetch = numel(images) >= 1 && ischar(images{1}) ;
 
 % isjpg is true if all images to fetch are of jpeg format
 isjpg = fetch && strcmpi(images{1}(end-3:end),'.jpg'); 
+
+assert(mod(numel(images),opts.nViews)==0, '''nViews'' is incompatible with input');
+nViews = opts.nViews;
+nShapes = numel(images)/nViews; 
 
 if opts.prefetch
   if isjpg, vl_imreadjpeg(images, 'numThreads', opts.numThreads, 'prefetch'); end
@@ -77,31 +83,37 @@ end
 imo = zeros(opts.imageSize(1), opts.imageSize(2), 3, ...
             numel(images)*opts.numAugments, 'single') ;
 
-si = 1 ;
-for i=1:numel(images)
-
-  % acquire image
-  if isempty(im{i})
-    imt = imread(images{i}) ;
-    imt = single(imt) ; % faster than im2single (and multiplies by 255)
-  else
-    imt = im{i} ;
-  end
-  if size(imt,3) == 1
-    imt = cat(3, imt, imt, imt) ;
+for i=1:nShapes, 
+  for j=1:nViews, 
+    % acquire image
+    idx = (i-1)*nViews + j;  
+    if isempty(im{idx})
+      imt = imread(images{idx}) ;
+      imt = single(imt) ; % faster than im2single (and multiplies by 255)
+    else
+      imt = im{idx} ;
+    end
+    if size(imt,3) == 1
+      imt = cat(3, imt, imt, imt) ;
+    end
+    if j==1, 
+      imArr = zeros(size(imt,1),size(imt,2),3,nViews,'single');
+    end
+    imArr(:,:,:,j) = imt; 
   end
 
   % pad
   if ~isempty(opts.pad) && any(opts.pad>0), 
-    imtt = imt; 
-    imt = 255*ones(size(imtt,1)+sum(opts.pad(1:2)), ...
-      size(imtt,2)+sum(opts.pad(3:4)), 3, 'like', imtt); 
-    imt(opts.pad(1)+(1:size(imtt,1)), opts.pad(3)+(1:size(imtt,2)),:) = imtt; 
+    w = size(imArr,2);
+    h = size(imArr,1); 
+    imArrTmp = imArr; 
+    imArr = 255*ones(h+sum(opts.pad(1:2)), w+sum(opts.pad(3:4)), 3, nViews, 'single'); 
+    imArr(opts.pad(1)+(1:h), opts.pad(3)+(1:w),:,:) = imArrTmp; 
   end
 
   % resize
-  w = size(imt,2) ;
-  h = size(imt,1) ;
+  w = size(imArr,2) ;
+  h = size(imArr,1) ;
   factor = [(opts.imageSize(1)+opts.border(1))/h ...
             (opts.imageSize(2)+opts.border(2))/w];
 
@@ -109,14 +121,14 @@ for i=1:numel(images)
     factor = max(factor) ;
   end
   if any(abs(factor - 1) > 0.0001)
-    imt = imresize(imt, ...
-                   'scale', factor, ...
-                   'method', opts.interpolation) ;
+    imArr = imresize(imArr, ...
+                     'scale', factor, ...
+                     'method', opts.interpolation) ;
   end
 
   % crop & flip
-  w = size(imt,2) ;
-  h = size(imt,1) ;
+  w = size(imArr,2) ;
+  h = size(imArr,1) ;
   for ai = 1:opts.numAugments
     switch opts.transformation
       case 'stretch'
@@ -140,10 +152,9 @@ for i=1:numel(images)
       if ~isempty(opts.rgbVariance)
         offset = bsxfun(@plus, offset, reshape(opts.rgbVariance * randn(3,1), 1,1,3)) ;
       end
-      imo(:,:,:,si) = bsxfun(@minus, imt(sy,sx,:), offset) ;
+      imo(:,:,:,(ai-1)*numel(images)+(i-1)*nViews+(1:nViews)) = bsxfun(@minus, imArr(sy,sx,:,:), offset) ;
     else
-      imo(:,:,:,si) = imt(sy,sx,:) ;
+      imo(:,:,:,(ai-1)*numel(images)+(i-1)*nViews+(1:nViews)) = imArr(sy,sx,:,:) ;
     end
-    si = si + 1 ;
   end
 end

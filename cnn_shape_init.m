@@ -32,8 +32,11 @@ dataTyp = class(net.layers{end-1}.weights{1});
 
 % Initiate the last but one layer w/ random weights
 widthPrev = size(net.layers{end-1}.weights{1}, 3);
-net.layers{end-1}.weights{1} = init_weight(opts, 1, 1, widthPrev, nClass, dataTyp);
-net.layers{end-1}.weights{2} = zeros(nClass, 1, dataTyp); 
+nClass0 = size(net.layers{end-1}.weights{1},4);
+if nClass0 ~= nClass || opts.restart, 
+  net.layers{end-1}.weights{1} = init_weight(opts, 1, 1, widthPrev, nClass, dataTyp);
+  net.layers{end-1}.weights{2} = zeros(nClass, 1, dataTyp); 
+end
 
 % Initiate other layers w/ random weights if training from scratch is desired
 if opts.restart, 

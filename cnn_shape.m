@@ -45,13 +45,13 @@ opts.viewpoolPos = 'relu5';
 opts.useUprightAssumption = true;
 opts.aug = 'stretch';
 opts.pad = 32; 
-opts.numEpochs = [10 20]; 
+opts.numEpochs = [5 10 20]; 
 opts.includeVal = false;
 [opts, varargin] = vl_argparse(opts, varargin) ;
 
 if strcmpi(opts.baseModel(end-3:end),'.mat'), 
-  opts.baseModel = load(opts.baseModel);
   [~,modelNameStr] = fileparts(opts.baseModel); 
+  opts.baseModel = load(opts.baseModel);
 else
   modelNameStr = opts.baseModel; 
 end
@@ -71,7 +71,7 @@ end
 opts.expDir = fullfile(opts.dataRoot, opts.expDir);
 [opts, varargin] = vl_argparse(opts,varargin) ;
 
-opts.train.learningRate = [0.001*ones(1, 10) 0.0001*ones(1, 10) 0.00001*ones(1,10)];
+opts.train.learningRate = [0.005*ones(1, 5) 0.001*ones(1, 5) 0.0001*ones(1,10) 0.00001*ones(1,10)];
 opts.train.momentum = 0.9; 
 opts.train.batchSize = 5; 
 opts.train.gpus = []; 
@@ -124,10 +124,10 @@ switch opts.networkType
 end
 
 trainable_layers = find(cellfun(@(l) isfield(l,'weights'),net.layers)); 
+fc_layers = find(cellfun(@(s) numel(s.name)>=2 && strcmp(s.name(1:2),'fc'),net.layers));
+fc_layers = intersect(fc_layers, trainable_layers); 
 lr = cellfun(@(l) l.learningRate, net.layers(trainable_layers),'UniformOutput',false); 
-layers_for_update = cell(1,2);
-layers_for_update{1} = trainable_layers(end);
-layers_for_update{2} = trainable_layers; 
+layers_for_update = {trainable_layers(end), fc_layers, trainable_layers}; 
 
 for s=1:numel(opts.numEpochs), 
   if opts.numEpochs(s)<1, continue; end
@@ -143,7 +143,7 @@ for s=1:numel(opts.numEpochs),
     'expDir', opts.expDir, ...
     net.meta.trainOpts, ...
     opts.train, ...
-    'numEpochs', opts.numEpochs(s)) ;
+    'numEpochs', sum(opts.numEpochs(1:s))) ;
 end
 
 % -------------------------------------------------------------------------
@@ -193,9 +193,16 @@ batch = batch(:)';
 images = strcat([imdb.imageDir filesep], imdb.images.name(batch)) ;
 
 if ~isVal, % training
-  im = cnn_get_batch(images, opts, 'prefetch', nargout == 0); 
+  im = cnn_shape_get_batch(images, opts, ...
+    'prefetch', nargout == 0, ...
+    'nViews', nViews); 
 else
-  im = cnn_get_batch(images, opts, 'prefetch', nargout == 0, ...
+  im = cnn_shape_get_batch(images, opts, ...
+    'prefetch', nargout == 0, ...
+    'nViews', nViews, ...
     'transformation', 'none'); 
 end
+
+nAugs = numel(im)/numel(images); 
+if nargout > 1, labels = repmat(labels(:)',[1 nViews]); end
 
