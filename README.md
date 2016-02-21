@@ -77,6 +77,16 @@ tar xf ModelNet40v1.tar
 cd data
 wget http://maxwell.cs.umass.edu/deep-shape-data/ModelNet40v2.tar
 tar xf ModelNet40v2.tar
+
+#sketch (211M)
+cd data
+wget http://pegasus.cs.umass.edu/deep-shape-data/sketch160.tar
+tar xf sketch160.tar
+
+#clipart (701M)
+cd data
+wget http://pegasus.cs.umass.edu/deep-shape-data/clipart100.tar
+tar xf clipart100.tar
 ```
 * run experiments in the paper (see run_experiments.m for options and other details)
 ```
