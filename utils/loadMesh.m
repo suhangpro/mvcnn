@@ -23,8 +23,6 @@ if strcmp( filestr(end-3:end), '.off')
     numverts = eval(token);
     [token,line] = strtok(line);
     numfaces = eval(token);
-    curvert = 0;
-    curface = 0;
     mesh.V = zeros( 3, numverts, 'single' );
     mesh.F = zeros( 3, numfaces, 'single' );
     
@@ -43,8 +41,8 @@ elseif strcmp( filestr(end-3:end), '.obj')
     while(~feof(file))
         line_type = fscanf(file,'%c',2);
         switch line_type(1)
-            case '#'
-                line = fgets(file);
+            case {'#', 'g'}
+                fgets(file);
             case 'v'
                 if line_type(2) == 'n'
                     vn = vn + 1;
@@ -62,13 +60,16 @@ elseif strcmp( filestr(end-3:end), '.obj')
                 face = fscanf(file, '%u%u%u');
                 mesh.F(:, f) = face;
             otherwise
+                if feof(file)
+                    break;
+                end
                 if isspace(line_type(1))
                     fseek(file, -1, 'cof');
                     continue;
                 end
                 fprintf('last string read: %c%c %s', line_type(1), line_type(2), fgets(file));
                 fclose(file);
-                error('only triangular obj meshes are supported with vertices, normals, groups, and vertex normals.');
+                error('only triangular obj meshes are supported with vertices, normals and faces.');
         end
     end
     mesh.V = mesh.V(:, 1:v);

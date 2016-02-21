@@ -3,4 +3,4 @@
 	url = git@github.com:vlfeat/vlfeat.git
 [submodule "dependencies/matconvnet"]
 	path = dependencies/matconvnet
-	url = git@github.com:vlfeat/matconvnet.git
+	url = git@github.com:suhangpro/matconvnet-18.git
