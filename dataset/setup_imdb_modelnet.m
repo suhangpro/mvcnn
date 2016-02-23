@@ -2,7 +2,7 @@ function imdb = setup_imdb_modelnet(datasetDir, varargin)
 
 opts.seed = 0 ;             % random seed generator
 opts.ratio = [0.8 0.2];     % train:val ratio
-opts.ext = '.png';          % extension of target files
+opts.ext = '.jpg';          % extension of target files
 opts.extmesh = '.off';      % extension of target mesh files
 opts.useUprightAssumption = true; % if true, 12 views will be used to render meshes, otherwise 80 views based on a dodecahedron
 opts = vl_argparse(opts, varargin);
@@ -202,7 +202,7 @@ for ci = 1:length(imdb.meta.classes),
         end
         
         for ij=1:length(ims)
-            imwrite( ims{ij}, sprintf('%s_%03d.png', mesh_filenames{fi}(1:end-4), ij) );
+            imwrite( ims{ij}, sprintf('%s_%03d%s', mesh_filenames{fi}(1:end-4), ij, opts.ext) );
         end
     end
     close(fig);

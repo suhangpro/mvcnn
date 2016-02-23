@@ -21,6 +21,7 @@ function imdb_render_views( imdb, saveDir, varargin )
 
 opts.az = [0:30:330];
 opts.el = 30;
+opts.imageExt = '.jpg'; 
 opts.colorMode = 'gray';
 opts.outputSize = 224;
 opts.minMargin = 0.1;
@@ -47,7 +48,7 @@ for i=1:numel(imdb.images.name),
     savePathPrefix = fullfile(saveDir,pathstr);
     vl_xmkdir(savePathPrefix);
     for j = 1:numel(ims), 
-        savePath = fullfile(savePathPrefix,sprintf('%s_%03d.png',namestr,j));
+        savePath = fullfile(savePathPrefix,sprintf('%s_%03d%s',namestr,j,opts.imageExt));
         imwrite(ims{j},savePath);
     end
     close(fh);
