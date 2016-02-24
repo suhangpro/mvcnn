@@ -27,7 +27,9 @@ switch opts.mode,
         end
         I = cellfun(@(x)(strcmp(x.name, opts.loc)), net.layers);
         I = find(I);
-        if numel(I)~=1,
+        if isempty(I), 
+            error('No %s layer found!', opts.loc);
+        elseif numel(I)~=1,
             error('Ambiguous location: more than one %s layer!', opts.loc);
         end;
         net.layers(I) = [];
