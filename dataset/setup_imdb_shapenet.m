@@ -2,6 +2,7 @@ function imdb = setup_imdb_shapenet(datasetDir, varargin)
 
 opts.ext = '.jpg';          % extension of target files
 opts.nViews = 80;
+opts.useSubclass = false; 
 opts.trainFile = fullfile(datasetDir,'train.csv');
 opts.valFile = fullfile(datasetDir,'val.csv');
 opts = vl_argparse(opts, varargin);
@@ -13,9 +14,15 @@ valAnno = csvread(opts.valFile, 1);
 assert(numel(unique([trainAnno(:,1);valAnno(:,1)])) ...
   ==size(trainAnno,1)+size(valAnno,1)); 
 
-classIds = sort(unique([trainAnno(:,2); valAnno(:,2)])'); 
-[~,trainAnno(:,2)] = ismember(trainAnno(:,2),classIds); 
-[~,valAnno(:,2)] = ismember(valAnno(:,2),classIds); 
+if opts.useSubclass, 
+  labelCol = 3; 
+else
+  labelCol = 2;
+end
+
+classIds = sort(unique([trainAnno(:,labelCol); valAnno(:,labelCol)])'); 
+[~,trainAnno(:,labelCol)] = ismember(trainAnno(:,labelCol),classIds); 
+[~,valAnno(:,labelCol)] = ismember(valAnno(:,labelCol),classIds); 
 
 % meta
 imdb.meta.classes = arrayfun(@(i) sprintf('%08d',i),classIds,'UniformOutput',false); 
@@ -43,6 +50,11 @@ fprintf('done! %d shapes found.\n', nTestShapes);
 imdb.images.id = 1:numel(imdb.images.name); 
 
 function [imdb, nShapesAdded] = add_to_imdb(imdb, subDir, setId, anno, opts); 
+if opts.useSubclass, 
+  labelCol = 3; 
+else
+  labelCol = 2;
+end
 files = dir(fullfile(imdb.imageDir,subDir,['*' opts.ext]));
 files = {files.name};
 sids = cellfun(@get_shape_id, files); 
@@ -59,7 +71,7 @@ if isempty(anno), % test
 else
   [I I2] = ismember(sids0,anno(:,1)');
   nShapesAdded = sum(I); 
-  label = anno(I2(I),2); 
+  label = anno(I2(I),labelCol); 
   label = repmat(label', [opts.nViews 1]);
   label = label(:)'; 
   I = repmat(I, [opts.nViews 1]); 
