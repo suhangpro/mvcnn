@@ -74,6 +74,7 @@ opts.expDir = fullfile(opts.dataRoot, opts.expDir);
 opts.train.learningRate = [0.005*ones(1, 5) 0.001*ones(1, 5) 0.0001*ones(1,10) 0.00001*ones(1,10)];
 opts.train.momentum = 0.9; 
 opts.train.batchSize = 5; 
+opts.train.maxIterPerEpoch = 1000; 
 opts.train.gpus = []; 
 opts.train = vl_argparse(opts.train, varargin) ;
 
