@@ -60,6 +60,8 @@ if isempty(opts.val), opts.val = find(imdb.images.set==2) ; end
 if isnan(opts.train), opts.train = [] ; end
 if isnan(opts.val), opts.val = [] ; end
 if numel(opts.maxIterPerEpoch)==1, opts.maxIterPerEpoch = opts.maxIterPerEpoch*[1 1]; end
+if ~iscell(opts.balancingFunction), opts.balancingFunction = {opts.balancingFunction}; end
+if numel(opts.balancingFunction)==1, opts.balancingFunction = repmat(opts.balancingFunction,[1 2]); end
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
@@ -228,7 +230,7 @@ if numel(trainQueue)<nTrain,
   labels_unique = unique(labels_train); 
   labelMap = arrayfun(@(v) find(labels_train==v), labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 
-  cnt = opts.balancingFunction(cnt0); 
+  cnt = opts.balancingFunction{1}(cnt0); 
   train = []; 
   for i=1:numel(cnt), 
     if cnt(i)==cnt0(i), continue; end
@@ -254,7 +256,7 @@ if numel(valQueue)<nVal,
   labels_unique = unique(labels_val); 
   labelMap = arrayfun(@(v) find(labels_val==v), labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 
-  cnt = opts.balancingFunction(cnt0); 
+  cnt = opts.balancingFunction{2}(cnt0); 
   val = []; 
   for i=1:numel(cnt), 
     if cnt(i)==cnt0(i), continue; end
