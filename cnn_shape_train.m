@@ -60,7 +60,6 @@ if isempty(opts.val), opts.val = find(imdb.images.set==2) ; end
 if isnan(opts.train), opts.train = [] ; end
 if isnan(opts.val), opts.val = [] ; end
 if numel(opts.maxIterPerEpoch)==1, opts.maxIterPerEpoch = opts.maxIterPerEpoch*[1 1]; end
-if numel(opts.labelBalancing)==1, opts.labelBalancing = [opts.labelBalancing opts.labelBalancing]; end
 
 % -------------------------------------------------------------------------
 %                                                    Network initialization
@@ -221,12 +220,11 @@ if ~isfield(imdb.images,'sid'),
 else
   nViews = numel(imdb.images.name)/numel(unique(imdb.images.sid));
 end
-labels = imdb.images.class(1:nViews:end);
 
 % train
 nTrain = opts.batchSize*opts.maxIterPerEpoch(1);
 if numel(trainQueue)<nTrain, 
-  labels_train = labels(opts.train); 
+  labels_train = imdb.images.class(opts.train); 
   labels_unique = unique(labels_train); 
   labelMap = arrayfun(@(v) find(labels_train==v), labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 
@@ -252,7 +250,7 @@ trainQueue = trainQueue(train_end+1:end);
 % val
 nVal = opts.batchSize*opts.maxIterPerEpoch(2);
 if numel(valQueue)<nVal, 
-  labels_val = labels(opts.val); 
+  labels_val = imdb.images.class(opts.val); 
   labels_unique = unique(labels_val); 
   labelMap = arrayfun(@(v) find(labels_val==v), labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 

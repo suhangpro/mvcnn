@@ -22,7 +22,9 @@ if ~exist(datasetDir,'dir'),
 end
 
 if exist(imdbPath,'file') && ~args.rebuild, 
+    fprintf('Loading imdb from %s ...', imdbPath);
     imdb = load(imdbPath);
+    fprintf(' done!\n');
 else
     imdb = args.func(datasetDir);
     save(imdbPath,'-struct','imdb');
