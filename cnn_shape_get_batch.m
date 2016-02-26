@@ -21,6 +21,7 @@ opts = vl_argparse(opts, varargin);
 
 % if only one value is given, apply the same amount of padding to all borders
 if numel(opts.pad)==1, opts.pad = repmat(opts.pad,[1 4]); end
+if numel(opts.border)==1, opts.border = repmat(opts.border,[1 2]); end
 
 % fetch is true if images is a list of filenames (instead of
 % a cell array of images)

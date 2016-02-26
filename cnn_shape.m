@@ -44,7 +44,8 @@ opts.multiview = true;
 opts.viewpoolPos = 'relu5';
 opts.useUprightAssumption = true;
 opts.aug = 'stretch';
-opts.pad = 32; 
+opts.pad = 0; 
+opts.border = 0; 
 opts.numEpochs = [5 10 20]; 
 opts.includeVal = false;
 [opts, varargin] = vl_argparse(opts, varargin) ;
@@ -75,6 +76,7 @@ opts.train.learningRate = [0.005*ones(1, 5) 0.001*ones(1, 5) 0.0001*ones(1,10) 0
 opts.train.momentum = 0.9; 
 opts.train.batchSize = 5; 
 opts.train.maxIterPerEpoch = 1000; 
+opts.train.balancingFunction = @(v) round(mean(v)*(v/mean(v)).^0.2); 
 opts.train.gpus = []; 
 opts.train = vl_argparse(opts.train, varargin) ;
 
@@ -85,10 +87,7 @@ assert(strcmp(opts.networkType,'simplenn'), 'Only simplenn is supported currentl
 % -------------------------------------------------------------------------
 %                                                             Prepare data
 % -------------------------------------------------------------------------
-imdb = get_imdb(dataName, ...
-  'func', @(s) setup_imdb_modelnet(s, ...
-    'useUprightAssumption', opts.useUprightAssumption,...
-    'ext', opts.imageExt));
+imdb = get_imdb(dataName); 
 if ~opts.multiview, 
   nViews = 1;
 else
@@ -120,7 +119,7 @@ net = cnn_shape_init(imdb.meta.classes, ...
 %                                                                    Learn 
 % -------------------------------------------------------------------------
 switch opts.networkType
-  case 'simplenn', trainFn = @cnn_train ;
+  case 'simplenn', trainFn = @cnn_shape_train ;
   case 'dagnn', trainFn = @cnn_train_dag ;
 end
 
@@ -167,12 +166,12 @@ function fn = getBatchFn(opts, meta)
 % -------------------------------------------------------------------------
 bopts.numThreads = opts.numFetchThreads ;
 bopts.pad = opts.pad; 
+bopts.border = opts.border ;
+bopts.transformation = opts.aug ;
 bopts.imageSize = meta.normalization.imageSize ;
-bopts.border = meta.normalization.border ;
 bopts.averageImage = meta.normalization.averageImage ;
 bopts.rgbVariance = meta.augmentation.rgbVariance ;
 % bopts.transformation = meta.augmentation.transformation ;
-bopts.transformation = opts.aug ;
 
 switch lower(opts.networkType)
   case 'simplenn'
