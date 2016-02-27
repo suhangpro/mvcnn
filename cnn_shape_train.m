@@ -217,29 +217,26 @@ end
 % -------------------------------------------------------------------------
 function [train, val, trainQueue, valQueue] = get_trainval(imdb, opts, trainQueue, valQueue);
 % -------------------------------------------------------------------------
-if ~isfield(imdb.images,'sid'), 
-  nViews = 1;
-else
-  nViews = numel(imdb.images.name)/numel(unique(imdb.images.sid));
-end
-
 % train
 nTrain = opts.batchSize*opts.maxIterPerEpoch(1);
 if numel(trainQueue)<nTrain, 
   labels_train = imdb.images.class(opts.train); 
   labels_unique = unique(labels_train); 
-  labelMap = arrayfun(@(v) find(labels_train==v), labels_unique, 'UniformOutput', false); 
+  labelMap = arrayfun(@(v) opts.train(labels_train==v), ...
+    labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 
   cnt = opts.balancingFunction{1}(cnt0); 
   train = []; 
   for i=1:numel(cnt), 
-    if cnt(i)==cnt0(i), continue; end
+    if cnt(i)==cnt0(i), 
+      train = [train labelMap{i}];
+      continue; 
+    end
+    labelMap{i} = labelMap{i}(randperm(numel(labelMap{i})));
     if cnt(i)<cnt0(i), % sample larger classes
-      idx = randperm(numel(labelMap{i}));
-      train = [train labelMap{i}(idx(1:cnt(i)))];
+      train = [train labelMap{i}(1:cnt(i))];
     else % augment smaller classes
-      idx = randperm(numel(labelMap{i}));
-      train = [train labelMap{i}(idx(1:mod(cnt(i),cnt0(i))))];
+      train = [train labelMap{i}(1:mod(cnt(i),cnt0(i)))];
       train = [train repmat(labelMap{i},[1 floor(cnt(i)/cnt0(i))])];
     end
   end
@@ -254,18 +251,21 @@ nVal = opts.batchSize*opts.maxIterPerEpoch(2);
 if numel(valQueue)<nVal, 
   labels_val = imdb.images.class(opts.val); 
   labels_unique = unique(labels_val); 
-  labelMap = arrayfun(@(v) find(labels_val==v), labels_unique, 'UniformOutput', false); 
+  labelMap = arrayfun(@(v) opts.val(labels_val==v), ...
+    labels_unique, 'UniformOutput', false); 
   cnt0 = cellfun(@(c) numel(c), labelMap); 
   cnt = opts.balancingFunction{2}(cnt0); 
   val = []; 
   for i=1:numel(cnt), 
-    if cnt(i)==cnt0(i), continue; end
+    if cnt(i)==cnt0(i), 
+      val = [val labelMap{i}];
+      continue; 
+    end
+    labelMap{i} = labelMap{i}(randperm(numel(labelMap{i})));
     if cnt(i)<cnt0(i), % sample larger classes
-      idx = randperm(numel(labelMap{i}));
-      val = [val labelMap{i}(idx(1:cnt(i)))];
+      val = [val labelMap{i}(1:cnt(i))];
     else % augment smaller classes
-      idx = randperm(numel(labelMap{i}));
-      val = [val labelMap{i}(idx(1:mod(cnt(i),cnt0(i))))];
+      val = [val labelMap{i}(1:mod(cnt(i),cnt0(i)))];
       val = [val repmat(labelMap{i},[1 floor(cnt(i)/cnt0(i))])];
     end
   end
