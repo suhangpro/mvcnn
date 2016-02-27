@@ -141,7 +141,8 @@ for epoch=start+1:opts.numEpochs
   % train one epoch and validate
   learningRate = opts.learningRate(min(epoch, numel(opts.learningRate))) ;
 
-  [train, val, trainQueue, valQueue] = get_trainval(imdb, opts, trainQueue, valQueue);
+  [train, trainQueue] = next_samples(opts.train, trainQueue, imdb.images.class(opts.train), opts.batchSize*opts.maxIterPerEpoch(1), opts.balancingFunction{1});
+  [val, valQueue] = next_samples(opts.val, valQueue, imdb.images.class(opts.val), opts.batchSize*opts.maxIterPerEpoch(2), opts.balancingFunction{2});
 
   if numGpus <= 1
     [net,stats.train,prof] = process_epoch(opts, getBatch, epoch, train, learningRate, imdb, net) ;
@@ -213,67 +214,6 @@ for epoch=start+1:opts.numEpochs
     print(1, modelFigPath, '-dpdf') ;
   end
 end
-
-% -------------------------------------------------------------------------
-function [train, val, trainQueue, valQueue] = get_trainval(imdb, opts, trainQueue, valQueue);
-% -------------------------------------------------------------------------
-% train
-nTrain = opts.batchSize*opts.maxIterPerEpoch(1);
-if numel(trainQueue)<nTrain, 
-  labels_train = imdb.images.class(opts.train); 
-  labels_unique = unique(labels_train); 
-  labelMap = arrayfun(@(v) opts.train(labels_train==v), ...
-    labels_unique, 'UniformOutput', false); 
-  cnt0 = cellfun(@(c) numel(c), labelMap); 
-  cnt = opts.balancingFunction{1}(cnt0); 
-  train = []; 
-  for i=1:numel(cnt), 
-    if cnt(i)==cnt0(i), 
-      train = [train labelMap{i}];
-      continue; 
-    end
-    labelMap{i} = labelMap{i}(randperm(numel(labelMap{i})));
-    if cnt(i)<cnt0(i), % sample larger classes
-      train = [train labelMap{i}(1:cnt(i))];
-    else % augment smaller classes
-      train = [train labelMap{i}(1:mod(cnt(i),cnt0(i)))];
-      train = [train repmat(labelMap{i},[1 floor(cnt(i)/cnt0(i))])];
-    end
-  end
-  trainQueue = [trainQueue train(randperm(numel(train)))];
-end
-train_end = min(nTrain, numel(trainQueue));
-train = trainQueue(1:train_end);
-trainQueue = trainQueue(train_end+1:end);
-
-% val
-nVal = opts.batchSize*opts.maxIterPerEpoch(2);
-if numel(valQueue)<nVal, 
-  labels_val = imdb.images.class(opts.val); 
-  labels_unique = unique(labels_val); 
-  labelMap = arrayfun(@(v) opts.val(labels_val==v), ...
-    labels_unique, 'UniformOutput', false); 
-  cnt0 = cellfun(@(c) numel(c), labelMap); 
-  cnt = opts.balancingFunction{2}(cnt0); 
-  val = []; 
-  for i=1:numel(cnt), 
-    if cnt(i)==cnt0(i), 
-      val = [val labelMap{i}];
-      continue; 
-    end
-    labelMap{i} = labelMap{i}(randperm(numel(labelMap{i})));
-    if cnt(i)<cnt0(i), % sample larger classes
-      val = [val labelMap{i}(1:cnt(i))];
-    else % augment smaller classes
-      val = [val labelMap{i}(1:mod(cnt(i),cnt0(i)))];
-      val = [val repmat(labelMap{i},[1 floor(cnt(i)/cnt0(i))])];
-    end
-  end
-  valQueue = [valQueue val(randperm(numel(val)))];
-end
-val_end = min(nVal, numel(valQueue));
-val = valQueue(1:val_end);
-valQueue = valQueue(val_end+1:end);
 
 % -------------------------------------------------------------------------
 function err = error_multiclass(opts, labels, res)
