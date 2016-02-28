@@ -1,23 +1,27 @@
-function [ feat ] = get_cnn_activations( im, net, subWins, layers, varargin)
-%GET_CNN_FEATURE Get CNN activation responses for im
+function [ feat ] = cnn_shape_get_activations(im, net, layers, subWins, varargin)
+%CNN_SHAPE_GET_ACTIVATIONS Get CNN activation responses for im
 %   im:: 
 %       image matrix, #channels (size(im,3)) must be compatible with net
 %       0~255
 %   net::
 %       cnn model structure 
+%   layers:: {'relu7'}
+%       can be either a structure (.name, .sizes, .index) or string array 
 %   subWins:: [0; 1; 0; 1; 0]
 %       see get_augmentation_matrix.m for details 
-%   layers:: {'fc7'}
-%       can be either a structure (.name, .sizes, .index) or string array 
 %   `gpuMode`:: false 
 %       set to true to compute on GPU 
 
-if nargin<4 || isempty(layers), 
-    layers = {'fc7'};
+if ~exist('layers','var') || isempty(layers), 
+    layers = {'relu7'};
 end
-if nargin<3 || isempty(subWins), 
+if ~exist('subWins','var') || isempty(subWins), 
     subWins = get_augmentation_matrix('none');
 end
+
+opts.gpuMode = false;
+opts = vl_argparse(opts,varargin);
+
 nSubWins = size(subWins,2);
 if isfield(net.layers{1},'weights'), 
   nChannels = size(net.layers{1}.weights{1},3);
@@ -27,8 +31,8 @@ end
 
 if iscell(im), 
     imCell = im;
-    im = zeros(net.normalization.imageSize(1), ...
-        net.normalization.imageSize(2), ...
+    im = zeros(net.meta.normalization.imageSize(1), ...
+        net.meta.normalization.imageSize(2), ...
         nChannels, ...
         numel(imCell));
     for i=1:numel(imCell), 
@@ -36,7 +40,7 @@ if iscell(im),
             error('image (%d channels) is not compatible with net (%d channels)', ...
                 size(imCell{i},3), nChannels);
         end
-        im(:,:,:,i) = imresize(imCell{i}, net.normalization.imageSize(1:2));
+        im(:,:,:,i) = imresize(imCell{i}, net.meta.normalization.imageSize(1:2));
     end
 elseif size(im,3) ~= nChannels, 
     error('image (%d channels) is not compatible with net (%d channels)', ...
@@ -49,13 +53,10 @@ if ~isempty(viewpoolIdx),
     if numel(viewpoolIdx)>1, 
         error('More than one viewpool layers found!'); 
     end
-    nViews = net.layers{viewpoolIdx}.stride;
+    nViews = net.layers{viewpoolIdx}.vstride;
 else
     nViews = 1;
 end
-
-opts.gpuMode = false;
-opts = vl_argparse(opts,varargin);
 
 if iscell(layers),
     layersName = layers;
@@ -67,8 +68,8 @@ if iscell(layers),
     [~,layers.index] = ismember(layers.name,allLayersName);
     layers.index = layers.index + 1;
     % sizes
-    im0 = zeros(net.normalization.imageSize(1), ...
-        net.normalization.imageSize(2), nChannels, nViews, 'single') * 255;
+    im0 = zeros(net.meta.normalization.imageSize(1), ...
+        net.meta.normalization.imageSize(2), nChannels, nViews, 'single') * 255;
     if opts.gpuMode, im0 = gpuArray(im0); end
     res = vl_simplenn(net,im0);
     layers.sizes = zeros(3,numel(layers.name));
@@ -84,6 +85,10 @@ for fi = 1:numel(layers.name),
 end
 
 im = single(im);
+averageImage = net.meta.normalization.averageImage;
+if numel(averageImage)==nChannels, 
+    averageImage = reshape(averageImage, [1 1 nChannels]); 
+end
 
 for ri = 1:nSubWins,
     r = subWins(1:4,ri).*[size(im,2);size(im,2);size(im,1);size(im,1)];
@@ -91,8 +96,8 @@ for ri = 1:nSubWins,
     im_ = im(max(1,r(3)):min(size(im,1),r(3)+r(4)),...
         max(1,r(1)):min(size(im,2),r(1)+r(2)),:,:);
     if subWins(5,ri), im_ = flipdim(im_,2); end
-    im_ = bsxfun(@minus, imresize(im_, net.normalization.imageSize(1:2)), ...
-        net.normalization.averageImage);
+    im_ = bsxfun(@minus, imresize(im_, net.meta.normalization.imageSize(1:2)), ...
+        averageImage);
     if opts.gpuMode,
         im_ = gpuArray(im_);
     end

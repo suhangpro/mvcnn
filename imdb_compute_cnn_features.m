@@ -222,7 +222,7 @@ parfor (i=1:nImgs, poolSize)
         end
     end
     
-    feat = get_cnn_activations( im, net, subWins, layers, ...
+    feat = cnn_shape_get_activations( im, net, layers, subWins, ...
         'gpuMode', opts.gpuMode);
     parsave(fullfile(cacheDir, [num2str(i) '.mat']),feat);
     

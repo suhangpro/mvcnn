@@ -27,15 +27,11 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %       'metric-relu7-v2.mat'
 %   `gpuMode`:: (default) false
 %       set to true to compute on GPU
-%   `numWorkers`:: (default) 12
-%       number of CPU workers, only in use when gpuMode is false
 
-addpath(genpath('utils'));
-run dependencies/vlfeat/toolbox/vl_setup.m
-run dependencies/matconvnet/matlab/vl_setupnn.m
+setup;
 
 if nargin<1 || isempty(path_to_shape),
-    imdbName = 'data/';
+    path_to_shape = 'data/';
 end
 
 % default options
@@ -43,7 +39,6 @@ opts.cnn_model = 'cnn-modelnet40-v1.mat';
 opts.post_process_desriptor_metric = true;
 opts.metric_model = 'metric-relu7-v1.mat';
 opts.gpuMode = false;
-opts.numWorkers = 12;
 opts = vl_argparse(opts,varargin);
 
 if exist(opts.cnn_model, 'file')
@@ -88,7 +83,11 @@ if ~isempty(viewpoolIdx),
     if numel(viewpoolIdx)>1,
         error('More than one viewpool layers found!');
     end
-    num_views = cnn.layers{viewpoolIdx}.stride;
+    if ~isfield(cnn.layers{viewpoolIdx},'vstride'), 
+        num_views = cnn.layers{viewpoolIdx}.stride; % old format
+    else
+        num_views = cnn.layers{viewpoolIdx}.vstride;
+    end
     fprintf('CNN model is based on %d views. Will process %d views per mesh.\n', num_views, num_views);
 else
     error('Computing a descriptor per shape requires a multi-view CNN.');
@@ -122,7 +121,7 @@ for i=1:length(mesh_filenames)
     else
         ims = render_views(mesh, 'use_dodecahedron_views', true, 'figHandle', fig);
     end
-    outs = get_cnn_activations(ims, cnn, [], {'relu7','prob'});
+    outs = cnn_shape_get_activations(ims, cnn, {'relu7','prob'}, [], 'gpuMode', opts.gpuMode);
     out = outs.relu7(:);
     if opts.post_process_desriptor_metric
         out = double(modelDimRedFV.W*out);

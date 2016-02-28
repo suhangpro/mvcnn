@@ -1,7 +1,7 @@
 function render_views_of_all_meshes_in_a_folder(folder, varargin)
 % calls 'render_views' for every shape found in the given folder
 
-opts.ext = '.png';          % extension of target files
+opts.ext = '.jpg';          % extension of target files
 opts.range = [];            % if empty, all found shapes will be rendered, while a range [X:Y] will render shapes in the given range
 opts.useUprightAssumption = true; % if true, 12 views will be used to render meshes, otherwise 80 views based on a dodecahedron
 opts = vl_argparse(opts, varargin);
@@ -30,7 +30,7 @@ for fi=range
     end
     
     for ij=1:length(ims)
-        imwrite( ims{ij}, sprintf('%s_%03d.png', mesh_filenames(fi).name(1:end-4), ij) );
+        imwrite( ims{ij}, sprintf('%s_%03d%s', mesh_filenames(fi).name(1:end-4), ij, opts.ext) );
     end
 end
 close(fig);
