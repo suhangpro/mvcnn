@@ -78,7 +78,7 @@ if isempty(net),
     if ~exist(netFilePath,'file'),
         fprintf('Downloading model (%s) ...', modelName) ;
         vl_xmkdir(fullfile('data','models')) ;
-        urlwrite(fullfile('http://maxwell.cs.umass.edu/deep-shape-data/models', ...
+        urlwrite(fullfile('http://maxwell.cs.umass.edu/mvcnn-data/models', ...
             [modelName '.mat']), netFilePath) ;
         fprintf(' done!\n');
     end
