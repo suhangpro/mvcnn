@@ -25,8 +25,8 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %       server
 %       if you want to use the model trained *without upright assumption*, use
 %       'metric-relu7-v2.mat'
-%   `gpuMode`:: (default) false
-%       set to true to compute on GPU
+%   `gpus`:: (default) []
+%       set to use GPU
 
 setup;
 
@@ -38,7 +38,7 @@ end
 opts.cnn_model = 'cnn-modelnet40-v1.mat';
 opts.post_process_desriptor_metric = true;
 opts.metric_model = 'metric-relu7-v1.mat';
-opts.gpuMode = false;
+opts.gpus = [];
 opts = vl_argparse(opts,varargin);
 
 if exist(opts.cnn_model, 'file')
@@ -51,7 +51,6 @@ else
     websave(opts.cnn_model,url);
     if exist(opts.cnn_model, 'file')
         cnn = load(opts.cnn_model);
-	cnn = convert_net_format(cnn,'old');
         fprintf('Done.\n');
     else
         error('Could not download mat file from our server. Please check internet connection or contact us.');
@@ -121,7 +120,7 @@ for i=1:length(mesh_filenames)
     else
         ims = render_views(mesh, 'use_dodecahedron_views', true, 'figHandle', fig);
     end
-    outs = cnn_shape_get_activations(ims, cnn, {'relu7','prob'}, [], 'gpuMode', opts.gpuMode);
+    outs = cnn_shape_get_features(ims, cnn, {'relu7','prob'}, 'gpus', opts.gpus);
     out = outs.relu7(:);
     if opts.post_process_desriptor_metric
         out = double(modelDimRedFV.W*out);
