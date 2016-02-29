@@ -8,6 +8,13 @@ opts.numWorkers = 20;
 opts.verbose = true;
 opts = vl_argparse(opts,varargin);
 
+if isempty(x2) || isequal(x1,x2),
+    if isempty(x2), x2 = x1; end
+    withSelf = true;
+else
+    withSelf = false;
+end
+
 if opts.numWorkers<=1, 
     Dist = vl_alldist(x1,x2,opts.measure);
     return;
@@ -44,7 +51,7 @@ end
 maxNum = maxmem / numbytes;
 
 % decide window width w.r.t. constraints
-w = ceil(max(sqrt(n1*n2/opts.maxParts),2*n1*n2*D/maxNum));
+w = ceil(max(sqrt(n1*n2/opts.maxParts),2*n1*n2*D/(maxNum-2*n1*n2)));
 npar = ceil([n1 n2]/w);
 while npar(1)*npar(2)>opts.maxParts, 
     npar = max(1,npar - 1);
@@ -66,8 +73,13 @@ end
 for i = 1:t,
     i1 = mod(i-1,npar(1))+1;
     i2 = floor((i-1)/npar(1))+1;
-    x1cell{i} = x1(:,(i1-1)*w+(1:sz1(i1)));
-    x2cell{i} = x2(:,(i2-1)*w+(1:sz2(i2)));
+    if withSelf && i2>i1, % skip top-right triangle for self-dist
+        x1cell{i} = [];
+        x2cell{i} = [];
+    else
+        x1cell{i} = x1(:,(i1-1)*w+(1:sz1(i1)));
+        x2cell{i} = x2(:,(i2-1)*w+(1:sz2(i2)));
+    end
     if opts.verbose, 
         if mod(i,10)==0, fprintf('.');end;
         if mod(i,200)==0, fprintf(' [%d/%d]\n',i,t); end;
@@ -78,7 +90,7 @@ if opts.verbose, fprintf(' done!\n'); end;
 % estimate speed
 tmp = rand(1000,1000);
 tt=tic;vl_alldist2(tmp,tmp,opts.measure);tc=toc(tt);
-estTime = (D*n1*n2/10e9)*tc;
+estTime = (D*n1*n2/1e9)*tc;
 
 % real work
 %{-
@@ -89,7 +101,7 @@ if isempty(pool) || pool.NumWorkers<opts.numWorkers,
     pool = parpool(opts.numWorkers);
 end
 if opts.verbose, 
-    fprintf('[2/3] Computing distances using %d threads (~%s) ...', ...
+    fprintf('[2/3] Computing distances using %d workers (~%s) ...', ...
     pool.NumWorkers, timestr(estTime/pool.NumWorkers));
 end
 %}
@@ -104,7 +116,12 @@ Dist = zeros(n1,n2,typeX1);
 for i = 1:t,
     i1 = mod(i-1,npar(1))+1;
     i2 = floor((i-1)/npar(1))+1;
-    Dist((i1-1)*w+(1:sz1(i1)),(i2-1)*w+(1:sz2(i2))) = distcell{i};
+    if withSelf && i2>i1, 
+        dist_block = distcell{(i1-1)*npar(1)+i2}';
+    else
+        dist_block = distcell{i};
+    end
+    Dist((i1-1)*w+(1:sz1(i1)),(i2-1)*w+(1:sz2(i2))) = dist_block;
     if opts.verbose, 
         if mod(i,10)==0, fprintf('.'); end
         if mod(i,200)==0, fprintf(' [%d/%d]\n',i,t); end;
