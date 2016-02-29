@@ -237,7 +237,7 @@ for fi = 1:numel(layers.name),
     fprintf('%s ... ',layers.name{fi});
     feat = feats{fi};
     save(fullfile(opts.saveRoot, [layers.name{fi} '.mat']), ...
-        '-struct', 'feat', '-v7.3');
+        'feat', '-v7.3');
 end
 fprintf('done! \n');
 
