@@ -4,7 +4,6 @@ var DCG = function(x_, k_) {
   var x = k_ ? x_.slice(0, k) : x_;
   var sum = x[0];
   for (var i = 1; i < x.length; i++) {
-//    var w = 1.0 / Math.log2(i + 1);
     var w = Math.log(2) / Math.log(i + 1);
     sum = sum + (w * x[i]);
   }
@@ -110,6 +109,9 @@ var SummedMetrics = function() {
   this.pSum    = [];
   this.rSum    = [];
   this.f1Sum   = [];
+  this.pNSum   = 0;
+  this.rNSum   = 0;
+  this.f1NSum  = 0;
   this.apSum   = 0;
   this.ndcgSum = 0;
   this.numSum  = 0;
@@ -132,6 +134,9 @@ SummedMetrics.prototype.addMetricsSet = function(m) {
   this.pSum     = addVec(this.pSum, m.p);
   this.rSum     = addVec(this.rSum, m.r);
   this.f1Sum    = addVec(this.f1Sum, m.f1);
+  this.pNSum   += m.p[m.p.length-1];
+  this.rNSum   += m.r[m.r.length-1];
+  this.f1NSum  += m.f1[m.f1.length-1];
   this.apSum   += m.ap;
   this.ndcgSum += m.ndcg;
   this.numSum  += m.num;
@@ -150,6 +155,9 @@ SummedMetrics.prototype.addSummedMetrics = function(s) {
   this.pSum     = addVec(this.pSum, avg.P);
   this.rSum     = addVec(this.rSum, avg.R);
   this.f1Sum    = addVec(this.f1Sum, avg.F1);
+  this.pNSum   += avg['P@N'];
+  this.rNSum   += avg['R@N'];
+  this.f1NSum  += avg['F1@N'];
   this.apSum   += avg.mAP;
   this.ndcgSum += avg.NDCG;
   this.numSum++;  // add one for macro averaging since s is already summed
@@ -160,15 +168,18 @@ SummedMetrics.prototype.getAverages = function() {
   var p = mulVec(this.pSum, norm);
   var r = mulVec(this.rSum, norm);
   var f1 = mulVec(this.f1Sum, norm);
+  var pn = this.pNSum * norm;
+  var rn = this.rNSum * norm;
+  var f1n = this.f1NSum * norm;
   var ap = this.apSum * norm;
   var ndcg = this.ndcgSum * norm;
   return {
     'P':    p,
     'R':    r,
     'F1':   f1,
-    'P@N':  p[p.length-1],
-    'R@N':  r[r.length-1],
-    'F1@N': f1[f1.length-1],
+    'P@N':  pn,
+    'R@N':  rn,
+    'F1@N': f1n,
     'mAP':  ap,
     'NDCG': ndcg,
     'num':  this.numSum

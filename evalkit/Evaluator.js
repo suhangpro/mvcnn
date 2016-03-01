@@ -10,6 +10,7 @@ function Evaluator(params) {
   fs.readFileSync(params.truthFile).toString().split('\n').forEach(function(line) {
     var tokens = line.split(',');
     var id = tokens[0];
+    if (id === 'id') { return; }  // this is the header line so skip it
     var synset = tokens[1];
     var subsynset = tokens[2];
     scope.truth[id] = {synset: synset, subsynset: subsynset};
@@ -132,6 +133,23 @@ Evaluator.prototype.evaluate = function(dir) {
 
   saveAverages(metrics, 'summary.csv');
   savePRs(metrics, 'PR.csv');
+};
+
+// Writes oracle query results to given dir, cutting off lists at maxN
+Evaluator.prototype.writeOracleResults = function(dir, maxN) {
+  // for each id in truth table
+  for (var modelId in this.truth) {
+    if (!this.truth.hasOwnProperty(modelId) || modelId === '') { continue; }
+    var model = this.truth[modelId];
+    var synsetId = model.synset;
+    // get all ids with same synset
+    var sameSynsetModelIds = this.bySynset[synsetId];
+    if (sameSynsetModelIds.length > maxN) {
+      sameSynsetModelIds = sameSynsetModelIds.slice(0, maxN);
+    }
+    var file = dir + '/' + modelId;
+    fs.writeFileSync(file, sameSynsetModelIds.join('\n'));
+  }
 };
 
 module.exports = Evaluator;
