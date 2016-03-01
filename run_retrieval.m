@@ -22,7 +22,7 @@ end
 
 nViews = numel(imdb.images.name) / size(feat,1); 
 
-results = cell(1,numel(opts.sets)); 
+results = cell(2,numel(opts.sets)); 
 for i = 1:numel(opts.sets), 
   setId = find(cellfun(@(s) strcmp(opts.sets{i},s),imdb.meta.sets));
   f = feat(imdb.images.set(1:nViews:end)==setId,:);
@@ -33,20 +33,20 @@ for i = 1:numel(opts.sets),
   if strcmpi(opts.resultType,'sameClass'), 
     [~,I] = max(f,[],2);
     sameLabelMask = arrayfun(@(l) (I'==l), I,'UniformOutput', false);
-    results{i} = cellfun(@(c) sid(c), sameLabelMask, 'UniformOutput', false);
-    dists = cell(size(f,1),1);
+    results{1,i} = cellfun(@(c) sid(c), sameLabelMask, 'UniformOutput', false);
+    results{2,i} = cell(size(f,1),1);
     for j=1:size(f,1),
-      [dists{j},I] = sort(D(j,sameLabelMask{j}),'ascend');
+      [results{2,i}{j},I] = sort(D(j,sameLabelMask{j}),'ascend');
       topK = min(opts.topK, numel(I));
-      dists{j} = dists{j}(1:topK);
-      results{i}{j} = results{i}{j}(I(1:topK));
+      results{2,i}{j} = results{2,i}{j}(1:topK);
+      results{1,i}{j} = results{1,i}{j}(I(1:topK));
     end
   elseif strcmpi(opts.resultType,'fixedLength')
     [Y,I] = sort(D,2,'ascend');
     topK = min(opts.topK, numel(sid));
     I = I(:,1:topK); 
-    dists = Y(:,1:topK);
-    results{i} = sid(I); 
+    results{2,i} = Y(:,1:topK);
+    results{1,i} = sid(I); 
   else
     error('Unknown option: %s', opts.resultType);
   end
@@ -58,15 +58,15 @@ for i = 1:numel(opts.sets),
     for k=1:numel(sid), 
       fid = fopen(fullfile(opts.savePath,opts.sets{i},sprintf('%06d',sid(k))),'w+');
       if strcmpi(opts.resultType,'sameClass'), 
-        r = results{i}{k};
+        r = results{1,i}{k};
       else
-        r = results{i}(k,:);
+        r = results{1,i}(k,:);
       end
       if opts.saveDist, 
         if strcmpi(opts.resultType,'sameClass')
-          r = [r ; dists{k}]; 
+          r = [r ; results{2,i}{k}]; 
         else
-          r = [r ; dists(k,:)];   
+          r = [r ; results{2,i}(k,:)];   
         end
         fprintf(fid,'%06d %f\n',r);
       else

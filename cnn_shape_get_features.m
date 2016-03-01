@@ -13,6 +13,7 @@ function feats = cnn_shape_get_features( imList, model, layers, varargin )
 %       features will be saved under `saveRoot` in respective sub-folders
 %   `saveNames`:: {}
 %       containing names that will be used for output files
+%   `imListMask`:: true(1,numel(imList)) 
 %   `aug`:: 'none'
 %       1st field(f|n) indicates whether include flipped copy or not
 %       2nd field(s|r) indicates type of region - Square or Rectangle
@@ -43,6 +44,7 @@ end
 % default options
 opts.saveRoot = fullfile('data','features'); 
 opts.saveNames = {}; 
+opts.imListMask = true(1,numel(imList)); 
 opts.aug = 'none';
 opts.gpus = [];
 opts.numWorkers = 12;
@@ -171,11 +173,12 @@ else
     saveNames = cellfun(@(s) get_name_str(s, nViews), ...
         imList(1:nViews:end), 'UniformOutput', false);
 end
+shapeMask = opts.imListMask(1:nViews:end); 
 
 if opts.numWorkers<=1 || ~isempty(opts.gpus), 
     poolSize = 0;
     for  i=1:nShapes, 
-        if ~exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
+        if shapeMask(i) && ~exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
             im = cell(1,nViews);
             for v = 1:nViews, 
                 im{v} = opts.readOp(imList{(i-1)*nViews+v}, nChannels);
@@ -197,7 +200,7 @@ else
     parfor_progress(nShapes); 
     parfor (i=1:nShapes, poolSize)
     %  for  i=1:nShapes, % if no parallel computing toolbox
-        if exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
+        if ~shapeMask(i) || exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
             continue;
         end
         im = cell(1,nViews);
@@ -221,13 +224,15 @@ for fi=1:numel(layers.name),
 end
 fprintf('Loading raw features: \n');
 for i=1:nShapes,
+    if shapeMask(i), 
+        feat = load(fullfile(cacheDir, [saveNames{i} '.mat']));
+        for fi = 1:numel(layers.name),
+            feats{fi}((i-1)*nSubWins+(1:nSubWins),:) = ...
+                squeeze(feat.(layers.name{fi}))';
+        end
+    end
     if mod(i,10)==0, fprintf('.'); end
     if mod(i,500)==0, fprintf(' %4d/%4d\n', i,nShapes); end
-    feat = load(fullfile(cacheDir, [saveNames{i} '.mat']));
-    for fi = 1:numel(layers.name),
-        feats{fi}((i-1)*nSubWins+(1:nSubWins),:) = ...
-            squeeze(feat.(layers.name{fi}))';
-    end
 end
 fprintf(' %4d/%4d done! \n', nShapes,nShapes);
 
