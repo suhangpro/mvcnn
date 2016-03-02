@@ -20,7 +20,7 @@ for s = 1:nSets,
   sid = imdb.images.sid(imdb.images.set==setId);   
   sid = sid(1:nViews:end); 
   for i = 1:numel(r1{1,s}),
-    [Y,I]=ismember(r1{1,s}{i}, r2{1,s}(i,:));
+    [Y,I]=ismember(r1{1,s}{i}, r2{1,s}{i});
     assert(all(Y));
     [~,I] = sort(I);
     r1{1,s}{i} = r1{1,s}{i}(I); 
