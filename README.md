@@ -16,26 +16,25 @@ If you use any part of the code from this project, please cite:
 ## Installation
 
 * Install dependencies
-``` 
-#!bash
+```bash 
 git submodule update --init
 ```
 
 * Compile
 
 compile for CPU: 
-``` 
-#!bash
+```bash 
+# two environment variables might need to be set, e.g. MATLABDIR=<MATLAB_ROOT> MEX=<MATLAB_ROOT>/bin/mex
 matlab -nodisplay -r "setup(true);exit;"
 ```
 compile for GPU (w/ cuDNN): 
-``` 
-#!bash
-# other compilation options (e.g. 'cudaRoot',<CUDA_ROOT>,'cudaMethod','nvcc','cudnnRoot',<CUDNN_ROOT>) 
-# might be needed in the 'struct(...)' as well depending on you system settings
+```bash
+# 1) two environment variables might need to be set, e.g. MATLABDIR=<MATLAB_ROOT> MEX=<MATLAB_ROOT>/bin/mex
+# 2) other compilation options (e.g. 'cudaRoot',<CUDA_ROOT>,'cudaMethod','nvcc','cudnnRoot',<CUDNN_ROOT>) 
+#  might be needed in the 'struct(...)' as well depending on you system settings
 matlab -nodisplay -r "setup(true,struct('enableGpu',true,'enableCudnn',true));exit;"
 ```
-**Note**: (1) you might need to set the environment variables (MATLABDIR=<MATLAB_ROOT> MEX=<MATLAB_ROOT>/bin/mex); (2) you can alternatively run directly the scripts from the Matlab command window, e.g. for Windows installations:
+**Note**: you can alternatively run directly the scripts from the Matlab command window, e.g. for Windows installations:
 setup(true,struct('enableGpu',true,'cudaRoot','C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0','cudaMethod','nvcc'));
 You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64)
 
@@ -43,19 +42,19 @@ You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., 
 
 * Extract descriptor for a shape (off/obj mesh) - the descriptor will be saved in a txt file (bunny_descriptor.txt) [assumes upright orientation by default]
 
-```
+```matlab
 MATLAB> shape_compute_descriptor('bunny.off');
 ```
 
 * Extract descriptor for all shapes in a folder (off/obj meshes),  the descriptors will be saved in txt files in the same folder [assumes upright orientation by default]
 
-```
+```matlab
 MATLAB> shape_compute_descriptor('my_mesh_folder/');
 ```
 
 * Extract descriptor for all shapes in a folder (off/obj meshes), post-process descriptor with learned metric, and use the model that *does not assume* upright orientation [*-v2 models do not assume upright orientations]
 
-```
+```matlab
 MATLAB> shape_compute_descriptor('my_mesh_folder/', 'cnn_model', 'cnn-modelnet40-v2.mat', ...
 'metric_model', 'metric-relu7-v2.mat','post_process_desriptor_metric',true);
 ```
@@ -67,8 +66,7 @@ MATLAB> shape_compute_descriptor('my_mesh_folder/', 'cnn_model', 'cnn-modelnet40
     * shapenet55v2 (80 views w/o upright assumption): [tarball](http://maxwell.cs.umass.edu/mvcnn-data/shapenet55v2.tar) (15G)
 
 * Run training examples (see run_experiments.m for details)
-```
-#!bash
+```bash
+# LD_LIBRARY_PATH might need to be set, e.g. LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT> 
 matlab -nodisplay -r "run_experiments;exit;"
 ```
-**Note**: you might need to set the environment variable (LD_LIBRARY_PATH=<CUDA_ROOT>/lib64:<CUDNN_ROOT>)
