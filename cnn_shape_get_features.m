@@ -45,6 +45,7 @@ end
 opts.saveRoot = fullfile('data','features'); 
 opts.saveNames = {}; 
 opts.imListMask = true(1,numel(imList)); 
+opts.batchSize = 1;
 opts.aug = 'none';
 opts.gpus = [];
 opts.numWorkers = 12;
@@ -126,7 +127,7 @@ fprintf(' done!\n');
 %                                                             Usage mode 2 
 % -------------------------------------------------------------------------
 if  ~iscell(imList) || ~ischar(imList{1}),  
-    feats = get_activations(imList, net, layers, subWins, ~isempty(opts.gpus));
+    feats = get_activations(imList, net, layers, nViews, subWins, ~isempty(opts.gpus));
     return; 
 end
 
@@ -177,17 +178,28 @@ shapeMask = opts.imListMask(1:nViews:end);
 
 if opts.numWorkers<=1 || ~isempty(opts.gpus), 
     poolSize = 0;
-    for  i=1:nShapes, 
+    i=1;
+    while i<=nShapes, 
+        nCurr = 1;
         if shapeMask(i) && ~exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
-            im = cell(1,nViews);
-            for v = 1:nViews, 
+            nCurr = min(opts.batchSize, nShapes-i+1); 
+            im = cell(1,nViews*nCurr);
+            for v = 1:nViews*nCurr, 
                 im{v} = opts.readOp(imList{(i-1)*nViews+v}, nChannels);
             end
-            feat = get_activations(im, net, layers, subWins, ~isempty(opts.gpus));
-            save(fullfile(cacheDir, [saveNames{i} '.mat']),'-struct','feat');
+            feat = get_activations(im, net, layers, nViews, subWins, ~isempty(opts.gpus));
+            for j=i:i+nCurr-1,
+                for featName = fields(feat)', 
+                    f.(featName{1}) = feat.(featName{1})(:,:,:,(j-i)*nSubWins+(1:nSubWins)); 
+                end
+                save(fullfile(cacheDir, [saveNames{j} '.mat']),'-struct','f');
+            end
         end
-        if mod(i,10)==0, fprintf('.'); end
-        if mod(i,500)==0, fprintf('\t [%3d/%3d]\n',i,nShapes); end
+        for j=i:i+nCurr-1, 
+            if mod(j,10)==0, fprintf('.'); end
+            if mod(j,500)==0, fprintf('\t [%3d/%3d]\n',j,nShapes); end
+        end
+        i = i + nCurr; 
     end
     fprintf(' done!\n'); 
 else
@@ -200,16 +212,15 @@ else
     parfor_progress(nShapes); 
     parfor (i=1:nShapes, poolSize)
     %  for  i=1:nShapes, % if no parallel computing toolbox
-        if ~shapeMask(i) || exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
-            continue;
+        if shapeMask(i) && ~exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
+            im = cell(1,nViews);
+            for v = 1:nViews, 
+                im{v} = opts.readOp(imList{(i-1)*nViews+v}, nChannels);
+            end
+            feat = get_activations(im, net, layers, nViews, subWins, ~isempty(opts.gpus));
+            parsave(fullfile(cacheDir, [saveNames{i} '.mat']),feat);
+            % fprintf(' %s\n',imList{(i-1)*nViews+1});
         end
-        im = cell(1,nViews);
-        for v = 1:nViews, 
-            im{v} = opts.readOp(imList{(i-1)*nViews+v}, nChannels);
-        end
-        feat = get_activations(im, net, layers, subWins, ~isempty(opts.gpus));
-        parsave(fullfile(cacheDir, [saveNames{i} '.mat']),feat);
-        % fprintf(' %s\n',imList{(i-1)*nViews+1});
         parfor_progress();
     end
     parfor_progress(0);
@@ -248,7 +259,7 @@ fprintf('done! \n');
 
 
 % ------------------------------------------------------------------------------
-function feat = get_activations(im, net, layers, subWins, gpuMode)
+function feat = get_activations(im, net, layers, nViews, subWins, gpuMode)
 % ------------------------------------------------------------------------------
 
 nSubWins = size(subWins,2);
@@ -276,10 +287,12 @@ elseif size(im,3) ~= nChannels,
         size(im,3), nChannels);
 end
 
+batchSize = size(im,4)/nViews; 
+
 featCell = cell(1,numel(layers.name));
 for fi = 1:numel(layers.name),
     featCell{fi} = zeros(layers.sizes(1,fi),layers.sizes(2,fi),...
-        layers.sizes(3,fi),nSubWins, 'single');
+        layers.sizes(3,fi),nSubWins*batchSize, 'single');
 end
 
 im = single(im);
@@ -301,7 +314,7 @@ for ri = 1:nSubWins,
     end
     res = vl_simplenn(net,im_);
     for fi = 1:numel(layers.name),
-        featCell{fi}(:,:,:,ri) = single(gather(res(layers.index(fi)).x));
+        featCell{fi}(:,:,:,ri:nSubWins:end) = single(gather(res(layers.index(fi)).x));
     end
 end
 % pack features into structure
