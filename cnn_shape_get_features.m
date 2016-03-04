@@ -14,6 +14,8 @@ function feats = cnn_shape_get_features( imList, model, layers, varargin )
 %   `saveNames`:: {}
 %       containing names that will be used for output files
 %   `imListMask`:: true(1,numel(imList)) 
+%   `batchSize`:: 1
+%       batch size for gpu mode
 %   `aug`:: 'none'
 %       1st field(f|n) indicates whether include flipped copy or not
 %       2nd field(s|r) indicates type of region - Square or Rectangle
@@ -118,7 +120,11 @@ layers = struct('name', {layers}, 'sizes', [], 'index', []);
 for i = 1:numel(layers.name), 
     layers.index(i) = 1 + find(cellfun(@(c) strcmp(c.name, layers.name{i}), net.layers));
     [sz1, sz2, sz3, sz4] = size(res(layers.index(i)).x);
-    assert(sz1==1 && sz2==1 && sz4==1); 
+    assert(sz4==1, 'Incompatible network'); 
+    if (sz1~=1 || sz2~=1), 
+        warning('Feature %s will have spatial span: %d x %d', ...
+            layers.name{i}, sz1, sz2);
+    end 
     layers.sizes(:,i) = [sz1; sz2; sz3];
 end
 fprintf(' done!\n');
@@ -231,19 +237,20 @@ end
 % -------------------------------------------------------------------------
 feats = cell(1,numel(layers.name));
 for fi=1:numel(layers.name),
-    feats{fi} = zeros(nShapes*nSubWins,layers.sizes(3,fi), 'single');
+    feats{fi} = zeros(nShapes*nSubWins,layers.sizes(3,fi), ...
+        layers.sizes(1,fi), layers.sizes(2,fi), 'single');
 end
 fprintf('Loading raw features: \n');
 for i=1:nShapes,
     if shapeMask(i), 
         feat = load(fullfile(cacheDir, [saveNames{i} '.mat']));
         for fi = 1:numel(layers.name),
-            feats{fi}((i-1)*nSubWins+(1:nSubWins),:) = ...
-                squeeze(feat.(layers.name{fi}))';
+            feats{fi}((i-1)*nSubWins+(1:nSubWins),:,:,:) = ...
+                permute(feat.(layers.name{fi}), [4 3 1 2]); 
         end
     end
     if mod(i,10)==0, fprintf('.'); end
-    if mod(i,500)==0, fprintf(' %4d/%4d\n', i,nShapes); end
+    if mod(i,500)==0, fprintf('\t [%3d/%3d]\n', i,nShapes); end
 end
 fprintf(' %4d/%4d done! \n', nShapes,nShapes);
 
