@@ -8,23 +8,21 @@ function descr = shape_compute_descriptor( path_to_shape, varargin )
 %   path_to_shape:: (default) 'data/'
 %        can be either a filename for a mesh in OBJ/OFF format
 %        or a name of folder containing multiple OBJ/OFF meshes
-%   `cnn_model`:: (default) 'cnn-modelnet40-v1.mat'
+%   `cnnModel`:: (default) ''
 %       this is a matlab file with the saved CNN parameters
 %       if the default file is not found, it will be downloaded from our
 %       server.
 %       Note: The default mat file assumes that shapes that are
 %       upright oriented according to +Z axis!
 %       if you want to use the CNN trained *without upright assumption*, use
-%       'cnn-modelnet40-v2.mat'
-%   `post_process_desriptor_metric`:: (default) true
-%       set to false to disable transforming descriptor based on our
-%       learned distance metric
-%   `metric_model`:: (default:) 'metric-relu7-v1.mat'
+%       'cnn-vggm-relu7-v2'
+%   `applyMetric`:: (default) false
+%       set to true to disable transforming descriptor based on specified
+%       distance metric
+%   `metricModel`:: (default:) ''
 %       this is a matlab file with the saved metric parameters
-%       if the default file is not found, it will be downloaded from our
+%       if the default file is not found, it will attempt to download from our
 %       server
-%       if you want to use the model trained *without upright assumption*, use
-%       'metric-relu7-v2.mat'
 %   `gpus`:: (default) []
 %       set to use GPU
 
@@ -35,46 +33,61 @@ if nargin<1 || isempty(path_to_shape),
 end
 
 % default options
-opts.cnn_model = 'cnn-modelnet40-v1.mat';
-opts.post_process_desriptor_metric = true;
-opts.metric_model = 'metric-relu7-v1.mat';
+opts.feature = 'viewpool'; 
+opts.useUprightAssumption = true; 
+opts.applyMetric = false;
 opts.gpus = [];
+[opts, varargin] = vl_argparse(opts,varargin);
+
+opts.metricModel = '';
+opts.cnnModel = '';
 opts = vl_argparse(opts,varargin);
 
-if exist(opts.cnn_model, 'file')
-    fprintf('Loading CNN model from mat file...');
-    cnn = load(opts.cnn_model);
-    fprintf('Done.\n');
+% locate network file
+default_viewpool_loc = 'relu7'; 
+vl_xmkdir(fullfile('data','models')) ;
+if isempty(opts.cnnModel), 
+    if opts.useUprightAssumption, 
+        opts.cnnModel = sprintf('cnn-vggm-%s-v1',default_viewpool_loc);
+        nViews = 12;
+    else
+        opts.cnnModel = sprintf('cnn-vggm-%s-v2',default_viewpool_loc);
+        nViews = 80;
+    end
+    baseModel = 'imagenet-matconvnet-vgg-m';
+    cnn = cnn_shape_init({},'base',baseModel,'viewpoolPos',default_viewpool_loc,'nViews',nViews);
+    netFilePath = fullfile('data','models',[opts.cnnModel '.mat']);
+    save(netFilePath,'-struct','cnn');
+end
+
+if ~ischar(opts.cnnModel), 
+    cnn = opts.cnnModel;
 else
-    fprintf('Downloading CNN model from our server...');
-    url = ['http://maxwell.cs.umass.edu/mvcnn/models/' opts.cnn_model];
-    websave(opts.cnn_model,url);
-    if exist(opts.cnn_model, 'file')
-        cnn = load(opts.cnn_model);
-        fprintf('Done.\n');
-    else
-        error('Could not download mat file from our server. Please check internet connection or contact us.');
+    netFilePath = fullfile('data','models',[opts.cnnModel '.mat']);
+    if ~exist(netFilePath,'file'),
+        fprintf('Downloading model (%s) ...', opts.cnnModel) ;
+        urlwrite(fullfile('http://maxwell.cs.umass.edu/mvcnn/models/', ...
+            [opts.cnnModel '.mat']), netFilePath) ;
+        fprintf(' done!\n');
     end
+    cnn = load(netFilePath);
 end
 
-if opts.post_process_desriptor_metric
-    if exist(opts.metric_model, 'file')
-        fprintf('Loading metric model from mat file...');
-        modelDimRedFV = load(opts.metric_model);
-        fprintf('Done.\n');
-    else
-        fprintf('Downloading metric model from our server...');
-        url = ['http://maxwell.cs.umass.edu/mvcnn/models/' opts.metric_model];
-        websave(opts.metric_model,url);
-        if exist(opts.metric_model, 'file')
-            modelDimRedFV = load(opts.metric_model);
-            fprintf('Done.\n');
-        else
-            error('Could not download mat file from our server. Please check internet connection or contact us.');
-        end
-    end
+% locate metric file
+if isempty(opts.metricModel) && opts.applyMetric, 
+    opts.applyMetric = false; 
+    warning('No metric file specified. Post-processing turned off');
 end
-
+if opts.applyMetric
+    metricFilePath = fullfile('data','models',[opts.metricModel '.mat']);
+    if ~exist(metricFilePath,'file'),
+        fprintf('Downloading model (%s) ...', opts.metricModel) ;
+        urlwrite(fullfile('http://maxwell.cs.umass.edu/mvcnn/models/', ...
+            [opts.metricModel '.mat']), metricFilePath) ;
+        fprintf(' done!\n');
+    end
+    modelDimRedFV = load(metricFilePath);
+end
 
 % see if it's a multivew net
 viewpoolIdx = find(cellfun(@(x)strcmp(x.name, 'viewpool'), cnn.layers));
@@ -96,9 +109,9 @@ end
 if strcmpi((path_to_shape(end-2:end)),'off') || strcmpi((path_to_shape(end-2:end)),'obj')
     mesh_filenames(1).name = path_to_shape;
 else
-    mesh_filenames  = [dir( strcat(path_to_shape, '/*.off' ) ); dir( strcat(path_to_shape, '/*.obj') )];
+    mesh_filenames  = [dir( fullfile(path_to_shape, '*.off' ) ); dir( fullfile(path_to_shape, '*.obj') )];
     for i=1:length(mesh_filenames)  
-        mesh_filenames(i).name = [path_to_shape '/' mesh_filenames(i).name];
+        mesh_filenames(i).name = fullfile(path_to_shape,mesh_filenames(i).name);
     end
     if isempty(mesh_filenames)
         error('No obj/off meshes found in the specified folder!');
@@ -108,24 +121,27 @@ end
 descr = cell( 1, length(mesh_filenames));
 fig = figure('Visible','off');
 for i=1:length(mesh_filenames)
-    fprintf('Loading input shape %s...', mesh_filenames(i).name);
+    fprintf('Loading shape %s ...', mesh_filenames(i).name);
     mesh = loadMesh( mesh_filenames(i).name );
     if isempty(mesh.F)
         error('Could not load mesh from file');
     else
-        fprintf('Done.\n');
+        fprintf(' done!\n');
     end
+    fprintf('Rendering shape %s ...', mesh_filenames(i).name);
     if num_views == 12
         ims = render_views(mesh, 'figHandle', fig);
     else
         ims = render_views(mesh, 'use_dodecahedron_views', true, 'figHandle', fig);
     end
-    outs = cnn_shape_get_features(ims, cnn, {'relu7','prob'}, 'gpus', opts.gpus);
-    out = outs.relu7(:);
-    if opts.post_process_desriptor_metric
-        out = double(modelDimRedFV.W*out);
+    fprintf(' done!\n');
+    outs = cnn_shape_get_features(ims, cnn, {opts.feature}, 'gpus', opts.gpus);
+    out = outs.(opts.feature)(:);
+    if opts.applyMetric
+        out = single(modelDimRedFV.W*out);
     end
     descr{i} = out;
+    out = double(out);  
     save( sprintf('%s_descriptor.txt', mesh_filenames(i).name(1:end-4)), 'out', '-ascii');
 end
 close(fig);

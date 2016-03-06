@@ -67,6 +67,11 @@ end
 % update meta data
 net.meta.classes.name = classNames;
 net.meta.classes.description = classNames;
+
+% speial case: when no class names specified, remove fc8/prob layers
+if nClass==0, 
+    net.layers = net.layers(1:end-2);
+end
     
 end
 
