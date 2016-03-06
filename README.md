@@ -40,24 +40,23 @@ You may also need to add Visual Studio's cl.exe in your PATH environment (e.g., 
 
 ## Usage
 
-* Extract descriptor for a shape (off/obj mesh), the descriptor will be saved in a txt file (bunny_descriptor.txt). Use default model 
-with no fine-tuning [assumes upright orientation by default]
+* Extract descriptor for a shape (.off/.obj mesh). The descriptor will be saved in a .txt file (e.g. bunny_descriptor.txt). Uses default model with no fine-tuning. Assumes upright orientation by default. 
 
 ```matlab
 MATLAB> shape_compute_descriptor('bunny.off');
 ```
 
-* Extract descriptor for all shapes in a folder (off/obj meshes), the descriptors will be saved in txt files in the same folder [assumes no upright orientation]
+* Extract descriptor for all shapes in a folder (.off/.obj meshes). The descriptors will be saved in .txt files in the same folder. Assumes no upright orientation. 
 
 ```matlab
 MATLAB> shape_compute_descriptor('my_mesh_folder/','useUprightAssumption',false);
 ```
 
-* Extract descriptor for all shapes in a folder (off/obj meshes), post-process descriptor with learned metric. Uses non-default models. 
+* Extract descriptors for all shapes in a folder (.off/.obj meshes) and post-process descriptors with learned metric. Uses non-default models. 
 
 ```matlab
-MATLAB> shape_compute_descriptor('my_mesh_folder/', 'cnn_model', 'cnn-modelnet40-v2.mat', ...
-'metric_model', 'metric-relu7-v2.mat','applyMetric',true);
+MATLAB> shape_compute_descriptor('my_mesh_folder/', 'cnnModel', 'my_cnn.mat', ...
+'metricModel', 'my_metric.mat','applyMetric',true); 
 ```
 
 * Download datasets for training/evaluation (should be placed under data/)
