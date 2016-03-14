@@ -235,9 +235,15 @@ end
 % -------------------------------------------------------------------------
 %                                   Construct and save feature descriptors
 % -------------------------------------------------------------------------
-feats = cell(1,numel(layers.name));
-for fi=1:numel(layers.name),
-    feats{fi} = zeros(nShapes*nSubWins,layers.sizes(3,fi), ...
+if numel(layers.name)>1, 
+    feats = cell(1,numel(layers.name));
+    for fi=1:numel(layers.name),
+        feats{fi} = zeros(nShapes*nSubWins,layers.sizes(3,fi), ...
+            layers.sizes(1,fi), layers.sizes(2,fi), 'single');
+    end
+else
+    fi=1;
+    feats = zeros(nShapes*nSubWins,layers.sizes(3,fi), ...
         layers.sizes(1,fi), layers.sizes(2,fi), 'single');
 end
 fprintf('Loading raw features: \n');
@@ -245,8 +251,13 @@ for i=1:nShapes,
     if shapeMask(i), 
         feat = load(fullfile(cacheDir, [saveNames{i} '.mat']));
         for fi = 1:numel(layers.name),
-            feats{fi}((i-1)*nSubWins+(1:nSubWins),:,:,:) = ...
-                permute(feat.(layers.name{fi}), [4 3 1 2]); 
+            if numel(layers.name)>1,
+                feats{fi}((i-1)*nSubWins+(1:nSubWins),:,:,:) = ...
+                    permute(feat.(layers.name{fi}), [4 3 1 2]); 
+            else
+                feats((i-1)*nSubWins+(1:nSubWins),:,:,:) = ...
+                    permute(feat.(layers.name{fi}), [4 3 1 2]); 
+            end
         end
     end
     if mod(i,10)==0, fprintf('.'); end
@@ -258,9 +269,14 @@ fprintf(' %4d/%4d done! \n', nShapes,nShapes);
 fprintf('Saving feature descriptors: ');
 for fi = 1:numel(layers.name),
     fprintf('%s ... ',layers.name{fi});
-    feat = feats{fi};
-    save(fullfile(opts.saveRoot, [layers.name{fi} '.mat']), ...
-        'feat', '-v7.3');
+    if numel(layers.name)>1, 
+        feat = feats{fi};
+        save(fullfile(opts.saveRoot, [layers.name{fi} '.mat']), ...
+            'feat', '-v7.3');
+    else
+        save(fullfile(opts.saveRoot, [layers.name{fi} '.mat']), ...
+            'feats', '-v7.3');
+    end
 end
 fprintf('done! \n');
 
