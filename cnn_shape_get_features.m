@@ -31,6 +31,7 @@ function feats = cnn_shape_get_features( imList, model, layers, varargin )
 %       set to true to re-compute all features
 %   `readOp`:: @imread_255
 %       the operator that reads data from file
+%   `verbose`:: true 
 
 if ~exist('model','var') || isempty(model),
     model = 'imagenet-matconvnet-vgg-m';
@@ -43,6 +44,8 @@ else
     net = model;
 end
 
+if isempty(imList); feats = []; return; end
+
 % default options
 opts.saveRoot = fullfile('data','features'); 
 opts.saveNames = {}; 
@@ -53,6 +56,7 @@ opts.gpus = [];
 opts.numWorkers = 12;
 opts.restart = false;
 opts.readOp = @imread_255;
+opts.verbose = true; 
 [opts,varargin] = vl_argparse(opts,varargin);
 
 % data augmentation
@@ -70,11 +74,11 @@ if isempty(net),
     netFilePath = fullfile('data','models', [modelName '.mat']);
     % download model if not found
     if ~exist(netFilePath,'file'),
-        fprintf('Downloading model (%s) ...', modelName) ;
+        if opts.verbose, fprintf('Downloading model (%s) ...', modelName) ; end
         vl_xmkdir(fullfile('data','models')) ;
         urlwrite(fullfile('http://maxwell.cs.umass.edu/mvcnn-data/models', ...
             [modelName '.mat']), netFilePath) ;
-        fprintf(' done!\n');
+        if opts.verbose, fprintf(' done!\n'); end
     end
     net = load(netFilePath);
 end
@@ -106,7 +110,7 @@ nShapes = numel(imList) / nViews;
 %                                                          Response layers
 % -------------------------------------------------------------------------
 % response dimensions
-fprintf('Testing model (%s) ...', modelName) ;
+if opts.verbose, fprintf('Testing model (%s) ...', modelName) ; end
 if isfield(net.layers{1},'weights'), 
   nChannels = size(net.layers{1}.weights{1},3); 
 else
@@ -127,7 +131,7 @@ for i = 1:numel(layers.name),
     end 
     layers.sizes(:,i) = [sz1; sz2; sz3];
 end
-fprintf(' done!\n');
+if opts.verbose, fprintf(' done!\n'); end
 
 % -------------------------------------------------------------------------
 %                                                             Usage mode 2 
@@ -149,25 +153,25 @@ vl_xmkdir(cacheDir);
 
 featCell = cell(1,numel(layers.name));
 flag_found = true;
-fprintf('Loading pre-computed features ... ');
+if opts.verbose, fprintf('Loading pre-computed features ... '); end
 for fi = 1:numel(layers.name),
     featPath = fullfile(opts.saveRoot,[layers.name{fi} '.mat']);
     if ~exist(featPath, 'file'), 
         flag_found = false;
         break;
     end
-    fprintf('%s ... ', layers.name{fi});
+    if opts.verbose, fprintf('%s ... ', layers.name{fi}); end
     featCell{fi} = load(featPath);
 end
 if flag_found, 
-    fprintf('all found! \n');
+    if opts.verbose, fprintf('all found! \n'); end
     feats = struct();
     for fi = 1:numel(layers.name),
         feats.(layers.name{fi}) = featCell{fi};
     end
     return;
 else
-    fprintf('all/some feature missing! \n');
+    if opts.verbose, fprintf('all/some feature missing! \n'); end
     clear featCell;
 end
 
@@ -201,13 +205,15 @@ if opts.numWorkers<=1 || ~isempty(opts.gpus),
                 save(fullfile(cacheDir, [saveNames{j} '.mat']),'-struct','f');
             end
         end
-        for j=i:i+nCurr-1, 
-            if mod(j,10)==0, fprintf('.'); end
-            if mod(j,500)==0, fprintf('\t [%3d/%3d]\n',j,nShapes); end
+        if opts.verbose, 
+            for j=i:i+nCurr-1, 
+                if mod(j,10)==0, fprintf('.'); end
+                if mod(j,500)==0, fprintf('\t [%3d/%3d]\n',j,nShapes); end
+            end
         end
         i = i + nCurr; 
     end
-    fprintf(' done!\n'); 
+    if opts.verbose, fprintf(' done!\n');  end
 else
     poolObj = gcp('nocreate');
     if isempty(poolObj) || poolObj.NumWorkers<opts.numWorkers, 
@@ -215,7 +221,7 @@ else
         poolObj = parpool(opts.numWorkers);
     end
     poolSize = poolObj.NumWorkers;
-    parfor_progress(nShapes); 
+    if opts.verbose, parfor_progress(nShapes); end
     parfor (i=1:nShapes, poolSize)
     %  for  i=1:nShapes, % if no parallel computing toolbox
         if shapeMask(i) && ~exist(fullfile(cacheDir, [saveNames{i} '.mat']),'file'),
@@ -227,9 +233,9 @@ else
             parsave(fullfile(cacheDir, [saveNames{i} '.mat']),feat);
             % fprintf(' %s\n',imList{(i-1)*nViews+1});
         end
-        parfor_progress();
+        if opts.verbose, parfor_progress(); end
     end
-    parfor_progress(0);
+    if opts.verbose, parfor_progress(0); end
 end
 
 % -------------------------------------------------------------------------
@@ -246,7 +252,7 @@ else
     feats = zeros(nShapes*nSubWins,layers.sizes(3,fi), ...
         layers.sizes(1,fi), layers.sizes(2,fi), 'single');
 end
-fprintf('Loading raw features: \n');
+if opts.verbose, fprintf('Loading raw features: \n'); end
 for i=1:nShapes,
     if shapeMask(i), 
         feat = load(fullfile(cacheDir, [saveNames{i} '.mat']));
@@ -260,15 +266,17 @@ for i=1:nShapes,
             end
         end
     end
-    if mod(i,10)==0, fprintf('.'); end
-    if mod(i,500)==0, fprintf('\t [%3d/%3d]\n', i,nShapes); end
+    if opts.verbose, 
+        if mod(i,10)==0, fprintf('.'); end
+        if mod(i,500)==0, fprintf('\t [%3d/%3d]\n', i,nShapes); end
+    end
 end
-fprintf(' %4d/%4d done! \n', nShapes,nShapes);
+if opts.verbose, fprintf(' %4d/%4d done! \n', nShapes,nShapes); end
 
 % write to disk
-fprintf('Saving feature descriptors: ');
+if opts.verbose, fprintf('Saving feature descriptors: ') ; end
 for fi = 1:numel(layers.name),
-    fprintf('%s ... ',layers.name{fi});
+    if opts.verbose, fprintf('%s ... ',layers.name{fi}); end
     if numel(layers.name)>1, 
         feat = feats{fi};
         save(fullfile(opts.saveRoot, [layers.name{fi} '.mat']), ...
@@ -278,7 +286,7 @@ for fi = 1:numel(layers.name),
             'feats', '-v7.3');
     end
 end
-fprintf('done! \n');
+if opts.verbose, fprintf('done! \n'); end
 
 
 % ------------------------------------------------------------------------------
