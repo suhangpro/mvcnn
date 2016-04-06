@@ -3,6 +3,7 @@ opts.base = 'imagenet-matconvnet-vgg-m';
 opts.restart = false; 
 opts.nViews = 12; 
 opts.viewpoolPos = 'relu5'; 
+opts.viewpoolType = 'max'; 
 opts.weightInitMethod = 'xavierimproved';
 opts.scale = 1;
 opts.networkType = 'simplenn'; % only simplenn is supported currently
@@ -41,7 +42,7 @@ end
 % Initiate other layers w/ random weights if training from scratch is desired
 if opts.restart, 
   w_layers = find(cellfun(@(c) isfield(c,'weights'),net.layers));
-  for i=1:numel(w_layers)-1, 
+  for i=1:w_layers(1:end-1), 
     sz = size(net.layers{i}.weights{1}); 
     net.layers{i}.weights{1} = init_weight(opts, sz(1), sz(2), sz(3), sz(4), dataTyp);
     net.layers{i}.weights{2} = zeros(sz(4), 1, dataTyp); 
@@ -56,12 +57,34 @@ if opts.nViews>1,
   viewpoolLayer = struct('name', 'viewpool', ...
     'type', 'custom', ...
     'vstride', opts.nViews, ...
-    'method', 'max', ...
+    'method', opts.viewpoolType, ...
     'forward', @viewpool_fw, ...
     'backward', @viewpool_bw);
   net = modify_net(net, viewpoolLayer, ...
         'mode','add_layer', ...
         'loc',opts.viewpoolPos);
+
+  if strcmp(opts.viewpoolType, 'cat'),
+    loc = find(cellfun(@(c) strcmp(c.name,'viewpool'), net.layers));
+    assert(numel(loc)==1);
+    w_layers = find(cellfun(@(c) isfield(c,'weights'), net.layers));
+    loc = w_layers(find((w_layers-loc)>0,1)); % location of the adjacent weight layer
+    if ~isempty(loc),
+      sz = size(net.layers{loc}.weights{1});
+      if length(sz)<4, sz = [sz ones(1,4-length(sz))]; end
+      net.layers{loc}.weights{1} = init_weight(opts, sz(1), sz(2), sz(3)*opts.nViews, sz(4), dataTyp);
+      net.layers{loc}.weights{2} = zeros(sz(4), 1, dataTyp);
+      % random initialize layers after
+      w_layers = w_layers(w_layers>loc);
+      for i=1:numel(w_layers)-1,
+        sz = size(net.layers{i}.weights{1});
+        if length(sz)<4, sz = [sz ones(1,4-length(sz))]; end
+        net.layers{i}.weights{1} = init_weight(opts, sz(1), sz(2), sz(3), sz(4), dataTyp);
+        net.layers{i}.weights{2} = zeros(sz(4), 1, dataTyp);
+      end
+    end
+  end
+
 end
 
 % update meta data
@@ -115,6 +138,8 @@ elseif strcmp(layer.method, 'max'),
     res_ip1.x = permute(...
         max(reshape(res_i.x,[sz1 sz2 sz3 layer.vstride sz4/layer.vstride]), [], 4), ...
         [1,2,3,5,4]);
+elseif strcmp(layer.method, 'cat'),
+    res_ip1.x = reshape(res_i.x,[sz1 sz2 sz3*layer.vstride sz4/layer.vstride]);
 else
     error('Unknown viewpool method: %s', layer.method);
 end
@@ -143,6 +168,8 @@ elseif strcmp(layer.method, 'max'),
                        [sz1 sz2 sz3 1 sz4]), ...
                 [1 1 1 layer.vstride 1]),...
         [sz1 sz2 sz3 layer.vstride*sz4]) .* Ind;
+elseif strcmp(layer.method, 'cat'),
+    res_i.dzdx = reshape(res_ip1.dzdx, [sz1 sz2 sz3/layer.vstride sz4*layer.vstride]);
 else
     error('Unknown viewpool method: %s', layer.method);
 end
