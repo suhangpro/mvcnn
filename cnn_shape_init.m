@@ -42,7 +42,7 @@ end
 % Initiate other layers w/ random weights if training from scratch is desired
 if opts.restart, 
   w_layers = find(cellfun(@(c) isfield(c,'weights'),net.layers));
-  for i=1:w_layers(1:end-1), 
+  for i=w_layers(1:end-1), 
     sz = size(net.layers{i}.weights{1}); 
     net.layers{i}.weights{1} = init_weight(opts, sz(1), sz(2), sz(3), sz(4), dataTyp);
     net.layers{i}.weights{2} = zeros(sz(4), 1, dataTyp); 
@@ -76,7 +76,7 @@ if opts.nViews>1,
       net.layers{loc}.weights{2} = zeros(sz(4), 1, dataTyp);
       % random initialize layers after
       w_layers = w_layers(w_layers>loc);
-      for i=1:numel(w_layers)-1,
+      for i=w_layers(1:end-1),
         sz = size(net.layers{i}.weights{1});
         if length(sz)<4, sz = [sz ones(1,4-length(sz))]; end
         net.layers{i}.weights{1} = init_weight(opts, sz(1), sz(2), sz(3), sz(4), dataTyp);
