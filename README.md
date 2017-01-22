@@ -13,6 +13,10 @@ If you use any part of the code from this project, please cite:
   booktitle = {Proc. ICCV}, 
   year      = {2015}}
 
+## Updates 
+
+Thanks @brotherhuang for a sample caffe implementation! Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder. 
+
 ## Installation
 
 * Install dependencies
