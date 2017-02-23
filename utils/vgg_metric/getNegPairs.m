@@ -13,8 +13,8 @@ function neg_pairs = getNegPairs(personID, personList, numPairs)
         
         % select two different persons
         t = randperm(length(personList), 2);
-        personListIdx1 = t(1);
-        personListIdx2 = t(2);    
+        personListIdx1 = personList(t(1));
+        personListIdx2 = personList(t(2));      
         
         % All data indices of that person
         idxData1 = find(personID == personListIdx1);
