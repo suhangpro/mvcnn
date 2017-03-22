@@ -59,7 +59,7 @@ class MVCNNDataLayer(caffe.Layer):
     imh = 227
     imw = 227
     imc = 3
-    ims = np.ones((imh, imw, imc, self._view_Size), dtype=np.float32)
+    ims = np.zeros((imh, imw, imc, self._view_Size), dtype=np.float32)
     label = self._model2lable[modelName]
     for view in range(1, self._view_Size + 1):
       viewID = str(view)
@@ -81,11 +81,12 @@ class MVCNNDataLayer(caffe.Layer):
     height = 227
     width = 227
     batch_size = self._batch_size
-    if self._train_iteration == 0 : shuffle(self._modelList)
+    #if self._train_iteration == 0 : shuffle(self._modelList)
     data = np.ones((self._batch_size * self._view_Size, self._channel_Size, height, width), dtype=np.float32)
     label = np.ones((batch_size, 1, 1, 1), dtype=np.float32)
     for i in range(batch_size):
 	currentModel = self._modelList[(self._train_iteration * self._batch_size + i) % len(self._modelList)] 
+	#print currentModel
 	currentImage = self._loadSampleImage(currentModel)
 	for j in range(self._view_Size) :
 		data[j * self._batch_size + i,:,:,:] = currentImage[j,:,:,:]

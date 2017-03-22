@@ -5,9 +5,9 @@ layer {
   top: "data"
   top: "label"
   python_param {
-    module: 'MVCNNDataLayer'
-    layer: 'MVCNNDataLayer'
-    param_str: "{'phase': 'train', 'batch_size': 1, 'view_size': 12,'channel_size': 3, 'data_path': './modelnet40v1'}"
+    module: 'MVCNNDataLayerPreTrain'
+    layer: 'MVCNNDataLayerPreTrain'
+    param_str: "{'phase': 'train', 'batch_size': 64, 'view_size': 1,'channel_size': 3, 'data_path': './modelnet40v1'}"
   }
   include {
     phase: TRAIN
@@ -19,9 +19,9 @@ layer {
   top: "data"
   top: "label"
   python_param {
-    module: 'MVCNNDataLayer'
-    layer: 'MVCNNDataLayer'
-    param_str: "{'phase': 'test', 'batch_size': 1, 'view_size': 12,'channel_size': 3, 'data_path': './modelnet40v1'}"
+    module: 'MVCNNDataLayerPreTrain'
+    layer: 'MVCNNDataLayerPreTrain'
+    param_str: "{'phase': 'test', 'batch_size': 64, 'view_size': 1,'channel_size': 3, 'data_path': './modelnet40v1'}"
   }
   include {
     phase: TEST
@@ -250,72 +250,11 @@ layer {
     stride: 2
   }
 }
-
-
-
-
 layer {
-name: "splitView"
-type : "Slice"
-bottom: "pool5"
-top : "model_view0"
-top : "model_view1"
-top : "model_view2"
-top : "model_view3"
-top : "model_view4"
-top : "model_view5"
-top : "model_view6"
-top : "model_view7"
-top : "model_view8"
-top : "model_view9"
-top : "model_view10"
-top : "model_view11"
-slice_param{
-axis : 0
-slice_point: 1
-slice_point: 2
-slice_point: 3
-slice_point: 4
-slice_point: 5
-slice_point: 6
-slice_point: 7
-slice_point: 8
-slice_point: 9
-slice_point: 10
-slice_point: 11
-}
-}
-
-layer {
-name: "view_pooling_max"
-type: "Eltwise"
-bottom: "model_view0"
-bottom: "model_view1"
-bottom: "model_view2"
-bottom: "model_view3"
-bottom: "model_view4"
-bottom: "model_view5"
-bottom: "model_view6"
-bottom: "model_view7"
-bottom: "model_view8"
-bottom: "model_view9"
-bottom: "model_view10"
-bottom: "model_view11"
-top: "view_pooling_max"
- eltwise_param {
-operation: MAX
-	}
-}
-
-
-layer {
-  bottom: "view_pooling_max"
-  top: "fc6"
   name: "fc6"
   type: "InnerProduct"
-  inner_product_param {
-    num_output: 4096
-  }
+  bottom: "pool5"
+  top: "fc6"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -324,25 +263,33 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
 }
-
-
 layer {
-  bottom: "fc6"
-  top: "fc6"
   name: "relu6"
   type: "ReLU"
-}
-layer {
   bottom: "fc6"
   top: "fc6"
+}
+layer {
   name: "drop6"
   type: "Dropout"
+  bottom: "fc6"
+  top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
   }
 }
-
 layer {
   name: "fc7"
   type: "InnerProduct"
@@ -400,7 +347,7 @@ layer {
     num_output: 40
     weight_filler {
       type: "gaussian"
-      std: 0.01
+      std: 0.005
     }
     bias_filler {
       type: "constant"
@@ -408,16 +355,16 @@ layer {
     }
   }
 }
-layer {
-  name: "accuracy"
-  type: "Accuracy"
-  bottom: "modelNet40"
-  bottom: "label"
-  top: "accuracy"
-  include {
-    phase: TEST
-  }
-}
+#layer {
+#  name: "accuracy"
+#  type: "Accuracy"
+#  bottom: "modelNet40"
+#  bottom: "label"
+#  top: "accuracy"
+#  include {
+#    phase: TEST
+#  }
+#}
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
@@ -425,5 +372,3 @@ layer {
   bottom: "label"
   top: "loss"
 }
-
-
