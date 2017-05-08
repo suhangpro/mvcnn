@@ -15,7 +15,8 @@ If you use any part of the code from this project, please cite:
 
 ## Updates 
 
-Thanks @brotherhuang for a sample caffe implementation! Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder. 
+* If you prefer a Tensorflow implementation, this one [here](https://github.com/WeiTang114/MVCNN-TensorFlow) on GitHub from @WeiTang114 might worth checking out. 
+* Thanks @brotherhuang for a sample caffe implementation! Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder. 
 
 ## Installation
 
