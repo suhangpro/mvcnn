@@ -13,10 +13,13 @@ If you use any part of the code from this project, please cite:
   booktitle = {Proc. ICCV}, 
   year      = {2015}}
 
-## Updates 
+## Other implementations
 
-* If you prefer a Tensorflow implementation, this one [here](https://github.com/WeiTang114/MVCNN-TensorFlow) on GitHub from @WeiTang114 might worth checking out. 
-* Thanks @brotherhuang for a sample caffe implementation! Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder. 
+(These are implementations provided by friends or found online, and are listed here for your convenience. I do not provide direct support on them.)
+
+* Caffe (from @brotherhuang): Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder
+* Tensorflow (from @WeiTang114): [MVCNN-Tensorflow](https://github.com/WeiTang114/MVCNN-TensorFlow)
+* Torch (from @eriche2016): [mvcnn.torch](https://github.com/eriche2016/mvcnn.torch)
 
 ## Installation
 
