@@ -24,7 +24,7 @@ class MVCNNDataLayer(caffe.Layer):
     self._channel_Size = layer_params['channel_size']
     self._phase = layer_params['phase']   # train or test
     self._name_to_top_map = {'data': 0, 'label': 1}
-    self._classList = next(os.walk(self._dataPath))[1]
+    self._classList = sorted(next(os.walk(self._dataPath))[1])
     self._modelList = []
     self._model2lable = {}
     self._train_iteration = 0	
