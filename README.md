@@ -17,7 +17,8 @@ If you use any part of the code from this project, please cite:
 
 (These are implementations provided by friends or found online, and are listed here for your convenience. I do not provide direct support on them.)
 
-* Caffe (from @brotherhuang): Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder
+* PyTorch (from my UMass labmate @jongchyisu): [mvcnn_pytorch](https://github.com/jongchyisu/mvcnn_pytorch)
+* Caffe (from my UMass labmate @brotherhuang): Check out the [caffe](https://github.com/suhangpro/mvcnn/tree/master/caffe) folder
 * Tensorflow (from @WeiTang114): [MVCNN-Tensorflow](https://github.com/WeiTang114/MVCNN-TensorFlow)
 * Torch (from @eriche2016): [mvcnn.torch](https://github.com/eriche2016/mvcnn.torch)
 * PyTorch (from @RBirkeland): [MVCNN-ResNet](https://github.com/RBirkeland/MVCNN-ResNet)
